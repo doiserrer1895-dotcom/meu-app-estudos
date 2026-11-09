@@ -545,7 +545,7 @@ async function flushCloudSave(){
    if(error)throw error;
    if(ready&&activeUid===owner)setCloudStatus(queuedState?'Salvando...':'Sincronizado');
   }catch(e){
-   if(ready&&activeUid===owner){queuedState=snapshot;setCloudStatus('Falha ao sincronizar',true);console.error('Falha ao sincronizar estudos:',e)}
+   if(ready&&activeUid===owner){if(!queuedState)queuedState=snapshot;setCloudStatus('Falha ao sincronizar',true);console.error('Falha ao sincronizar estudos:',e)}
    break;
   }
  }
