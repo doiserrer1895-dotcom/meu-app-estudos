@@ -373,7 +373,7 @@ function render(){if(!S.edital.find(x=>x.name===S.timer.subj))S.timer.subj=S.edi
  if(view==='c')fillTop('ts','tt2',S.timer.top);if(view==='d'){fillTop('s','tp');fillTop('rsub','rtop')}if(view==='s'&&sheet)fillTop('ss','st')}
 render();setInterval(tick,250);
 </script>
-<div id="cloud-user"><span id="cloud-email"></span><span id="cloud-status" role="status">Conectado</span><button id="cloud-backup" type="button">Baixar</button><button id="cloud-cloud-backup" type="button">Cópia nuvem</button><button id="cloud-restore" type="button">Restaurar</button><button id="cloud-import-button" type="button">Importar</button><button id="cloud-retry" type="button" hidden>Reenviar</button><button id="cloud-logout" type="button">Sair</button><input id="cloud-import-file" type="file" accept="application/json,.json" hidden></div>
+<div id="cloud-user"><span id="cloud-email"></span><span id="cloud-status" role="status">Conectado</span><button id="cloud-backup" type="button">Baixar</button><button id="cloud-save-snapshot" type="button">Salvar cópia</button><button id="cloud-cloud-backup" type="button">Cópia nuvem</button><button id="cloud-restore" type="button">Restaurar</button><button id="cloud-import-button" type="button">Importar</button><button id="cloud-retry" type="button" hidden>Reenviar</button><button id="cloud-logout" type="button">Sair</button><input id="cloud-import-file" type="file" accept="application/json,.json" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 (function(){
@@ -512,6 +512,16 @@ function downloadBackup(){
  setCloudStatus('Backup baixado');
 }
 document.getElementById('cloud-backup').addEventListener('click',downloadBackup);
+document.getElementById('cloud-save-snapshot').addEventListener('click',async()=>{
+ const b=document.getElementById('cloud-save-snapshot');if(!ready||!activeUid)return;
+ b.disabled=true;setCloudStatus('Salvando cópia na nuvem...');
+ try{
+  const {error}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:S,atualizado_em:new Date().toISOString()});
+  if(error)throw error;
+  setCloudStatus('Cópia salva na nuvem');
+ }catch(e){alert('Não foi possível salvar a cópia: '+friendlyError(e));setCloudStatus('Falha ao salvar cópia',true)}
+ finally{b.disabled=false}
+});
 async function getLatestCloudBackup(){
  if(!ready||!activeUid)throw new Error('Entre na sua conta para acessar as cópias.');
  const {data,error}=await client.from('estudos_backups').select('dados,backup_date,created_at').eq('user_id',activeUid).order('created_at',{ascending:false}).limit(1).maybeSingle();
