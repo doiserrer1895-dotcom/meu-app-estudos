@@ -1,56 +1,72 @@
--- Meu App Estudos: proteção da tabela de dados pessoais
--- Execute este arquivo no Supabase > SQL Editor > New query.
--- A tabela guarda um único documento JSON por usuário autenticado.
+-- Meu App Estudos — segurança e cópias diárias por usuário
+-- Estado aplicado ao projeto Supabase MeuAppEstudos em 09/11/2026.
+-- Não inclui chaves secret/service_role.
 
-create table if not exists public.estudos (
-  id uuid primary key references auth.users(id) on delete cascade,
-  dados jsonb not null default '{}'::jsonb,
-  atualizado_em timestamptz not null default now()
+create table if not exists public.estudos_backups (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  backup_date date not null,
+  dados jsonb not null,
+  atualizado_em timestamptz,
+  created_at timestamptz not null default now(),
+  constraint estudos_backups_user_day_unique unique (user_id, backup_date)
 );
 
-alter table public.estudos
-  add column if not exists dados jsonb not null default '{}'::jsonb;
-
-alter table public.estudos
-  add column if not exists atualizado_em timestamptz not null default now();
-
 alter table public.estudos enable row level security;
+alter table public.estudos_backups enable row level security;
 
--- Remove políticas antigas desta tabela para impedir que uma regra permissiva
--- antiga continue liberando leitura ou escrita entre usuários.
-do $$
-declare
-  p record;
-begin
-  for p in
-    select policyname
-    from pg_policies
-    where schemaname = 'public' and tablename = 'estudos'
-  loop
-    execute format('drop policy if exists %I on public.estudos', p.policyname);
-  end loop;
-end
-$$;
+-- Política existente de estudos, otimizada para auth.uid().
+alter policy "Acesso aos próprios estudos"
+  on public.estudos
+  using ((select auth.uid()) = id)
+  with check ((select auth.uid()) = id);
 
-revoke all on table public.estudos from anon;
-revoke all on table public.estudos from public;
+-- A tabela principal só permite ler/criar/atualizar a própria linha.
+revoke all on table public.estudos from anon, public, authenticated;
 grant select, insert, update on table public.estudos to authenticated;
 
-create policy estudos_select_own
-  on public.estudos for select
-  to authenticated
-  using (id::text = auth.uid()::text);
+-- Cópias: usuário só pode ler e inserir as próprias; não pode editar ou apagar.
+revoke all on table public.estudos_backups from anon, public, authenticated;
+grant select, insert on table public.estudos_backups to authenticated;
 
-create policy estudos_insert_own
-  on public.estudos for insert
+drop policy if exists estudos_backups_select_own on public.estudos_backups;
+create policy estudos_backups_select_own
+  on public.estudos_backups for select
   to authenticated
-  with check (id::text = auth.uid()::text);
+  using ((select auth.uid()) = user_id);
 
-create policy estudos_update_own
-  on public.estudos for update
+drop policy if exists estudos_backups_insert_own on public.estudos_backups;
+create policy estudos_backups_insert_own
+  on public.estudos_backups for insert
   to authenticated
-  using (id::text = auth.uid()::text)
-  with check (id::text = auth.uid()::text);
+  with check ((select auth.uid()) = user_id);
 
--- Não é concedido DELETE ao navegador. A chave service_role nunca deve ser
--- colocada no HTML ou compartilhada publicamente.
+-- Cópia inicial da linha existente, sem sobrescrever cópia já existente.
+insert into public.estudos_backups (user_id, backup_date, dados, atualizado_em)
+select id, (now() at time zone 'UTC')::date, dados, atualizado_em
+from public.estudos
+on conflict (user_id, backup_date) do nothing;
+
+-- Antes da primeira alteração do dia, guarda o estado anterior.
+create or replace function public.capture_estudos_daily_backup()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  insert into public.estudos_backups (user_id, backup_date, dados, atualizado_em)
+  values (old.id, (now() at time zone 'UTC')::date, old.dados, old.atualizado_em)
+  on conflict (user_id, backup_date) do nothing;
+  return new;
+end;
+$$;
+
+revoke all on function public.capture_estudos_daily_backup() from public, anon, authenticated;
+drop trigger if exists estudos_daily_backup_before_update on public.estudos;
+create trigger estudos_daily_backup_before_update
+  before update on public.estudos
+  for each row
+  execute function public.capture_estudos_daily_backup();
+
+-- Importante: esta cópia está no mesmo projeto Supabase.
+-- Baixe também cópias externas pelo botão "Cópia nuvem" no aplicativo.
