@@ -565,7 +565,9 @@ document.getElementById('cloud-restore').addEventListener('click',async()=>{
  const b=document.getElementById('cloud-restore');b.disabled=true;setCloudStatus('Buscando cópia...');
  try{
   const row=await getLatestCloudBackup();
-  if(!confirm('Restaurar a cópia '+(row.backup_type==='manual'?'manual':'automática')+' de '+row.backup_date+'? Isso substituirá os dados atuais. Antes, o aplicativo baixará uma cópia do estado atual para seu computador.'))return;
+  if(!confirm('Restaurar a cópia '+(row.backup_type==='manual'?'manual':'automática')+' de '+row.backup_date+'? Isso substituirá os dados atuais. Antes, será criada uma cópia do estado atual na nuvem e baixada uma cópia para seu computador.'))return;
+  const {error:preError}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:S,atualizado_em:new Date().toISOString()});
+  if(preError)throw preError;
   downloadBackup();
   S=normalizeState(row.dados);
   localStorage.setItem(K+':'+activeUid,JSON.stringify(S));
@@ -580,12 +582,14 @@ document.getElementById('cloud-import-button').addEventListener('click',()=>impo
 importInput.addEventListener('change',()=>{
  const file=importInput.files&&importInput.files[0];if(!file)return;
  const reader=new FileReader();
- reader.onload=()=>{
+ reader.onload=async()=>{
   try{
    const backup=JSON.parse(String(reader.result||''));
    if(!backup||!backup.data||typeof backup.data!=='object'||Array.isArray(backup.data))throw new Error('O arquivo não parece ser um backup válido do Meu App Estudos.');
    if(backup.userId&&backup.userId!==activeUid){alert('Este backup pertence a outra conta. Entre na conta correspondente para importá-lo.');return;}
    if(!confirm('Importar este backup vai substituir os registros atuais desta conta. Você já baixou um backup do estado atual?'))return;
+   const {error:preError}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:S,atualizado_em:new Date().toISOString()});
+   if(preError)throw preError;
    S=normalizeState(backup.data);
    localStorage.setItem(K+':'+activeUid,JSON.stringify(S));
    if(typeof render==='function')render();
