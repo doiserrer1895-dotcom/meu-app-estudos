@@ -6,10 +6,11 @@ create table if not exists public.estudos_backups (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   backup_date date not null,
+  backup_type text not null default 'daily' check (backup_type in ('daily','manual')),
   dados jsonb not null,
   atualizado_em timestamptz,
   created_at timestamptz not null default now(),
-  constraint estudos_backups_user_day_unique unique (user_id, backup_date)
+  constraint estudos_backups_user_day_type_unique unique (user_id, backup_date, backup_type)
 );
 
 alter table public.estudos enable row level security;
@@ -45,7 +46,7 @@ create policy estudos_backups_insert_own
 insert into public.estudos_backups (user_id, backup_date, dados, atualizado_em)
 select id, (now() at time zone 'UTC')::date, dados, atualizado_em
 from public.estudos
-on conflict (user_id, backup_date) do nothing;
+on conflict (user_id, backup_date, backup_type) do nothing;
 
 -- Antes da primeira alteração do dia, guarda o estado anterior.
 create or replace function public.capture_estudos_daily_backup()
