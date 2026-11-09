@@ -77,6 +77,22 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 .row .done{text-decoration:line-through;opacity:.5}
 .rev-white{background:var(--in);color:var(--tx);border:1px solid var(--bd)}.rev-green{background:rgba(74,222,128,.18);color:var(--gr)}.rev-red{background:rgba(248,113,113,.18);color:var(--rd)}
 .monthcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}.mday{min-width:0;min-height:72px;border:1px solid var(--bd);border-radius:9px;background:var(--in);padding:4px;font-size:11px;overflow:hidden}.mday .num{font-weight:800;font-size:13px;margin-bottom:4px}.mday.today{outline:2px solid var(--ac)}.mday.selected{border:2px solid var(--tx)}.mday .study{display:block;background:var(--card);border-radius:5px;padding:3px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}.mday.emptyday{opacity:.3}.monthhead{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;color:var(--mu);font-size:11px;margin-bottom:5px}.monthstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.monthstats .tile{padding:10px 4px}.monthstats .tile b{font-size:20px}
+
+#cloud-user{position:fixed;z-index:15;top:8px;right:8px;display:none;align-items:center;gap:8px;padding:7px 10px;background:var(--card);border:1px solid var(--bd);border-radius:999px;color:var(--tx);font-size:11px;max-width:calc(100vw - 16px)}
+#cloud-user span{max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cloud-user button{border:0;border-radius:999px;padding:5px 9px;background:var(--in);color:var(--tx);font-weight:700;cursor:pointer}
+#cloud-auth{position:fixed;inset:0;z-index:100;background:var(--bg);color:var(--tx);display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,"Segoe UI",Arial,sans-serif}
+#cloud-auth .panel{width:100%;max-width:390px;background:var(--card);border:1px solid var(--bd);border-radius:22px;padding:24px}
+#cloud-auth h1{font-size:23px;margin:0 0 7px}
+#cloud-auth p{color:var(--mu);font-size:14px;line-height:1.5;margin:0 0 18px}
+#cloud-auth label{display:block;color:var(--mu);font-size:13px;margin:13px 0 5px}
+#cloud-auth input{width:100%;padding:13px;border-radius:12px;border:1px solid var(--bd);background:var(--in);color:var(--tx);font-size:16px}
+#cloud-auth .primary{width:100%;margin-top:17px;padding:13px;border:0;border-radius:12px;background:var(--ac);color:var(--actx);font-weight:800;font-size:15px;cursor:pointer}
+#cloud-auth .switch{width:100%;margin-top:12px;background:none;border:0;color:var(--tx);text-decoration:underline;cursor:pointer;padding:8px}
+#cloud-auth .message{min-height:20px;margin-top:12px;color:var(--mu);font-size:13px;line-height:1.4}
+#cloud-auth .message.error{color:var(--rd)}
+#cloud-auth .message.ok{color:var(--gr)}
+#cloud-auth button:disabled{opacity:.55;cursor:wait}
 </style></head><body><div id="app"></div><div id="nav"><div></div></div>
 <script>
 const K='estudos-v1',$=s=>document.querySelector(s);
@@ -87,7 +103,7 @@ try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 if(S.subjects){S.edital=S.subjects.map(n=>({id:uid(),name:n,topics:[]}));delete S.subjects}
 if(!S.edital.length&&!S.seeded)S.edital=['Matemática 1','Matemática 2','Matemática 3','Física 1','Física 2','Física 3','Física 4','Português','Inglês'].map(n=>({id:uid(),name:n,topics:[]}));
-S.seeded=1;const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+S.seeded=1;const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){};if(window.__cloudSave)window.__cloudSave(S)};
 let view='d',mode='m',ref=new Date(),open={};
 const pad=n=>String(n).padStart(2,'0');
 const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -352,4 +368,122 @@ function render(){if(!S.edital.find(x=>x.name===S.timer.subj))S.timer.subj=S.edi
  $('#nav div').innerHTML=[['d','Visão Geral'],['p','LDI'],['s','Agenda'],['c','Foco'],['f','Desempenho']].map(x=>`<button class="${view===x[0]?'on':''}" onclick="go('${x[0]}')"><span>${ICON[x[0]]}</span>${x[1]}</button>`).join('');
  if(view==='c')fillTop('ts','tt2',S.timer.top);if(view==='d'){fillTop('s','tp');fillTop('rsub','rtop')}if(view==='s'&&sheet)fillTop('ss','st')}
 render();setInterval(tick,250);
-</script></body></html>
+</script>
+<div id="cloud-user"><span id="cloud-email"></span><button id="cloud-logout" type="button">Sair</button></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(function(){
+'use strict';
+const SUPABASE_URL='https://nwwwydwevgftbpjuasgz.supabase.co';
+const SUPABASE_KEY='sb_publishable_7-zqJxrp67zBzWZcwUmlQw_wLpb-Gqc';
+const layer=document.createElement('div');
+layer.id='cloud-auth';
+layer.innerHTML='<div class="panel"><h1>Meu App Estudos</h1><p id="auth-intro">Entre na sua conta para acessar seus estudos em qualquer dispositivo.</p><form id="auth-form"><label for="auth-email">E-mail</label><input id="auth-email" type="email" autocomplete="email" required placeholder="seuemail@exemplo.com"><label for="auth-password">Senha</label><input id="auth-password" type="password" autocomplete="current-password" minlength="6" required placeholder="Mínimo de 6 caracteres"><button class="primary" id="auth-submit" type="submit">Entrar</button></form><button class="switch" id="auth-switch" type="button">Criar uma conta</button><div class="message" id="auth-message" role="status"></div></div>';
+document.body.appendChild(layer);
+document.getElementById('app').style.visibility='hidden';
+document.getElementById('nav').style.visibility='hidden';
+const msg=document.getElementById('auth-message');
+const submit=document.getElementById('auth-submit');
+const form=document.getElementById('auth-form');
+const switchBtn=document.getElementById('auth-switch');
+const intro=document.getElementById('auth-intro');
+const pass=document.getElementById('auth-password');
+let creating=false,client=null,activeUid=null,saveTimer=null,ready=false;
+function message(t,kind){msg.textContent=t||'';msg.className='message'+(kind?' '+kind:'')}
+function showApp(email){
+ layer.remove();
+ document.getElementById('app').style.visibility='visible';
+ document.getElementById('nav').style.visibility='visible';
+ document.getElementById('cloud-email').textContent=email||'Conta conectada';
+ document.getElementById('cloud-user').style.display='flex';
+}
+function defaults(){return {edital:[],entries:[],reviews:[],tasks:[],sched:[],goal:20,goalQ:120,exam:{name:'',date:''},rem:[],sim:[],revs:[],pomo:{f:25,b:5,l:15},timer:{mode:'c',subj:'',top:'',run:0,st:0,acc:0,ph:'f',n:0},seeded:1}}
+function friendlyError(e){
+ const m=(e&&e.message)||String(e||'Erro desconhecido');
+ if(/invalid login credentials/i.test(m))return 'E-mail ou senha incorretos.';
+ if(/email not confirmed/i.test(m))return 'Confirme seu e-mail antes de entrar.';
+ if(/user already registered/i.test(m))return 'Este e-mail já possui cadastro. Tente entrar.';
+ if(/failed to fetch|networkerror|fetch failed/i.test(m))return 'Não foi possível conectar ao Supabase. Verifique sua internet e a configuração do projeto.';
+ return m;
+}
+async function activate(user){
+ if(!user||!user.id)return;
+ if(activeUid===user.id&&ready){showApp(user.email);return}
+ activeUid=user.id;ready=false;submit.disabled=true;message('Carregando seus estudos...');
+ try{
+  const result=await client.from('estudos').select('dados').eq('id',user.id).maybeSingle();
+  if(result.error)throw result.error;
+  if(result.data&&result.data.dados&&typeof result.data.dados==='object'){
+   S=Object.assign(defaults(),result.data.dados);
+   if(!S.pomo)S.pomo={f:25,b:5,l:15};
+   if(!S.timer)S.timer=defaults().timer;
+  }else{
+   const saved=await client.from('estudos').upsert({id:user.id,dados:S,atualizado_em:new Date().toISOString()},{onConflict:'id'});
+   if(saved.error)throw saved.error;
+  }
+  localStorage.setItem(K,JSON.stringify(S));
+  ready=true;
+  if(typeof render==='function')render();
+  showApp(user.email);
+ }catch(e){
+  activeUid=null;ready=false;submit.disabled=false;
+  message('Erro ao carregar seus estudos: '+friendlyError(e),'error');
+ }
+}
+async function init(){
+ try{
+  if(!window.supabase||!window.supabase.createClient)throw new Error('A biblioteca de conexão não carregou. Atualize a página e tente novamente.');
+  client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  client.auth.onAuthStateChange((event)=>{
+   if(event==='SIGNED_OUT'){activeUid=null;ready=false;document.getElementById('cloud-user').style.display='none';document.getElementById('app').style.visibility='hidden';document.getElementById('nav').style.visibility='hidden';if(!document.body.contains(layer))document.body.appendChild(layer);}
+  });
+  const {data,error}=await client.auth.getSession();
+  if(error)throw error;
+  if(data.session)await activate(data.session.user);
+  else{submit.disabled=false;message('Se ainda não tem cadastro, escolha “Criar uma conta”.');}
+ }catch(e){submit.disabled=false;message(friendlyError(e),'error');}
+}
+switchBtn.addEventListener('click',()=>{
+ creating=!creating;
+ document.getElementById('auth-password').autocomplete=creating?'new-password':'current-password';
+ submit.textContent=creating?'Criar conta':'Entrar';
+ switchBtn.textContent=creating?'Já tenho uma conta':'Criar uma conta';
+ intro.textContent=creating?'Crie sua conta para guardar seus estudos na nuvem.':'Entre na sua conta para acessar seus estudos em qualquer dispositivo.';
+ message('');
+});
+form.addEventListener('submit',async ev=>{
+ ev.preventDefault();if(!client)return;
+ const email=document.getElementById('auth-email').value.trim();
+ const password=pass.value;
+ submit.disabled=true;switchBtn.disabled=true;message(creating?'Criando sua conta...':'Entrando...');
+ try{
+  if(creating){
+   const {data,error}=await client.auth.signUp({email,password});
+   if(error)throw error;
+   if(data.session&&data.user)await activate(data.user);
+   else message('Cadastro criado! Confira sua caixa de entrada e confirme o e-mail para depois entrar.','ok');
+  }else{
+   const {data,error}=await client.auth.signInWithPassword({email,password});
+   if(error)throw error;
+   await activate(data.user);
+  }
+ }catch(e){message(friendlyError(e),'error');}
+ finally{submit.disabled=false;switchBtn.disabled=false;}
+});
+document.getElementById('cloud-logout').addEventListener('click',async()=>{
+ const {error}=await client.auth.signOut();
+ if(error)alert('Não foi possível sair: '+friendlyError(error));
+});
+window.__cloudSave=function(state){
+ if(!ready||!activeUid)return;
+ clearTimeout(saveTimer);
+ saveTimer=setTimeout(async()=>{
+  const uid=activeUid;
+  const {error}=await client.from('estudos').upsert({id:uid,dados:state,atualizado_em:new Date().toISOString()},{onConflict:'id'});
+  if(error){console.error('Falha ao sincronizar estudos:',error);return}
+ },700);
+};
+init();
+})();
+</script>
+</body></html>
