@@ -83,7 +83,7 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 #cloud-status{font-size:10px;color:var(--gr);white-space:nowrap}
 #cloud-user button{font-size:10px}
 #cloud-user button:disabled{opacity:.5;cursor:wait}
-@media(max-width:420px){#cloud-user{gap:5px;padding:6px 7px}#cloud-user span{max-width:90px}#cloud-status{max-width:78px;overflow:hidden;text-overflow:ellipsis}}
+@media(max-width:420px){#cloud-user{gap:4px;padding:6px 6px;flex-wrap:wrap;justify-content:center}#cloud-user span{max-width:90px}#cloud-status{max-width:78px;overflow:hidden;text-overflow:ellipsis}#cloud-user button{padding:5px 7px}}
 #cloud-user button{border:0;border-radius:999px;padding:5px 9px;background:var(--in);color:var(--tx);font-weight:700;cursor:pointer}
 #cloud-auth{position:fixed;inset:0;z-index:100;background:var(--bg);color:var(--tx);display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,"Segoe UI",Arial,sans-serif}
 #cloud-auth .panel{width:100%;max-width:390px;background:var(--card);border:1px solid var(--bd);border-radius:22px;padding:24px}
@@ -373,7 +373,7 @@ function render(){if(!S.edital.find(x=>x.name===S.timer.subj))S.timer.subj=S.edi
  if(view==='c')fillTop('ts','tt2',S.timer.top);if(view==='d'){fillTop('s','tp');fillTop('rsub','rtop')}if(view==='s'&&sheet)fillTop('ss','st')}
 render();setInterval(tick,250);
 </script>
-<div id="cloud-user"><span id="cloud-email"></span><span id="cloud-status" role="status">Conectado</span><button id="cloud-backup" type="button">Backup</button><button id="cloud-import-button" type="button">Importar</button><button id="cloud-retry" type="button" hidden>Reenviar</button><button id="cloud-logout" type="button">Sair</button><input id="cloud-import-file" type="file" accept="application/json,.json" hidden></div>
+<div id="cloud-user"><span id="cloud-email"></span><span id="cloud-status" role="status">Conectado</span><button id="cloud-backup" type="button">Baixar</button><button id="cloud-cloud-backup" type="button">Cópia nuvem</button><button id="cloud-restore" type="button">Restaurar</button><button id="cloud-import-button" type="button">Importar</button><button id="cloud-retry" type="button" hidden>Reenviar</button><button id="cloud-logout" type="button">Sair</button><input id="cloud-import-file" type="file" accept="application/json,.json" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 (function(){
@@ -512,6 +512,41 @@ function downloadBackup(){
  setCloudStatus('Backup baixado');
 }
 document.getElementById('cloud-backup').addEventListener('click',downloadBackup);
+async function getLatestCloudBackup(){
+ if(!ready||!activeUid)throw new Error('Entre na sua conta para acessar as cópias.');
+ const {data,error}=await client.from('estudos_backups').select('dados,backup_date,created_at').eq('user_id',activeUid).order('created_at',{ascending:false}).limit(1).maybeSingle();
+ if(error)throw error;
+ if(!data)throw new Error('Ainda não existe uma cópia automática na nuvem.');
+ return data;
+}
+function saveJsonFile(backup,name){
+ const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+document.getElementById('cloud-cloud-backup').addEventListener('click',async()=>{
+ const b=document.getElementById('cloud-cloud-backup');b.disabled=true;setCloudStatus('Buscando cópia...');
+ try{
+  const row=await getLatestCloudBackup();
+  saveJsonFile({app:'Meu App Estudos',version:1,exportedAt:new Date().toISOString(),userId:activeUid,backupDate:row.backup_date,data:row.dados},'meu-app-estudos-copia-nuvem-'+row.backup_date+'.json');
+  setCloudStatus('Cópia da nuvem baixada');
+ }catch(e){alert(friendlyError(e));setCloudStatus('Falha ao baixar cópia',true)}
+ finally{b.disabled=false}
+});
+document.getElementById('cloud-restore').addEventListener('click',async()=>{
+ const b=document.getElementById('cloud-restore');b.disabled=true;setCloudStatus('Buscando cópia...');
+ try{
+  const row=await getLatestCloudBackup();
+  if(!confirm('Restaurar a cópia automática de '+row.backup_date+'? Isso substituirá os dados atuais. Antes, o aplicativo baixará uma cópia do estado atual para seu computador.'))return;
+  downloadBackup();
+  S=normalizeState(row.dados);
+  localStorage.setItem(K+':'+activeUid,JSON.stringify(S));
+  if(typeof render==='function')render();
+  window.__cloudSave(S);
+  setCloudStatus('Cópia restaurada; sincronizando...');
+ }catch(e){alert(friendlyError(e));setCloudStatus('Falha ao restaurar cópia',true)}
+ finally{b.disabled=false}
+});
 const importInput=document.getElementById('cloud-import-file');
 document.getElementById('cloud-import-button').addEventListener('click',()=>importInput.click());
 importInput.addEventListener('change',()=>{
