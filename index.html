@@ -80,6 +80,10 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 
 #cloud-user{position:fixed;z-index:15;top:8px;right:8px;display:none;align-items:center;gap:8px;padding:7px 10px;background:var(--card);border:1px solid var(--bd);border-radius:999px;color:var(--tx);font-size:11px;max-width:calc(100vw - 16px)}
 #cloud-user span{max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cloud-status{font-size:10px;color:var(--gr);white-space:nowrap}
+#cloud-user button{font-size:10px}
+#cloud-user button:disabled{opacity:.5;cursor:wait}
+@media(max-width:420px){#cloud-user{gap:5px;padding:6px 7px}#cloud-user span{max-width:90px}#cloud-status{max-width:78px;overflow:hidden;text-overflow:ellipsis}}
 #cloud-user button{border:0;border-radius:999px;padding:5px 9px;background:var(--in);color:var(--tx);font-weight:700;cursor:pointer}
 #cloud-auth{position:fixed;inset:0;z-index:100;background:var(--bg);color:var(--tx);display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,"Segoe UI",Arial,sans-serif}
 #cloud-auth .panel{width:100%;max-width:390px;background:var(--card);border:1px solid var(--bd);border-radius:22px;padding:24px}
@@ -103,7 +107,7 @@ try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 if(S.subjects){S.edital=S.subjects.map(n=>({id:uid(),name:n,topics:[]}));delete S.subjects}
 if(!S.edital.length&&!S.seeded)S.edital=['Matemática 1','Matemática 2','Matemática 3','Física 1','Física 2','Física 3','Física 4','Português','Inglês'].map(n=>({id:uid(),name:n,topics:[]}));
-S.seeded=1;const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){};if(window.__cloudSave)window.__cloudSave(S)};
+S.seeded=1;const save=()=>{try{const key=window.__activeUserId?K+':'+window.__activeUserId:K;localStorage.setItem(key,JSON.stringify(S))}catch(e){};if(window.__cloudSave)window.__cloudSave(S)};
 let view='d',mode='m',ref=new Date(),open={};
 const pad=n=>String(n).padStart(2,'0');
 const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -369,7 +373,7 @@ function render(){if(!S.edital.find(x=>x.name===S.timer.subj))S.timer.subj=S.edi
  if(view==='c')fillTop('ts','tt2',S.timer.top);if(view==='d'){fillTop('s','tp');fillTop('rsub','rtop')}if(view==='s'&&sheet)fillTop('ss','st')}
 render();setInterval(tick,250);
 </script>
-<div id="cloud-user"><span id="cloud-email"></span><button id="cloud-logout" type="button">Sair</button></div>
+<div id="cloud-user"><span id="cloud-email"></span><span id="cloud-status" role="status">Conectado</span><button id="cloud-backup" type="button">Backup</button><button id="cloud-import-button" type="button">Importar</button><button id="cloud-retry" type="button" hidden>Reenviar</button><button id="cloud-logout" type="button">Sair</button><input id="cloud-import-file" type="file" accept="application/json,.json" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 (function(){
@@ -398,12 +402,30 @@ function showApp(email){
  document.getElementById('cloud-user').style.display='flex';
 }
 function defaults(){return {edital:[],entries:[],reviews:[],tasks:[],sched:[],goal:20,goalQ:120,exam:{name:'',date:''},rem:[],sim:[],revs:[],pomo:{f:25,b:5,l:15},timer:{mode:'c',subj:'',top:'',run:0,st:0,acc:0,ph:'f',n:0},seeded:1}}
+function normalizeState(value){
+ const d=defaults();
+ if(!value||typeof value!=='object'||Array.isArray(value))return d;
+ const s=Object.assign(d,value);
+ ['edital','entries','reviews','tasks','sched','rem','sim','revs'].forEach(k=>{if(!Array.isArray(s[k]))s[k]=[]});
+ if(!s.pomo||typeof s.pomo!=='object')s.pomo=d.pomo;
+ if(!s.timer||typeof s.timer!=='object')s.timer=d.timer;
+ if(!Number.isFinite(Number(s.goal))||Number(s.goal)<=0)s.goal=20;
+ if(!Number.isFinite(Number(s.goalQ))||Number(s.goalQ)<=0)s.goalQ=120;
+ return s;
+}
+function setCloudStatus(text,failed){
+ const el=document.getElementById('cloud-status');
+ const retry=document.getElementById('cloud-retry');
+ if(el){el.textContent=text;el.style.color=failed?'var(--rd)':'var(--gr)';el.title=text}
+ if(retry)retry.hidden=!failed;
+}
 function friendlyError(e){
  const m=(e&&e.message)||String(e||'Erro desconhecido');
  if(/invalid login credentials/i.test(m))return 'E-mail ou senha incorretos.';
  if(/email not confirmed/i.test(m))return 'Confirme seu e-mail antes de entrar.';
  if(/user already registered/i.test(m))return 'Este e-mail já possui cadastro. Tente entrar.';
- if(/failed to fetch|networkerror|fetch failed/i.test(m))return 'Não foi possível conectar ao Supabase. Verifique sua internet e a configuração do projeto.';
+ if(/failed to fetch|networkerror|fetch failed/i.test(m))return 'Não foi possível conectar ao Supabase. Verifique sua internet e tente novamente.';
+ if(/row-level security|permission denied|violates row-level security/i.test(m))return 'O Supabase bloqueou o acesso. Precisamos conferir as políticas de segurança da tabela estudos.';
  return m;
 }
 async function activate(user){
@@ -414,19 +436,21 @@ async function activate(user){
   const result=await client.from('estudos').select('dados').eq('id',user.id).maybeSingle();
   if(result.error)throw result.error;
   if(result.data&&result.data.dados&&typeof result.data.dados==='object'){
-   S=Object.assign(defaults(),result.data.dados);
-   if(!S.pomo)S.pomo={f:25,b:5,l:15};
-   if(!S.timer)S.timer=defaults().timer;
+   S=normalizeState(result.data.dados);
   }else{
+   const userCache=localStorage.getItem(K+':'+user.id);
+   S=userCache?normalizeState(JSON.parse(userCache)):defaults();
    const saved=await client.from('estudos').upsert({id:user.id,dados:S,atualizado_em:new Date().toISOString()},{onConflict:'id'});
    if(saved.error)throw saved.error;
   }
-  localStorage.setItem(K,JSON.stringify(S));
+  window.__activeUserId=user.id;
+  localStorage.setItem(K+':'+user.id,JSON.stringify(S));
   ready=true;
+  setCloudStatus('Sincronizado');
   if(typeof render==='function')render();
   showApp(user.email);
  }catch(e){
-  activeUid=null;ready=false;submit.disabled=false;
+  activeUid=null;window.__activeUserId=null;ready=false;submit.disabled=false;
   message('Erro ao carregar seus estudos: '+friendlyError(e),'error');
  }
 }
@@ -435,7 +459,11 @@ async function init(){
   if(!window.supabase||!window.supabase.createClient)throw new Error('A biblioteca de conexão não carregou. Atualize a página e tente novamente.');
   client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
   client.auth.onAuthStateChange((event)=>{
-   if(event==='SIGNED_OUT'){activeUid=null;ready=false;document.getElementById('cloud-user').style.display='none';document.getElementById('app').style.visibility='hidden';document.getElementById('nav').style.visibility='hidden';if(!document.body.contains(layer))document.body.appendChild(layer);}
+   if(event==='SIGNED_OUT'){
+    activeUid=null;window.__activeUserId=null;ready=false;queuedState=null;clearTimeout(saveTimer);
+    document.getElementById('cloud-user').style.display='none';document.getElementById('app').style.visibility='hidden';document.getElementById('nav').style.visibility='hidden';
+    if(!document.body.contains(layer))document.body.appendChild(layer);
+   }
   });
   const {data,error}=await client.auth.getSession();
   if(error)throw error;
@@ -474,15 +502,70 @@ document.getElementById('cloud-logout').addEventListener('click',async()=>{
  const {error}=await client.auth.signOut();
  if(error)alert('Não foi possível sair: '+friendlyError(error));
 });
+function downloadBackup(){
+ if(!ready||!activeUid)return;
+ const backup={app:'Meu App Estudos',version:1,exportedAt:new Date().toISOString(),userId:activeUid,data:S};
+ const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='meu-app-estudos-backup-'+new Date().toISOString().slice(0,10)+'.json';
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+ setCloudStatus('Backup baixado');
+}
+document.getElementById('cloud-backup').addEventListener('click',downloadBackup);
+const importInput=document.getElementById('cloud-import-file');
+document.getElementById('cloud-import-button').addEventListener('click',()=>importInput.click());
+importInput.addEventListener('change',()=>{
+ const file=importInput.files&&importInput.files[0];if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>{
+  try{
+   const backup=JSON.parse(String(reader.result||''));
+   if(!backup||!backup.data||typeof backup.data!=='object'||Array.isArray(backup.data))throw new Error('O arquivo não parece ser um backup válido do Meu App Estudos.');
+   if(backup.userId&&backup.userId!==activeUid&&!confirm('Este backup foi criado em outra conta. Deseja importar mesmo assim?'))return;
+   if(!confirm('Importar este backup vai substituir os registros atuais desta conta. Você já baixou um backup do estado atual?'))return;
+   S=normalizeState(backup.data);
+   localStorage.setItem(K+':'+activeUid,JSON.stringify(S));
+   if(typeof render==='function')render();
+   window.__cloudSave(S);
+   setCloudStatus('Backup importado; sincronizando...');
+  }catch(e){alert('Não foi possível importar: '+(e.message||e))}
+  finally{importInput.value=''}
+ };
+ reader.onerror=()=>{alert('Não foi possível ler o arquivo selecionado.');importInput.value=''};
+ reader.readAsText(file);
+});
+let queuedState=null,saving=false;
+async function flushCloudSave(){
+ if(!ready||!activeUid||saving||!queuedState)return;
+ saving=true;const owner=activeUid;
+ while(queuedState&&ready&&activeUid===owner){
+  const snapshot=queuedState;queuedState=null;
+  try{
+   const {error}=await client.from('estudos').upsert({id:owner,dados:snapshot,atualizado_em:new Date().toISOString()},{onConflict:'id'});
+   if(error)throw error;
+   if(ready&&activeUid===owner)setCloudStatus(queuedState?'Salvando...':'Sincronizado');
+  }catch(e){
+   if(ready&&activeUid===owner){queuedState=snapshot;setCloudStatus('Falha ao sincronizar',true);console.error('Falha ao sincronizar estudos:',e)}
+   break;
+  }
+ }
+ saving=false;
+ if(queuedState&&ready&&activeUid===owner&&document.getElementById('cloud-status').textContent!=='Falha ao sincronizar'){
+  clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,300);
+ }
+}
 window.__cloudSave=function(state){
  if(!ready||!activeUid)return;
- clearTimeout(saveTimer);
- saveTimer=setTimeout(async()=>{
-  const uid=activeUid;
-  const {error}=await client.from('estudos').upsert({id:uid,dados:state,atualizado_em:new Date().toISOString()},{onConflict:'id'});
-  if(error){console.error('Falha ao sincronizar estudos:',error);return}
- },700);
+ try{localStorage.setItem(K+':'+activeUid,JSON.stringify(state))}catch(e){setCloudStatus('Armazenamento local cheio',true)}
+ queuedState=JSON.parse(JSON.stringify(state));
+ setCloudStatus('Salvando...');
+ clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,800);
 };
+document.getElementById('cloud-retry').addEventListener('click',()=>{
+ if(!queuedState)return;
+ setCloudStatus('Tentando sincronizar...');
+ clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,50);
+});
 init();
 })();
 </script>
