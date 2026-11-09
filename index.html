@@ -431,26 +431,44 @@ function friendlyError(e){
 async function activate(user){
  if(!user||!user.id)return;
  if(activeUid===user.id&&ready){showApp(user.email);return}
- activeUid=user.id;ready=false;submit.disabled=true;message('Carregando seus estudos...');
+ clearTimeout(saveTimer);queuedState=null;
+ activeUid=user.id;window.__activeUserId=null;ready=false;submit.disabled=true;message('Carregando seus estudos...');
  try{
   const result=await client.from('estudos').select('dados').eq('id',user.id).maybeSingle();
   if(result.error)throw result.error;
-  if(result.data&&result.data.dados&&typeof result.data.dados==='object'){
-   S=normalizeState(result.data.dados);
+  const cacheKey=K+':'+user.id,pendingKey=K+':pending:'+user.id;
+  let cloudState=result.data&&result.data.dados&&typeof result.data.dados==='object'?normalizeState(result.data.dados):null;
+  let pending=null;
+  try{const raw=localStorage.getItem(pendingKey);if(raw)pending=JSON.parse(raw)}catch(e){console.warn('Alterações pendentes locais inválidas:',e)}
+  if(pending&&pending.state&&typeof pending.state==='object'){
+   const usePending=confirm('Encontramos alterações deste usuário que não chegaram à nuvem.\n\nOK = recuperar as alterações locais e sincronizar.\nCancelar = manter a versão que está na nuvem.');
+   if(usePending){
+    if(cloudState)saveJsonFile({app:'Meu App Estudos',version:1,exportedAt:new Date().toISOString(),userId:user.id,data:cloudState},'meu-app-estudos-estado-nuvem-antes-da-recuperacao.json');
+    S=normalizeState(pending.state);
+    window.__activeUserId=user.id;ready=true;
+    localStorage.setItem(cacheKey,JSON.stringify(S));
+    queuedState=JSON.parse(JSON.stringify(S));
+   }else{
+    localStorage.removeItem(pendingKey);
+    S=cloudState||defaults();
+   }
+  }else if(cloudState){
+   S=cloudState;
   }else{
-   const userCache=localStorage.getItem(K+':'+user.id);
+   const userCache=localStorage.getItem(cacheKey);
    S=userCache?normalizeState(JSON.parse(userCache)):defaults();
    const saved=await client.from('estudos').upsert({id:user.id,dados:S,atualizado_em:new Date().toISOString()},{onConflict:'id'});
    if(saved.error)throw saved.error;
   }
   window.__activeUserId=user.id;
-  localStorage.setItem(K+':'+user.id,JSON.stringify(S));
+  localStorage.setItem(cacheKey,JSON.stringify(S));
   ready=true;
-  setCloudStatus('Sincronizado');
+  if(queuedState){setCloudStatus('Recuperando alterações...');clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,50)}
+  else setCloudStatus('Sincronizado');
   if(typeof render==='function')render();
   showApp(user.email);
  }catch(e){
-  activeUid=null;window.__activeUserId=null;ready=false;submit.disabled=false;
+  activeUid=null;window.__activeUserId=null;ready=false;queuedState=null;submit.disabled=false;
   message('Erro ao carregar seus estudos: '+friendlyError(e),'error');
  }
 }
@@ -524,7 +542,7 @@ document.getElementById('cloud-save-snapshot').addEventListener('click',async()=
 });
 async function getLatestCloudBackup(){
  if(!ready||!activeUid)throw new Error('Entre na sua conta para acessar as cópias.');
- const {data,error}=await client.from('estudos_backups').select('dados,backup_date,created_at').eq('user_id',activeUid).order('created_at',{ascending:false}).limit(1).maybeSingle();
+ const {data,error}=await client.from('estudos_backups').select('dados,backup_date,backup_type,created_at').eq('user_id',activeUid).order('created_at',{ascending:false}).limit(1).maybeSingle();
  if(error)throw error;
  if(!data)throw new Error('Ainda não existe uma cópia automática na nuvem.');
  return data;
@@ -547,7 +565,7 @@ document.getElementById('cloud-restore').addEventListener('click',async()=>{
  const b=document.getElementById('cloud-restore');b.disabled=true;setCloudStatus('Buscando cópia...');
  try{
   const row=await getLatestCloudBackup();
-  if(!confirm('Restaurar a cópia automática de '+row.backup_date+'? Isso substituirá os dados atuais. Antes, o aplicativo baixará uma cópia do estado atual para seu computador.'))return;
+  if(!confirm('Restaurar a cópia '+(row.backup_type==='manual'?'manual':'automática')+' de '+row.backup_date+'? Isso substituirá os dados atuais. Antes, o aplicativo baixará uma cópia do estado atual para seu computador.'))return;
   downloadBackup();
   S=normalizeState(row.dados);
   localStorage.setItem(K+':'+activeUid,JSON.stringify(S));
@@ -566,7 +584,7 @@ importInput.addEventListener('change',()=>{
   try{
    const backup=JSON.parse(String(reader.result||''));
    if(!backup||!backup.data||typeof backup.data!=='object'||Array.isArray(backup.data))throw new Error('O arquivo não parece ser um backup válido do Meu App Estudos.');
-   if(backup.userId&&backup.userId!==activeUid&&!confirm('Este backup foi criado em outra conta. Deseja importar mesmo assim?'))return;
+   if(backup.userId&&backup.userId!==activeUid){alert('Este backup pertence a outra conta. Entre na conta correspondente para importá-lo.');return;}
    if(!confirm('Importar este backup vai substituir os registros atuais desta conta. Você já baixou um backup do estado atual?'))return;
    S=normalizeState(backup.data);
    localStorage.setItem(K+':'+activeUid,JSON.stringify(S));
@@ -588,14 +606,19 @@ async function flushCloudSave(){
   try{
    const {error}=await client.from('estudos').upsert({id:owner,dados:snapshot,atualizado_em:new Date().toISOString()},{onConflict:'id'});
    if(error)throw error;
+   try{localStorage.removeItem(K+':pending:'+owner)}catch(e){}
    if(ready&&activeUid===owner)setCloudStatus(queuedState?'Salvando...':'Sincronizado');
   }catch(e){
-   if(ready&&activeUid===owner){if(!queuedState)queuedState=snapshot;setCloudStatus('Falha ao sincronizar',true);console.error('Falha ao sincronizar estudos:',e)}
+   if(ready&&activeUid===owner){
+    if(!queuedState)queuedState=snapshot;
+    try{localStorage.setItem(K+':pending:'+owner,JSON.stringify({state:queuedState,updatedAt:new Date().toISOString()}))}catch(storageError){console.error('Não foi possível guardar a cópia pendente local:',storageError)}
+    setCloudStatus('Falha ao sincronizar',true);console.error('Falha ao sincronizar estudos:',e)
+   }
    break;
   }
  }
  saving=false;
- if(queuedState&&ready&&activeUid===owner&&document.getElementById('cloud-status').textContent!=='Falha ao sincronizar'){
+ if(queuedState&&ready){
   clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,300);
  }
 }
