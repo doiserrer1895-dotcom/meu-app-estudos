@@ -196,22 +196,22 @@ function addEntry(h,q,a){const T=S.timer;S.entries.push({id:uid(),date:iso(new D
 function topicDone(m,t){return (m.doneTopics||[]).includes(t)}
 function subjectDone(m){return m.topics.length>0&&m.topics.every(t=>topicDone(m,t))}
 function toggleTopic(id,encoded){const t=decodeURIComponent(encoded),m=S.edital.find(x=>x.id===id);if(!m)return;m.doneTopics=m.doneTopics||[];const i=m.doneTopics.indexOf(t);if(i>=0)m.doneTopics.splice(i,1);else m.doneTopics.push(t);save();render()}
-let ldi={q:'',st:'all',df:'all'};
+let ldi={q:'',st:'all',df:'all'},ldiIndex=Object.create(null);
 const DIFFS=['Fácil','Média','Difícil'],ST_TX={done:'Pronta',prog:'Em andamento',new:'Não iniciada'};
 function mStat(m){const n=m.topics.length,d=(m.doneTopics||[]).filter(t=>m.topics.includes(t)).length;return{n,d,pc:n?Math.round(d/n*100):0,st:n&&d===n?'done':d>0?'prog':'new'}}
 function ldiFiltered(){const q=ldi.q.trim().toLowerCase();return S.edital.filter(m=>{const s=mStat(m);if(ldi.st!=='all'&&s.st!==ldi.st)return false;if(ldi.df!=='all'&&(m.diff||'')!==ldi.df)return false;if(q&&!m.name.toLowerCase().includes(q)&&!m.topics.some(t=>t.toLowerCase().includes(q)))return false;return true})}
-function ldiCard(m){const s=mStat(m),o=open[m.id],dy=m.days||[],es=S.entries.filter(e=>e.subj===m.name);
+function ldiCard(m){const s=mStat(m),o=open[m.id],dy=m.days||[];
  const head=`<div class="ldh" onclick="tgO('${m.id}')"><span class="chev ${o?'o':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span><div class="g"><b>${esc(m.name)}</b><small>${s.d}/${s.n} tópicos · ${ST_TX[s.st]}${m.diff?' · '+m.diff:''}</small></div><span class="pct">${s.pc}%</span><button class="go" onclick="event.stopPropagation();tgO('${m.id}')"><span class="${o?'o':''}">↗</span></button></div>`;
  if(!o)return `<div class="ldc ${s.st}">${head}</div>`;
  const body=`<div class="ldb"><label>Dificuldade</label><div class="chips">${DIFFS.map(d=>`<button class="chip ${m.diff===d?'on':''}" onclick="tgDiff('${m.id}','${d}')">${d}</button>`).join('')}</div>
  <label>Dias da semana</label><div class="chips">${DN.map((n,i)=>`<button class="chip ${dy.includes(i)?'on':''}" onclick="tgD('${m.id}',${i})">${n}</button>`).join('')}</div>
  <label>Meta semanal (horas)</label><input type="number" min="0" step="0.5" value="${m.goal||''}" placeholder="Defina sua meta" onchange="setGoal('${m.id}',this.value)">
  <label>Conteúdos — marque quando concluir</label>`+
- (m.topics.length?m.topics.map((t,i)=>{const A=agg(es.filter(e=>e.top===t)),ok=topicDone(m,t);return `<div class="row"><button class="ck" style="${ok?'background:var(--gr);border-color:var(--gr);color:#04121a':''}" onclick="toggleTopic('${m.id}','${encodeURIComponent(t).replace(/'/g,'%27')}')">${ok?'✓':''}</button><div class="g"><b class="${ok?'done':''}">${esc(t)}</b>${A.h>0?`<small>${f1(A.h)}h estudadas</small>`:''}</div><button class="x" onclick="delT('${m.id}',${i})">×</button></div>`}).join(''):'<div class="empty" style="padding:12px 0">Nenhum conteúdo ainda</div>')+
+ (m.topics.length?m.topics.map((t,i)=>{const A=ldiIndex[m.name+'\u0000'+t]||{h:0,q:0,a:0},ok=topicDone(m,t);return `<div class="row"><button class="ck" style="${ok?'background:var(--gr);border-color:var(--gr);color:#04121a':''}" onclick="toggleTopic('${m.id}','${encodeURIComponent(t).replace(/'/g,'%27')}')">${ok?'✓':''}</button><div class="g"><b class="${ok?'done':''}">${esc(t)}</b>${A.h>0?`<small>${f1(A.h)}h estudadas</small>`:''}</div><button class="x" onclick="delT('${m.id}',${i})">×</button></div>`}).join(''):'<div class="empty" style="padding:12px 0">Nenhum conteúdo ainda</div>')+
  `<div class="add" style="margin-top:10px"><input id="t_${m.id}" placeholder="Novo conteúdo (use ; para vários)" onkeydown="if(event.key==='Enter')addT('${m.id}')"><button class="btn" onclick="addT('${m.id}')">Add</button></div>
  <div style="margin-top:14px;text-align:right">${pend[m.id]? `<button class="btn" style="background:var(--rd);color:#fff;padding:8px 12px" onclick="delM('${m.id}')">Confirmar exclusão</button> <button class="x" onclick="pend={};render()">Cancelar</button>`:`<button class="x" style="font-size:14px" onclick="pend={'${m.id}':1};render()">Apagar disciplina</button>`}</div></div>`;
  return `<div class="ldc ${s.st}">${head}${body}</div>`}
-function ldiList(){const L=ldiFiltered();return L.length?L.map(ldiCard).join(''):`<div class="empty">${S.edital.length?'Nenhuma disciplina encontrada':'Adicione sua primeira disciplina abaixo'}</div>`}
+function ldiList(){ldiIndex=Object.create(null);for(const e of S.entries){if(!e.top)continue;const k=e.subj+'\u0000'+e.top,o=ldiIndex[k]||(ldiIndex[k]={h:0,q:0,a:0});o.h+=net(e);o.q+=Number(e.q)||0;o.a+=Number(e.a)||0}const L=ldiFiltered();return L.length?L.map(ldiCard).join(''):`<div class="empty">${S.edital.length?'Nenhuma disciplina encontrada':'Adicione sua primeira disciplina abaixo'}</div>`}
 function ldiRefresh(){const el=$('#ldiList');if(el)el.innerHTML=ldiList()}
 function tgO(id){open[id]=!open[id];render()}
 function ldiAll(){const L=ldiFiltered(),a=L.length&&L.every(m=>open[m.id]);L.forEach(m=>open[m.id]=!a);render()}
