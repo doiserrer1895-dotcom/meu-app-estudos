@@ -118,7 +118,7 @@ let S={edital:[],entries:[],reviews:[],tasks:[],sched:[],goal:20,goalQ:120,exam:
 try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 if(S.subjects){S.edital=S.subjects.map(n=>({id:uid(),name:n,topics:[]}));delete S.subjects}
-if(!S.edital.length&&!S.seeded)S.edital=['Matemática 1','Matemática 2','Matemática 3','Física 1','Física 2','Física 3','Física 4','Português','Inglês'].map(n=>({id:uid(),name:n,topics:[]}));
+
 S.seeded=1;const save=()=>{try{const key=window.__activeUserId?K+':'+window.__activeUserId:K;localStorage.setItem(key,JSON.stringify(S))}catch(e){};if(window.__cloudSave)window.__cloudSave(S)};
 let view='d',mode='m',ref=new Date(),open={};
 const pad=n=>String(n).padStart(2,'0');
@@ -207,7 +207,7 @@ function ldiCard(m){const s=mStat(m),o=open[m.id],dy=m.days||[],es=S.entries.fil
  <label>Dias da semana</label><div class="chips">${DN.map((n,i)=>`<button class="chip ${dy.includes(i)?'on':''}" onclick="tgD('${m.id}',${i})">${n}</button>`).join('')}</div>
  <label>Meta semanal (horas)</label><input type="number" min="0" step="0.5" value="${m.goal||''}" placeholder="Defina sua meta" onchange="setGoal('${m.id}',this.value)">
  <label>Conteúdos — marque quando concluir</label>`+
- (m.topics.length?m.topics.map((t,i)=>{const A=agg(es.filter(e=>e.top===t)),ok=topicDone(m,t);return `<div class="row"><button class="ck" style="${ok?'background:var(--gr);border-color:var(--gr);color:#04121a':''}" onclick="toggleTopic('${m.id}','${encodeURIComponent(t).replace(/'/g,'%27')}')">${ok?'✓':''}</button><div class="g"><b class="${ok?'done':''}">${esc(t)}</b>${A.h>0?`<small>${f1(A.h)}h estudadas · ${A.a}/${A.q} acertos</small>`:''}</div><button class="x" onclick="delT('${m.id}',${i})">×</button></div>`}).join(''):'<div class="empty" style="padding:12px 0">Nenhum conteúdo ainda</div>')+
+ (m.topics.length?m.topics.map((t,i)=>{const A=agg(es.filter(e=>e.top===t)),ok=topicDone(m,t);return `<div class="row"><button class="ck" style="${ok?'background:var(--gr);border-color:var(--gr);color:#04121a':''}" onclick="toggleTopic('${m.id}','${encodeURIComponent(t).replace(/'/g,'%27')}')">${ok?'✓':''}</button><div class="g"><b class="${ok?'done':''}">${esc(t)}</b>${A.h>0?`<small>${f1(A.h)}h estudadas</small>`:''}</div><button class="x" onclick="delT('${m.id}',${i})">×</button></div>`}).join(''):'<div class="empty" style="padding:12px 0">Nenhum conteúdo ainda</div>')+
  `<div class="add" style="margin-top:10px"><input id="t_${m.id}" placeholder="Novo conteúdo (use ; para vários)" onkeydown="if(event.key==='Enter')addT('${m.id}')"><button class="btn" onclick="addT('${m.id}')">Add</button></div>
  <div style="margin-top:14px;text-align:right">${pend[m.id]? `<button class="btn" style="background:var(--rd);color:#fff;padding:8px 12px" onclick="delM('${m.id}')">Confirmar exclusão</button> <button class="x" onclick="pend={};render()">Cancelar</button>`:`<button class="x" style="font-size:14px" onclick="pend={'${m.id}':1};render()">Apagar disciplina</button>`}</div></div>`;
  return `<div class="ldc ${s.st}">${head}${body}</div>`}
