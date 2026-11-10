@@ -77,6 +77,18 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 .row .done{text-decoration:line-through;opacity:.5}
 .rev-white{background:var(--in);color:var(--tx);border:1px solid var(--bd)}.rev-green{background:rgba(74,222,128,.18);color:var(--gr)}.rev-red{background:rgba(248,113,113,.18);color:var(--rd)}
 .monthcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}.mday{min-width:0;min-height:72px;border:1px solid var(--bd);border-radius:9px;background:var(--in);padding:4px;font-size:11px;overflow:hidden}.mday .num{font-weight:800;font-size:13px;margin-bottom:4px}.mday.today{outline:2px solid var(--ac)}.mday.selected{border:2px solid var(--tx)}.mday .study{display:block;background:var(--card);border-radius:5px;padding:3px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}.mday.emptyday{opacity:.3}.monthhead{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;color:var(--mu);font-size:11px;margin-bottom:5px}.monthstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.monthstats .tile{padding:10px 4px}.monthstats .tile b{font-size:20px}
+.ldsearch{position:relative;margin-bottom:12px}.ldsearch svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--mu);pointer-events:none}.ldsearch input{padding-left:42px;border-radius:16px}
+.fr{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.fc{display:inline-flex;align-items:center;gap:8px;background:none;border:1px solid var(--bd);color:var(--mu);border-radius:999px;padding:9px 14px;font-size:14px;cursor:pointer;font-family:inherit}.fc i{font-style:normal;background:var(--in);border-radius:99px;padding:1px 8px;font-size:12px}
+.fc.on{background:rgba(124,92,255,.22);border-color:rgba(167,139,250,.7);color:var(--tx)}.fc.on i{background:rgba(167,139,250,.35)}.fc.fb{border-radius:14px}
+.fs{width:auto;border-radius:14px;padding:9px 12px;font-size:14px;background:none;color:var(--mu)}
+.ldc{background:var(--card);border:1px solid var(--bd);border-left:4px solid var(--bd);border-radius:20px;margin-bottom:12px;overflow:hidden}.ldc.prog{border-left-color:#a78bfa}.ldc.done{border-left-color:var(--gr)}
+.ldh{display:flex;align-items:center;gap:12px;padding-left:14px;cursor:pointer;min-height:78px}.ldh .g{flex:1;min-width:0}
+.ldh b{display:block;font-size:17px;text-transform:uppercase;font-weight:800;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ldh small{color:var(--mu);font-size:13px}.ldh .pct{color:var(--mu);font-size:14px;font-weight:600}
+.ldh .go{align-self:stretch;width:58px;border:0;border-left:1px solid var(--bd);background:none;color:#a78bfa;font-size:22px;cursor:pointer;margin-left:4px}.ldh .go span{display:inline-block;transition:transform .2s}.ldh .go span.o{transform:rotate(90deg)}
+.chev{width:18px;flex:none;color:var(--mu);transition:transform .2s}.chev.o{transform:rotate(180deg)}
+.ldb{padding:4px 16px 16px;border-top:1px solid var(--bd)}
+
 
 #cloud-user{position:fixed;z-index:15;top:8px;right:8px;display:none;align-items:center;gap:8px;padding:7px 10px;background:var(--card);border:1px solid var(--bd);border-radius:999px;color:var(--tx);font-size:11px;max-width:calc(100vw - 16px)}
 #cloud-user span{max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -180,22 +192,44 @@ function breakdown(es){const m={};es.forEach(e=>{const k=e.top||'Geral';m[k]=(m[
  return L.map(([k,h])=>{const p=t?Math.round(h/t*100):0;return`<div class="row"><div class="g"><b>${esc(k)}</b><small>${f1(h)}h · ${p}% da matéria</small><div class="bar"><i style="width:${p}%"></i></div></div></div>`}).join('')||'<div class="empty">Sem horas registradas</div>'}
 function addEntry(h,q,a){const T=S.timer;S.entries.push({id:uid(),date:iso(new Date()),subj:T.subj,top:T.top,h,p:0,q:q||0,a:a||0});mkRev(T.subj,T.top,iso(new Date()))}
 
-/* ---------- PLANO DE ESTUDOS ---------- */
+/* ---------- PLANO DE ESTUDOS / LDI CONFIGURÁVEL ---------- */
 function topicDone(m,t){return (m.doneTopics||[]).includes(t)}
 function subjectDone(m){return m.topics.length>0&&m.topics.every(t=>topicDone(m,t))}
 function toggleTopic(id,encoded){const t=decodeURIComponent(encoded),m=S.edital.find(x=>x.id===id);if(!m)return;m.doneTopics=m.doneTopics||[];const i=m.doneTopics.indexOf(t);if(i>=0)m.doneTopics.splice(i,1);else m.doneTopics.push(t);save();render()}
-function vP(){return`<div class="top">LDI</div><div class="sub">Edital e conteúdo programático</div>`+S.edital.map(m=>{const es=S.entries.filter(e=>e.subj===m.name),T=agg(es),o=open[m.id],dy=m.days||[],done=(m.doneTopics||[]).filter(t=>m.topics.includes(t)).length,pc=m.topics.length?Math.round(done/m.topics.length*100):0;
- return`<div class="card"><div class="row" style="border:0;padding:0"><button class="x" onclick="open['${m.id}']=!open['${m.id}'];render()">${o?'▾':'▸'}</button><div class="g"><b>${esc(m.name)} ${subjectDone(m)?'<span class="tag" style="color:var(--gr)">Concluída</span>':''}</b><small>${dy.length?dy.map(i=>DN[i]).join(' · '):'sem dias definidos'}${m.goal?' · meta '+f1(m.goal)+'h/sem':''}</small><small>${done}/${m.topics.length} conteúdos concluídos · ${pc}% · ${f1(T.h)}h estudadas</small><div class="bar"><i style="width:${pc}%"></i></div></div>${pend[m.id]?`<button class="btn" style="background:var(--rd);color:#fff;padding:8px 12px" onclick="delM('${m.id}')">Apagar</button><button class="x" onclick="pend={};render()">Cancelar</button>`:`<button class="x" onclick="pend={'${m.id}':1};render()">×</button>`}</div>`+
-   (o?`<label>Dias da semana</label><div class="chips">${DN.map((n,i)=>`<button class="chip ${dy.includes(i)?'on':''}" onclick="tgD('${m.id}',${i})">${n}</button>`).join('')}</div><label>Meta semanal (horas)</label><input type="number" min="0" step="0.5" value="${m.goal||''}" placeholder="ex.: 4" onchange="setGoal('${m.id}',this.value)"><label>Conteúdos — marque quando concluir</label>`+
-   m.topics.map((t,i)=>{const A=agg(es.filter(e=>e.top===t)),ok=topicDone(m,t);return`<div class="row"><button class="ck" style="${ok?'background:var(--gr);border-color:var(--gr);color:#04121a':''}" onclick="toggleTopic('${m.id}','${encodeURIComponent(t).replace(/'/g,'%27')}')">${ok?'✓':''}</button><div class="g"><b class="${ok?'done':''}">${esc(t)}</b><small>${f1(A.h)}h · ${A.a}/${A.q} acertos</small></div><button class="x" onclick="delT('${m.id}',${i})">×</button></div>`}).join('')+
-   `<div class="add" style="margin-top:10px"><input id="t_${m.id}" placeholder="Novo conteúdo (ex.: Porcentagem)"><button class="btn" onclick="addT('${m.id}')">Add</button></div>`:'')+`</div>`}).join('')+
- `<div class="card"><h2>Nova disciplina</h2><div class="add"><input id="nm" placeholder="ex.: Química 1"><button class="btn" onclick="addM()">Add</button></div></div>`}
-function addM(){const v=$('#nm').value.trim();if(v){const id=uid();S.edital.push({id,name:v,topics:[],days:[]});open[id]=true;save();render()}}
-function addT(id){const v=$('#t_'+id).value.trim(),m=S.edital.find(x=>x.id===id);if(v&&!m.topics.includes(v)){m.topics.push(v);save();render()}}
+let ldi={q:'',st:'all',df:'all'};
+const DIFFS=['Fácil','Média','Difícil'],ST_TX={done:'Pronta',prog:'Em andamento',new:'Não iniciada'};
+function mStat(m){const n=m.topics.length,d=(m.doneTopics||[]).filter(t=>m.topics.includes(t)).length;return{n,d,pc:n?Math.round(d/n*100):0,st:n&&d===n?'done':d>0?'prog':'new'}}
+function ldiFiltered(){const q=ldi.q.trim().toLowerCase();return S.edital.filter(m=>{const s=mStat(m);if(ldi.st!=='all'&&s.st!==ldi.st)return false;if(ldi.df!=='all'&&(m.diff||'')!==ldi.df)return false;if(q&&!m.name.toLowerCase().includes(q)&&!m.topics.some(t=>t.toLowerCase().includes(q)))return false;return true})}
+function ldiCard(m){const s=mStat(m),o=open[m.id],dy=m.days||[],es=S.entries.filter(e=>e.subj===m.name);
+ const head=`<div class="ldh" onclick="tgO('${m.id}')"><span class="chev ${o?'o':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span><div class="g"><b>${esc(m.name)}</b><small>${s.d}/${s.n} tópicos · ${ST_TX[s.st]}${m.diff?' · '+m.diff:''}</small></div><span class="pct">${s.pc}%</span><button class="go" onclick="event.stopPropagation();tgO('${m.id}')"><span class="${o?'o':''}">↗</span></button></div>`;
+ if(!o)return `<div class="ldc ${s.st}">${head}</div>`;
+ const body=`<div class="ldb"><label>Dificuldade</label><div class="chips">${DIFFS.map(d=>`<button class="chip ${m.diff===d?'on':''}" onclick="tgDiff('${m.id}','${d}')">${d}</button>`).join('')}</div>
+ <label>Dias da semana</label><div class="chips">${DN.map((n,i)=>`<button class="chip ${dy.includes(i)?'on':''}" onclick="tgD('${m.id}',${i})">${n}</button>`).join('')}</div>
+ <label>Meta semanal (horas)</label><input type="number" min="0" step="0.5" value="${m.goal||''}" placeholder="Defina sua meta" onchange="setGoal('${m.id}',this.value)">
+ <label>Conteúdos — marque quando concluir</label>`+
+ (m.topics.length?m.topics.map((t,i)=>{const A=agg(es.filter(e=>e.top===t)),ok=topicDone(m,t);return `<div class="row"><button class="ck" style="${ok?'background:var(--gr);border-color:var(--gr);color:#04121a':''}" onclick="toggleTopic('${m.id}','${encodeURIComponent(t).replace(/'/g,'%27')}')">${ok?'✓':''}</button><div class="g"><b class="${ok?'done':''}">${esc(t)}</b>${A.h>0?`<small>${f1(A.h)}h estudadas · ${A.a}/${A.q} acertos</small>`:''}</div><button class="x" onclick="delT('${m.id}',${i})">×</button></div>`}).join(''):'<div class="empty" style="padding:12px 0">Nenhum conteúdo ainda</div>')+
+ `<div class="add" style="margin-top:10px"><input id="t_${m.id}" placeholder="Novo conteúdo (use ; para vários)" onkeydown="if(event.key==='Enter')addT('${m.id}')"><button class="btn" onclick="addT('${m.id}')">Add</button></div>
+ <div style="margin-top:14px;text-align:right">${pend[m.id]? `<button class="btn" style="background:var(--rd);color:#fff;padding:8px 12px" onclick="delM('${m.id}')">Confirmar exclusão</button> <button class="x" onclick="pend={};render()">Cancelar</button>`:`<button class="x" style="font-size:14px" onclick="pend={'${m.id}':1};render()">Apagar disciplina</button>`}</div></div>`;
+ return `<div class="ldc ${s.st}">${head}${body}</div>`}
+function ldiList(){const L=ldiFiltered();return L.length?L.map(ldiCard).join(''):`<div class="empty">${S.edital.length?'Nenhuma disciplina encontrada':'Adicione sua primeira disciplina abaixo'}</div>`}
+function ldiRefresh(){const el=$('#ldiList');if(el)el.innerHTML=ldiList()}
+function tgO(id){open[id]=!open[id];render()}
+function ldiAll(){const L=ldiFiltered(),a=L.length&&L.every(m=>open[m.id]);L.forEach(m=>open[m.id]=!a);render()}
+function tgDiff(id,d){const m=S.edital.find(x=>x.id===id);if(!m)return;m.diff=m.diff===d?'':d;save();render()}
+function vP(){const C={all:S.edital.length,prog:0,done:0,new:0};S.edital.forEach(m=>C[mStat(m).st]++);
+ const L=ldiFiltered(),a=L.length&&L.every(m=>open[m.id]);
+ return `<div class="top">LDI</div><div class="sub">Edital e conteúdo programático</div>
+ <div class="ldsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="ldq" placeholder="Buscar matéria ou tópico..." value="${esc(ldi.q)}" oninput="ldi.q=this.value;ldiRefresh()"></div>
+ <div class="fr">${[['all','Todas'],['prog','Em andamento'],['done','Prontas'],['new','Não iniciadas']].map(([k,n])=>`<button class="fc ${ldi.st===k?'on':''}" onclick="ldi.st='${k}';render()">${n}<i>${C[k]}</i></button>`).join('')}</div>
+ <div class="fr"><select class="fs" onchange="ldi.df=this.value;render()"><option value="all">Toda dificuldade</option>${DIFFS.map(d=>`<option value="${d}"${ldi.df===d?' selected':''}>${d}</option>`).join('')}</select><button class="fc fb" onclick="ldiAll()">${a?'Recolher tudo':'Expandir tudo'}</button></div>
+ <div id="ldiList" style="margin-top:14px">${ldiList()}</div>
+ <div class="card"><h2>Nova disciplina</h2><div class="add"><input id="nm" placeholder="Digite uma disciplina" onkeydown="if(event.key==='Enter')addM()"><button class="btn" onclick="addM()">Add</button></div></div>`}
+function addM(){const v=$('#nm').value.trim();if(v&&!S.edital.some(m=>m.name.toLowerCase()===v.toLowerCase())){const id=uid();S.edital.push({id,name:v,topics:[],days:[]});open[id]=true;save();render()}}
+function addT(id){const m=S.edital.find(x=>x.id===id),input=$('#t_'+id);if(!m||!input)return;const L=input.value.split(/[;\n]/).map(x=>x.trim()).filter(Boolean);let c=0;L.forEach(v=>{if(!m.topics.includes(v)){m.topics.push(v);c++}});if(c){save();render()}}
 function delM(id){S.edital=S.edital.filter(x=>x.id!==id);S.sched=S.sched.filter(x=>S.edital.some(m=>m.name===x.subj));pend={};save();render()}
-function delT(id,i){const m=S.edital.find(x=>x.id===id),t=m.topics.splice(i,1)[0];m.doneTopics=(m.doneTopics||[]).filter(x=>x!==t);save();render()}
-function tgD(id,i){const m=S.edital.find(x=>x.id===id),d=m.days||(m.days=[]),k=d.indexOf(i);k<0?d.push(i):d.splice(k,1);d.sort();save();render()}
-function setGoal(id,v){S.edital.find(x=>x.id===id).goal=Math.max(0,parseFloat(String(v).replace(',','.'))||0);save();render()}
+function delT(id,i){const m=S.edital.find(x=>x.id===id);if(!m)return;const t=m.topics.splice(i,1)[0];m.doneTopics=(m.doneTopics||[]).filter(x=>x!==t);save();render()}
+function tgD(id,i){const m=S.edital.find(x=>x.id===id);if(!m)return;const d=m.days||(m.days=[]),k=d.indexOf(i);k<0?d.push(i):d.splice(k,1);d.sort();save();render()}
+function setGoal(id,v){const m=S.edital.find(x=>x.id===id);if(!m)return;m.goal=Math.max(0,parseFloat(String(v).replace(',','.'))||0);save();render()}
 
 /* ---------- CRONOGRAMA SEMANAL ---------- */
 let wo=0,sheet=null,dur=60;
@@ -331,15 +365,22 @@ function vF(){const P=period(),es=S.entries.filter(e=>{const d=parse(e.date);ret
  const B=Array.from({length:P.n},()=>({h:0,q:0,a:0}));es.forEach(e=>{const b=B[P.idx(parse(e.date))];b.h+=net(e);b.q+=e.q;b.a+=e.a});
  const body=dt==='q'?fQ(es,T,B,P):dt==='h'?fH(es,T,B,P):dt==='c'?fC():fG(es);
  return`<div class="top" style="margin-bottom:8px">Desempenho</div><div class="seg s4">${[['q','Acertos/Erros'],['h','Horas'],['c','Constância'],['g','Disciplinas']].map(x=>`<button class="${dt===x[0]?'on':''}" onclick="dt='${x[0]}';render()">${x[1]}</button>`).join('')}</div>`+(dt==='c'?'':pHead())+body}
-function fQ(es,T,B,P){const er=T.q-T.a,pa=T.q?Math.round(T.a/T.q*100):0,m={};
- es.forEach(e=>{if(!e.q)return;const o=m[e.subj]||(m[e.subj]={q:0,a:0,t:{}});o.q+=e.q;o.a+=e.a;const k=e.top||'Geral',z=o.t[k]||(o.t[k]={q:0,a:0});z.q+=e.q;z.a+=e.a});
+function fQ(es,T,B,P){
+ const subs=[...new Set([...S.edital.map(m=>m.name),...S.entries.map(e=>e.subj)])].filter(Boolean);
+ if(qs!=='all'&&!subs.includes(qs))qs='all';
+ const f=qs==='all'?es:es.filter(e=>e.subj===qs),TF=agg(f),BF=Array.from({length:P.n},()=>({h:0,q:0,a:0}));
+ f.forEach(e=>{const b=BF[P.idx(parse(e.date))];if(b){b.h+=net(e);b.q+=e.q;b.a+=e.a}});
+ const er=TF.q-TF.a,pa=TF.q?Math.round(TF.a/TF.q*100):0,m={};
+ f.forEach(e=>{if(!e.q)return;const o=m[e.subj]||(m[e.subj]={q:0,a:0,t:{}});o.q+=e.q;o.a+=e.a;const k=e.top||'Geral',z=o.t[k]||(o.t[k]={q:0,a:0});z.q+=e.q;z.a+=e.a});
  const L=Object.entries(m).sort((a,b)=>b[1].q-a[1].q);
- return`<div class="tiles"><div class="tile"><small>Acertos</small><b style="color:var(--gr)">${T.a}</b><small>${T.q?pa:0}% das questões</small></div><div class="tile"><small>Erros</small><b style="color:var(--rd)">${er}</b><small>${T.q?100-pa:0}% das questões</small></div></div>
- <div class="card"><h2>${mode==='w'?'Estudo semanal':mode==='m'?'Estudo mensal':'Estudo anual'}</h2><div class="sub" style="text-align:left;margin:0 0 8px">Barras: questões (esquerda) · linha: desempenho (direita)</div>${combo(B,P)}<div class="leg"><span><i class="dot" style="background:var(--gr)"></i>Questões: ${T.q}</span><span><i class="dot" style="background:#a78bfa"></i>Desempenho: ${pa}%</span></div></div>
- <div class="card"><h2>Acertos vs Erros</h2>${bars(B,P)}<div class="leg"><span><i class="dot" style="background:var(--gr)"></i>Acertos</span><span><i class="dot" style="background:var(--rd)"></i>Erros</span></div></div>
- <div class="card"><h2>Questões por disciplina</h2>`+(L.length?`<div class="stk">${L.map(([n,o],i)=>`<i style="width:${o.q/T.q*100}%;background:${COL[i%9]}"></i>`).join('')}</div><div class="empty" style="padding:6px 0;text-align:left">${T.q} questões no período</div>`+L.map(([n,o],i)=>`<div class="row"><div class="g"><b><i class="dot" style="background:${COL[i%9]}"></i>${esc(n)}</b><small>${o.q} questões</small></div><b>${Math.round(o.q/T.q*100)}%</b></div>`).join(''):'<div class="empty">Nenhuma questão no período</div>')+`</div>
- <div class="card"><h2>Desempenho por disciplina e conteúdo</h2>`+(L.map(([n,o],i)=>{const p=Math.round(o.a/o.q*100);return`<div class="row" style="cursor:pointer" onclick="ex[${i}]=!ex[${i}];render()"><div class="g"><b>${ex[i]?'▾':'▸'} ${esc(n)}</b><small>${o.a}/${o.q} acertos</small><div class="bar"><i style="width:${p}%"></i></div></div><b>${p}%</b></div>`+
-  (ex[i]?Object.entries(o.t).sort((a,b)=>b[1].q-a[1].q).map(([k,z])=>`<div class="row sb"><div class="g"><b>${esc(k)}</b><small>${z.a}/${z.q} acertos · ${Math.round(z.q/o.q*100)}% das questões</small></div><b>${Math.round(z.a/z.q*100)}%</b></div>`).join(''):'')}).join('')||'<div class="empty">Registre questões com conteúdo para ver o detalhe</div>')+`</div>`}
+ const sel=`<select class="fs" style="width:100%;margin-bottom:12px;color:var(--tx)" onchange="qs=this.value;render()"><option value="all">Todas as disciplinas</option>${subs.map(n=>`<option value="${esc(n)}"${n===qs?' selected':''}>${esc(n)}</option>`).join('')}</select>`;
+ const big=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div class="bn">${nf(TF.q)}</div><div class="bl">questões selecionadas</div></div><div class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/></svg></div></div><div class="bf">${qs==='all'?'todas as matérias':esc(qs)} · ${P.title}${qs==='all'?'':' · de '+nf(T.q)+' no total'}</div></div>`;
+ const tiles=`<div class="tiles"><div class="tile"><small>Acertos</small><b style="color:var(--gr)">${nf(TF.a)}</b><small>${TF.q?pa:0}% das questões</small></div><div class="tile"><small>Erros</small><b style="color:var(--rd)">${nf(er)}</b><small>${TF.q?100-pa:0}% das questões</small></div></div>`;
+ const chart=`<div class="card"><h2>${mode==='w'?'Estudo semanal':mode==='m'?'Estudo mensal':'Estudo anual'}</h2><div class="sub" style="text-align:left;margin:0 0 8px">${qs==='all'?'Todas as disciplinas':esc(qs)} · barras: questões · linha: desempenho</div>${combo(BF,P)}<div class="leg"><span><i class="dot" style="background:var(--gr)"></i>Questões: ${nf(TF.q)}</span><span><i class="dot" style="background:#a78bfa"></i>Desempenho: ${pa}%</span></div></div>`;
+ const tabs=L.map(([n,o],i)=>`<div class="card"><h2><i class="dot" style="background:${COL[i%9]}"></i>${esc(n)}<small style="float:right;color:var(--mu);font-weight:600;font-size:14px">${nf(o.q)} questões</small></h2><div class="tq th"><span>Conteúdo</span><span>Quest.</span><span>% matéria</span><span>Acerto</span></div>`+
+ Object.entries(o.t).sort((a,b)=>b[1].q-a[1].q).map(([k,z])=>`<div class="tq"><span>${esc(k==='Geral'?'Sem conteúdo específico':k)}</span><span>${nf(z.q)}</span><span>${Math.round(z.q/o.q*100)}%</span><span>${Math.round(z.a/z.q*100)}%</span></div>`).join('')+
+ `<div class="tq tt"><span>Total</span><span>${nf(o.q)}</span><span>100%</span><span>${Math.round(o.a/o.q*100)}%</span></div></div>`).join('')||'<div class="card"><div class="empty">Nenhuma questão no período</div></div>';
+ return sel+big+tiles+chart+tabs}
 function fH(es,T,B,P){const t=today(),w0=mon(t),w1=new Date(w0);w1.setDate(w0.getDate()+6);const wk=sumP(w0,w1).h,L=byS(es),mx=L.length?L[0][1]:1;
  return`<div class="tiles"><div class="tile"><small>Horas líquidas</small><b style="color:var(--gr)">${f1(T.h)}h</b><small>no período</small></div><div class="tile"><small>Horas na semana</small><b>${f1(wk)}h</b><small>meta ${f1(S.goal)}h</small></div></div>
  <div class="card"><h2>Horas por período</h2>${hbars(B,P)}</div><div class="card"><h2>Horas líquidas acumuladas</h2>${line(B,P)}</div><div class="card"><h2>Meta da semana</h2>${ring(wk,S.goal)}</div>
