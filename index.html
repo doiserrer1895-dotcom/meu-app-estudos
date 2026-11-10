@@ -90,6 +90,8 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 .ldb{padding:4px 16px 16px;border-top:1px solid var(--bd)}
 
 
+.bn{font-size:40px;font-weight:800;line-height:1;color:var(--tx)}.bl{color:var(--mu);font-size:13px;margin-top:6px}.bi{width:44px;height:44px;border-radius:14px;background:var(--in);display:flex;align-items:center;justify-content:center;color:var(--ac);flex:none}.bi svg{width:24px;height:24px}.bf{color:var(--mu);font-size:12px;margin-top:12px;padding-top:10px;border-top:1px solid var(--bd)}
+.tq{display:grid;grid-template-columns:minmax(0,1fr) 54px 64px 54px;gap:4px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px}.tq span:not(:first-child){text-align:center}.tq.th{color:var(--mu);font-size:11px;font-weight:700}.tq.tt{border:0;background:var(--in);border-radius:10px;padding:9px 6px;margin-top:8px;font-weight:700}
 #cloud-user{position:fixed;z-index:15;top:8px;right:8px;display:none;align-items:center;gap:8px;padding:7px 10px;background:var(--card);border:1px solid var(--bd);border-radius:999px;color:var(--tx);font-size:11px;max-width:calc(100vw - 16px)}
 #cloud-user span{max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #cloud-status{font-size:10px;color:var(--gr);white-space:nowrap}
@@ -357,7 +359,8 @@ function vG(){const t=today(),k=iso(t),w0=mon(t),w1=new Date(w0);w1.setDate(w0.g
 function delE(id){S.entries=S.entries.filter(x=>x.id!==id);save();render()}
 
 /* ---------- DESEMPENHO ---------- */
-let dt='q',ex={},cm=new Date(),cs=null;
+let dt='q',ex={},cm=new Date(),cs=null,qs='all';
+const nf=n=>Number(n||0).toLocaleString('pt-BR');
 function pHead(){const P=period();return`<div class="top"><button onclick="shift(-1)">‹</button>${P.title}<button onclick="shift(1)">›</button></div><div class="seg">${[['w','Semana'],['m','Mês'],['y','Ano']].map(x=>`<button class="${mode===x[0]?'on':''}" onclick="setMode('${x[0]}')">${x[1]}</button>`).join('')}</div>`}
 function hbars(B,P){const W=340,H=170,L=30,Bt=24,T=10,mx=Math.max(1,...B.map(b=>b.h)),cw=(W-L)/P.n,bw=Math.min(22,cw*.6),ch=H-Bt-T;let s=grid(W,H,L,T,Bt,mx,f1);
  B.forEach((b,i)=>{const cx=L+cw*i+cw/2,h=ch*b.h/mx;s+=`<rect x="${cx-bw/2}" y="${H-Bt-h}" width="${bw}" height="${h}" rx="4" fill="var(--ac)"/><text x="${cx}" y="${H-7}" text-anchor="middle" fill="var(--mu)" font-size="10">${P.names[i]}</text>`});return`<svg viewBox="0 0 ${W} ${H}">${s}</svg>`}
