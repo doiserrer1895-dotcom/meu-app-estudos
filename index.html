@@ -19,12 +19,6 @@ body{margin:0;background:var(--bg);color:var(--tx);font-family:Inter,"Aptos","Se
 .card{background:var(--card);border:1px solid var(--bd);border-radius:24px;padding:18px;margin-bottom:14px}
 .card h2{font-size:18px;font-weight:700;letter-spacing:-.025em;margin:0 0 12px;padding-bottom:12px;border-bottom:1px solid var(--bd)}
 .card.al{border-color:var(--rd)}
-/* Tabela de conteúdos da aba Desempenho */
-.tq{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(0,.65fr));gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd);font-size:14px;line-height:1.35}
-.tq span:not(:first-child){text-align:center}
-.tq.th{color:var(--mu);font-size:12px;font-weight:700;padding:8px 0}
-.tq.tt{font-weight:700;background:var(--in);border:0;border-radius:12px;padding:10px;margin-top:8px}
-@media(max-width:420px){.tq{grid-template-columns:minmax(0,1.45fr) repeat(3,minmax(0,.65fr));gap:4px;font-size:12px}.tq.th{font-size:10px}}
 svg{width:100%;height:auto;display:block}
 .leg{display:flex;gap:16px;justify-content:center;color:var(--mu);font-size:13px;margin-top:8px}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
@@ -120,8 +114,7 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 const K='estudos-v1',$=s=>document.querySelector(s);
 const COL=['#4cc7ff','#4ade80','#fbbf24','#f87171','#a78bfa','#fb923c','#2dd4bf','#f472b6','#94a3b8'];
 const MES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-var S={edital:[],entries:[],reviews:[],tasks:[],sched:[],goal:20,goalQ:120,exam:{name:'',date:''},rem:[],sim:[],revs:[],pomo:{f:25,b:5,l:15},timer:{mode:'c',subj:'',top:'',run:0,st:0,acc:0,ph:'f',n:0}};
-Object.defineProperty(window,'__appState',{configurable:true,get:()=>S,set:value=>{S=value}});
+let S={edital:[],entries:[],reviews:[],tasks:[],sched:[],goal:20,goalQ:120,exam:{name:'',date:''},rem:[],sim:[],revs:[],pomo:{f:25,b:5,l:15},timer:{mode:'c',subj:'',top:'',run:0,st:0,acc:0,ph:'f',n:0}};
 try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 if(S.subjects){S.edital=S.subjects.map(n=>({id:uid(),name:n,topics:[]}));delete S.subjects}
@@ -203,22 +196,22 @@ function addEntry(h,q,a){const T=S.timer;S.entries.push({id:uid(),date:iso(new D
 function topicDone(m,t){return (m.doneTopics||[]).includes(t)}
 function subjectDone(m){return m.topics.length>0&&m.topics.every(t=>topicDone(m,t))}
 function toggleTopic(id,encoded){const t=decodeURIComponent(encoded),m=S.edital.find(x=>x.id===id);if(!m)return;m.doneTopics=m.doneTopics||[];const i=m.doneTopics.indexOf(t);if(i>=0)m.doneTopics.splice(i,1);else m.doneTopics.push(t);save();render()}
-let ldi={q:'',st:'all',df:'all'},ldiIndex=Object.create(null);
+let ldi={q:'',st:'all',df:'all'};
 const DIFFS=['Fácil','Média','Difícil'],ST_TX={done:'Pronta',prog:'Em andamento',new:'Não iniciada'};
 function mStat(m){const n=m.topics.length,d=(m.doneTopics||[]).filter(t=>m.topics.includes(t)).length;return{n,d,pc:n?Math.round(d/n*100):0,st:n&&d===n?'done':d>0?'prog':'new'}}
 function ldiFiltered(){const q=ldi.q.trim().toLowerCase();return S.edital.filter(m=>{const s=mStat(m);if(ldi.st!=='all'&&s.st!==ldi.st)return false;if(ldi.df!=='all'&&(m.diff||'')!==ldi.df)return false;if(q&&!m.name.toLowerCase().includes(q)&&!m.topics.some(t=>t.toLowerCase().includes(q)))return false;return true})}
-function ldiCard(m){const s=mStat(m),o=open[m.id],dy=m.days||[];
+function ldiCard(m){const s=mStat(m),o=open[m.id],dy=m.days||[],es=S.entries.filter(e=>e.subj===m.name);
  const head=`<div class="ldh" onclick="tgO('${m.id}')"><span class="chev ${o?'o':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span><div class="g"><b>${esc(m.name)}</b><small>${s.d}/${s.n} tópicos · ${ST_TX[s.st]}${m.diff?' · '+m.diff:''}</small></div><span class="pct">${s.pc}%</span><button class="go" onclick="event.stopPropagation();tgO('${m.id}')"><span class="${o?'o':''}">↗</span></button></div>`;
  if(!o)return `<div class="ldc ${s.st}">${head}</div>`;
  const body=`<div class="ldb"><label>Dificuldade</label><div class="chips">${DIFFS.map(d=>`<button class="chip ${m.diff===d?'on':''}" onclick="tgDiff('${m.id}','${d}')">${d}</button>`).join('')}</div>
  <label>Dias da semana</label><div class="chips">${DN.map((n,i)=>`<button class="chip ${dy.includes(i)?'on':''}" onclick="tgD('${m.id}',${i})">${n}</button>`).join('')}</div>
  <label>Meta semanal (horas)</label><input type="number" min="0" step="0.5" value="${m.goal||''}" placeholder="Defina sua meta" onchange="setGoal('${m.id}',this.value)">
  <label>Conteúdos — marque quando concluir</label>`+
- (m.topics.length?m.topics.map((t,i)=>{const A=ldiIndex[m.name+'\u0000'+t]||{h:0,q:0,a:0},ok=topicDone(m,t);return `<div class="row"><button class="ck" style="${ok?'background:var(--gr);border-color:var(--gr);color:#04121a':''}" onclick="toggleTopic('${m.id}','${encodeURIComponent(t).replace(/'/g,'%27')}')">${ok?'✓':''}</button><div class="g"><b class="${ok?'done':''}">${esc(t)}</b>${A.h>0?`<small>${f1(A.h)}h estudadas</small>`:''}</div><button class="x" onclick="delT('${m.id}',${i})">×</button></div>`}).join(''):'<div class="empty" style="padding:12px 0">Nenhum conteúdo ainda</div>')+
+ (m.topics.length?m.topics.map((t,i)=>{const A=agg(es.filter(e=>e.top===t)),ok=topicDone(m,t);return `<div class="row"><button class="ck" style="${ok?'background:var(--gr);border-color:var(--gr);color:#04121a':''}" onclick="toggleTopic('${m.id}','${encodeURIComponent(t).replace(/'/g,'%27')}')">${ok?'✓':''}</button><div class="g"><b class="${ok?'done':''}">${esc(t)}</b>${A.h>0?`<small>${f1(A.h)}h estudadas</small>`:''}</div><button class="x" onclick="delT('${m.id}',${i})">×</button></div>`}).join(''):'<div class="empty" style="padding:12px 0">Nenhum conteúdo ainda</div>')+
  `<div class="add" style="margin-top:10px"><input id="t_${m.id}" placeholder="Novo conteúdo (use ; para vários)" onkeydown="if(event.key==='Enter')addT('${m.id}')"><button class="btn" onclick="addT('${m.id}')">Add</button></div>
  <div style="margin-top:14px;text-align:right">${pend[m.id]? `<button class="btn" style="background:var(--rd);color:#fff;padding:8px 12px" onclick="delM('${m.id}')">Confirmar exclusão</button> <button class="x" onclick="pend={};render()">Cancelar</button>`:`<button class="x" style="font-size:14px" onclick="pend={'${m.id}':1};render()">Apagar disciplina</button>`}</div></div>`;
  return `<div class="ldc ${s.st}">${head}${body}</div>`}
-function ldiList(){ldiIndex=Object.create(null);for(const e of S.entries){if(!e.top)continue;const k=e.subj+'\u0000'+e.top,o=ldiIndex[k]||(ldiIndex[k]={h:0,q:0,a:0});o.h+=net(e);o.q+=Number(e.q)||0;o.a+=Number(e.a)||0}const L=ldiFiltered();return L.length?L.map(ldiCard).join(''):`<div class="empty">${S.edital.length?'Nenhuma disciplina encontrada':'Adicione sua primeira disciplina abaixo'}</div>`}
+function ldiList(){const L=ldiFiltered();return L.length?L.map(ldiCard).join(''):`<div class="empty">${S.edital.length?'Nenhuma disciplina encontrada':'Adicione sua primeira disciplina abaixo'}</div>`}
 function ldiRefresh(){const el=$('#ldiList');if(el)el.innerHTML=ldiList()}
 function tgO(id){open[id]=!open[id];render()}
 function ldiAll(){const L=ldiFiltered(),a=L.length&&L.every(m=>open[m.id]);L.forEach(m=>open[m.id]=!a);render()}
@@ -364,8 +357,7 @@ function vG(){const t=today(),k=iso(t),w0=mon(t),w1=new Date(w0);w1.setDate(w0.g
 function delE(id){S.entries=S.entries.filter(x=>x.id!==id);save();render()}
 
 /* ---------- DESEMPENHO ---------- */
-let dt='q',ex={},cm=new Date(),cs=null,qs='all';
-const nf=n=>Number(n).toLocaleString('pt-BR');
+let dt='q',ex={},cm=new Date(),cs=null;
 function pHead(){const P=period();return`<div class="top"><button onclick="shift(-1)">‹</button>${P.title}<button onclick="shift(1)">›</button></div><div class="seg">${[['w','Semana'],['m','Mês'],['y','Ano']].map(x=>`<button class="${mode===x[0]?'on':''}" onclick="setMode('${x[0]}')">${x[1]}</button>`).join('')}</div>`}
 function hbars(B,P){const W=340,H=170,L=30,Bt=24,T=10,mx=Math.max(1,...B.map(b=>b.h)),cw=(W-L)/P.n,bw=Math.min(22,cw*.6),ch=H-Bt-T;let s=grid(W,H,L,T,Bt,mx,f1);
  B.forEach((b,i)=>{const cx=L+cw*i+cw/2,h=ch*b.h/mx;s+=`<rect x="${cx-bw/2}" y="${H-Bt-h}" width="${bw}" height="${h}" rx="4" fill="var(--ac)"/><text x="${cx}" y="${H-7}" text-anchor="middle" fill="var(--mu)" font-size="10">${P.names[i]}</text>`});return`<svg viewBox="0 0 ${W} ${H}">${s}</svg>`}
@@ -374,20 +366,20 @@ function vF(){const P=period(),es=S.entries.filter(e=>{const d=parse(e.date);ret
  const body=dt==='q'?fQ(es,T,B,P):dt==='h'?fH(es,T,B,P):dt==='c'?fC():fG(es);
  return`<div class="top" style="margin-bottom:8px">Desempenho</div><div class="seg s4">${[['q','Acertos/Erros'],['h','Horas'],['c','Constância'],['g','Disciplinas']].map(x=>`<button class="${dt===x[0]?'on':''}" onclick="dt='${x[0]}';render()">${x[1]}</button>`).join('')}</div>`+(dt==='c'?'':pHead())+body}
 function fQ(es,T,B,P){
- const subs=[...new Set([...S.edital.map(m=>m.name),...S.entries.map(e=>e.subj)])];
+ const subs=[...new Set([...S.edital.map(m=>m.name),...S.entries.map(e=>e.subj)])].filter(Boolean);
  if(qs!=='all'&&!subs.includes(qs))qs='all';
  const f=qs==='all'?es:es.filter(e=>e.subj===qs),TF=agg(f),BF=Array.from({length:P.n},()=>({h:0,q:0,a:0}));
- f.forEach(e=>{const b=BF[P.idx(parse(e.date))];b.h+=net(e);b.q+=e.q;b.a+=e.a});
+ f.forEach(e=>{const b=BF[P.idx(parse(e.date))];if(b){b.h+=net(e);b.q+=e.q;b.a+=e.a}});
  const er=TF.q-TF.a,pa=TF.q?Math.round(TF.a/TF.q*100):0,m={};
  f.forEach(e=>{if(!e.q)return;const o=m[e.subj]||(m[e.subj]={q:0,a:0,t:{}});o.q+=e.q;o.a+=e.a;const k=e.top||'Geral',z=o.t[k]||(o.t[k]={q:0,a:0});z.q+=e.q;z.a+=e.a});
  const L=Object.entries(m).sort((a,b)=>b[1].q-a[1].q);
- const sel=\`<select class="fs" style="width:100%;margin-bottom:12px;color:var(--tx)" onchange="qs=this.value;render()"><option value="all">Todas as disciplinas</option>\${subs.map(n=>\`<option value="\${esc(n)}"\${n===qs?' selected':''}>\${esc(n)}</option>\`).join('')}</select>\`;
- const big=\`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div class="bn">\${nf(TF.q)}</div><div class="bl">questões selecionadas</div></div><div class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/></svg></div></div><div class="bf">\${qs==='all'?'todas as matérias':esc(qs)} · \${P.title}\${qs==='all'?'':' · de '+nf(T.q)+' no total'}</div></div>\`;
- const tiles=\`<div class="tiles"><div class="tile"><small>Acertos</small><b style="color:var(--gr)">\${nf(TF.a)}</b><small>\${TF.q?pa:0}% das questões</small></div><div class="tile"><small>Erros</small><b style="color:var(--rd)">\${nf(er)}</b><small>\${TF.q?100-pa:0}% das questões</small></div></div>\`;
- const chart=\`<div class="card"><h2>\${mode==='w'?'Estudo semanal':mode==='m'?'Estudo mensal':'Estudo anual'}</h2><div class="sub" style="text-align:left;margin:0 0 8px">\${qs==='all'?'Todas as disciplinas':esc(qs)} · barras: questões (esquerda) · linha: desempenho (direita)</div>\${combo(BF,P)}<div class="leg"><span><i class="dot" style="background:var(--gr)"></i>Questões: \${nf(TF.q)}</span><span><i class="dot" style="background:#a78bfa"></i>Desempenho: \${pa}%</span></div></div>\`;
- const tabs=L.map(([n,o],i)=>\`<div class="card"><h2><i class="dot" style="background:\${COL[i%9]}"></i>\${esc(n)}<small style="float:right;color:var(--mu);font-weight:600;font-size:14px">\${nf(o.q)} questões</small></h2><div class="tq th"><span>Conteúdo</span><span>Quest.</span><span>% matéria</span><span>Acerto</span></div>\`+
-  Object.entries(o.t).sort((a,b)=>b[1].q-a[1].q).map(([k,z])=>\`<div class="tq"><span>\${esc(k==='Geral'?'Sem conteúdo específico':k)}</span><span>\${nf(z.q)}</span><span>\${Math.round(z.q/o.q*100)}%</span><span>\${Math.round(z.a/z.q*100)}%</span></div>\`).join('')+
-  \`<div class="tq tt"><span>Total</span><span>\${nf(o.q)}</span><span>100%</span><span>\${Math.round(o.a/o.q*100)}%</span></div></div>\`).join('')||'<div class="card"><div class="empty">Nenhuma questão no período</div></div>';
+ const sel=`<select class="fs" style="width:100%;margin-bottom:12px;color:var(--tx)" onchange="qs=this.value;render()"><option value="all">Todas as disciplinas</option>${subs.map(n=>`<option value="${esc(n)}"${n===qs?' selected':''}>${esc(n)}</option>`).join('')}</select>`;
+ const big=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div class="bn">${nf(TF.q)}</div><div class="bl">questões selecionadas</div></div><div class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/></svg></div></div><div class="bf">${qs==='all'?'todas as matérias':esc(qs)} · ${P.title}${qs==='all'?'':' · de '+nf(T.q)+' no total'}</div></div>`;
+ const tiles=`<div class="tiles"><div class="tile"><small>Acertos</small><b style="color:var(--gr)">${nf(TF.a)}</b><small>${TF.q?pa:0}% das questões</small></div><div class="tile"><small>Erros</small><b style="color:var(--rd)">${nf(er)}</b><small>${TF.q?100-pa:0}% das questões</small></div></div>`;
+ const chart=`<div class="card"><h2>${mode==='w'?'Estudo semanal':mode==='m'?'Estudo mensal':'Estudo anual'}</h2><div class="sub" style="text-align:left;margin:0 0 8px">${qs==='all'?'Todas as disciplinas':esc(qs)} · barras: questões · linha: desempenho</div>${combo(BF,P)}<div class="leg"><span><i class="dot" style="background:var(--gr)"></i>Questões: ${nf(TF.q)}</span><span><i class="dot" style="background:#a78bfa"></i>Desempenho: ${pa}%</span></div></div>`;
+ const tabs=L.map(([n,o],i)=>`<div class="card"><h2><i class="dot" style="background:${COL[i%9]}"></i>${esc(n)}<small style="float:right;color:var(--mu);font-weight:600;font-size:14px">${nf(o.q)} questões</small></h2><div class="tq th"><span>Conteúdo</span><span>Quest.</span><span>% matéria</span><span>Acerto</span></div>`+
+ Object.entries(o.t).sort((a,b)=>b[1].q-a[1].q).map(([k,z])=>`<div class="tq"><span>${esc(k==='Geral'?'Sem conteúdo específico':k)}</span><span>${nf(z.q)}</span><span>${Math.round(z.q/o.q*100)}%</span><span>${Math.round(z.a/z.q*100)}%</span></div>`).join('')+
+ `<div class="tq tt"><span>Total</span><span>${nf(o.q)}</span><span>100%</span><span>${Math.round(o.a/o.q*100)}%</span></div></div>`).join('')||'<div class="card"><div class="empty">Nenhuma questão no período</div></div>';
  return sel+big+tiles+chart+tabs}
 function fH(es,T,B,P){const t=today(),w0=mon(t),w1=new Date(w0);w1.setDate(w0.getDate()+6);const wk=sumP(w0,w1).h,L=byS(es),mx=L.length?L[0][1]:1;
  return`<div class="tiles"><div class="tile"><small>Horas líquidas</small><b style="color:var(--gr)">${f1(T.h)}h</b><small>no período</small></div><div class="tile"><small>Horas na semana</small><b>${f1(wk)}h</b><small>meta ${f1(S.goal)}h</small></div></div>
@@ -427,7 +419,6 @@ render();setInterval(tick,250);
 <script>
 (function(){
 'use strict';
-const K='estudos-v1';
 const SUPABASE_URL='https://nwwwydwevgftbpjuasgz.supabase.co';
 const SUPABASE_KEY='sb_publishable_7-zqJxrp67zBzWZcwUmlQw_wLpb-Gqc';
 const layer=document.createElement('div');
@@ -494,24 +485,24 @@ async function activate(user){
    const usePending=confirm('Encontramos alterações deste usuário que não chegaram à nuvem.\n\nOK = recuperar as alterações locais e sincronizar.\nCancelar = manter a versão que está na nuvem.');
    if(usePending){
     if(cloudState)saveJsonFile({app:'Meu App Estudos',version:1,exportedAt:new Date().toISOString(),userId:user.id,data:cloudState},'meu-app-estudos-estado-nuvem-antes-da-recuperacao.json');
-    window.__appState=normalizeState(pending.state);
+    S=normalizeState(pending.state);
     window.__activeUserId=user.id;ready=true;
-    localStorage.setItem(cacheKey,JSON.stringify(window.__appState));
-    queuedState=JSON.parse(JSON.stringify(window.__appState));
+    localStorage.setItem(cacheKey,JSON.stringify(S));
+    queuedState=JSON.parse(JSON.stringify(S));
    }else{
     localStorage.removeItem(pendingKey);
-    window.__appState=cloudState||defaults();
+    S=cloudState||defaults();
    }
   }else if(cloudState){
-   window.__appState=cloudState;
+   S=cloudState;
   }else{
    const userCache=localStorage.getItem(cacheKey);
-   window.__appState=userCache?normalizeState(JSON.parse(userCache)):defaults();
-   const saved=await client.from('estudos').upsert({id:user.id,dados:window.__appState,atualizado_em:new Date().toISOString()},{onConflict:'id'});
+   S=userCache?normalizeState(JSON.parse(userCache)):defaults();
+   const saved=await client.from('estudos').upsert({id:user.id,dados:S,atualizado_em:new Date().toISOString()},{onConflict:'id'});
    if(saved.error)throw saved.error;
   }
   window.__activeUserId=user.id;
-  localStorage.setItem(cacheKey,JSON.stringify(window.__appState));
+  localStorage.setItem(cacheKey,JSON.stringify(S));
   ready=true;
   if(queuedState){setCloudStatus('Recuperando alterações...');clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,50)}
   else setCloudStatus('Sincronizado');
@@ -519,7 +510,7 @@ async function activate(user){
   showApp(user.email);
  }catch(e){
   activeUid=null;window.__activeUserId=null;ready=false;queuedState=null;submit.disabled=false;
-  console.error('Erro ao carregar seus estudos:',e);message('Erro ao carregar seus estudos: '+friendlyError(e),'error');
+  message('Erro ao carregar seus estudos: '+friendlyError(e),'error');
  }
 }
 async function init(){
@@ -572,7 +563,7 @@ document.getElementById('cloud-logout').addEventListener('click',async()=>{
 });
 function downloadBackup(){
  if(!ready||!activeUid)return;
- const backup={app:'Meu App Estudos',version:1,exportedAt:new Date().toISOString(),userId:activeUid,data:window.__appState};
+ const backup={app:'Meu App Estudos',version:1,exportedAt:new Date().toISOString(),userId:activeUid,data:S};
  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download='meu-app-estudos-backup-'+new Date().toISOString().slice(0,10)+'.json';
@@ -584,7 +575,7 @@ document.getElementById('cloud-save-snapshot').addEventListener('click',async()=
  const b=document.getElementById('cloud-save-snapshot');if(!ready||!activeUid)return;
  b.disabled=true;setCloudStatus('Salvando cópia na nuvem...');
  try{
-  const {error}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:window.__appState,atualizado_em:new Date().toISOString()});
+  const {error}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:S,atualizado_em:new Date().toISOString()});
   if(error)throw error;
   setCloudStatus('Cópia salva na nuvem');
  }catch(e){alert('Não foi possível salvar a cópia: '+friendlyError(e));setCloudStatus('Falha ao salvar cópia',true)}
@@ -616,13 +607,13 @@ document.getElementById('cloud-restore').addEventListener('click',async()=>{
  try{
   const row=await getLatestCloudBackup();
   if(!confirm('Restaurar a cópia '+(row.backup_type==='manual'?'manual':'automática')+' de '+row.backup_date+'? Isso substituirá os dados atuais. Antes, será criada uma cópia do estado atual na nuvem e baixada uma cópia para seu computador.'))return;
-  const {error:preError}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:window.__appState,atualizado_em:new Date().toISOString()});
+  const {error:preError}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:S,atualizado_em:new Date().toISOString()});
   if(preError)throw preError;
   downloadBackup();
-  window.__appState=normalizeState(row.dados);
-  localStorage.setItem(K+':'+activeUid,JSON.stringify(window.__appState));
+  S=normalizeState(row.dados);
+  localStorage.setItem(K+':'+activeUid,JSON.stringify(S));
   if(typeof render==='function')render();
-  window.__cloudSave(window.__appState);
+  window.__cloudSave(S);
   setCloudStatus('Cópia restaurada; sincronizando...');
  }catch(e){alert(friendlyError(e));setCloudStatus('Falha ao restaurar cópia',true)}
  finally{b.disabled=false}
@@ -638,12 +629,12 @@ importInput.addEventListener('change',()=>{
    if(!backup||!backup.data||typeof backup.data!=='object'||Array.isArray(backup.data))throw new Error('O arquivo não parece ser um backup válido do Meu App Estudos.');
    if(backup.userId&&backup.userId!==activeUid){alert('Este backup pertence a outra conta. Entre na conta correspondente para importá-lo.');return;}
    if(!confirm('Importar este backup vai substituir os registros atuais desta conta. Você já baixou um backup do estado atual?'))return;
-   const {error:preError}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:window.__appState,atualizado_em:new Date().toISOString()});
+   const {error:preError}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:S,atualizado_em:new Date().toISOString()});
    if(preError)throw preError;
-   window.__appState=normalizeState(backup.data);
-   localStorage.setItem(K+':'+activeUid,JSON.stringify(window.__appState));
+   S=normalizeState(backup.data);
+   localStorage.setItem(K+':'+activeUid,JSON.stringify(S));
    if(typeof render==='function')render();
-   window.__cloudSave(window.__appState);
+   window.__cloudSave(S);
    setCloudStatus('Backup importado; sincronizando...');
   }catch(e){alert('Não foi possível importar: '+(e.message||e))}
   finally{importInput.value=''}
