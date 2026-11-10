@@ -126,10 +126,30 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 const K='estudos-v1',$=s=>document.querySelector(s);
 const COL=['#4cc7ff','#4ade80','#fbbf24','#f87171','#a78bfa','#fb923c','#2dd4bf','#f472b6','#94a3b8'];
 const MES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-let S={edital:[],entries:[],reviews:[],tasks:[],sched:[],goal:20,goalQ:120,exam:{name:'',date:''},rem:[],sim:[],revs:[],pomo:{f:25,b:5,l:15},timer:{mode:'c',subj:'',top:'',run:0,st:0,acc:0,ph:'f',n:0}};
+let S={edital:[],entries:[],reviews:[],tasks:[],sched:[],goal:20,goalQ:120,subjectColors:{},exam:{name:'',date:''},rem:[],sim:[],revs:[],pomo:{f:25,b:5,l:15},timer:{mode:'c',subj:'',top:'',run:0,st:0,acc:0,ph:'f',n:0}};
 try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 if(S.subjects){S.edital=S.subjects.map(n=>({id:uid(),name:n,topics:[]}));delete S.subjects}
+function subjectKey(n){return String(n||'').trim().toLowerCase().replace('á','a')}
+function ensureSubjectColors(){
+ if(!S.subjectColors||typeof S.subjectColors!=='object'||Array.isArray(S.subjectColors))S.subjectColors={};
+ const names=[...new Set([...(S.edital||[]).map(m=>m&&m.name),...(S.entries||[]).map(e=>e&&e.subj),...(S.sched||[]).map(e=>e&&e.subj),...(S.revs||[]).map(e=>e&&e.subj),...(S.sim||[]).map(e=>e&&e.subj),S.timer&&S.timer.subj].filter(Boolean))];
+ const mathName=names.find(n=>subjectKey(n)==='matematica');
+ const used=new Set([COL[0]]);
+ let changed=false;
+ if(mathName&&S.subjectColors[mathName]!==COL[0]){S.subjectColors[mathName]=COL[0];changed=true}
+ names.forEach((n,i)=>{
+  if(n===mathName)return;
+  let color=S.subjectColors[n];
+  if(!COL.includes(color)||used.has(color)){
+   color=COL.find(c=>!used.has(c))||COL[i%COL.length];
+   if(S.subjectColors[n]!==color){S.subjectColors[n]=color;changed=true}
+  }
+  used.add(color);
+ });
+ return changed;
+}
+function subjectColor(n){return S.subjectColors&&S.subjectColors[n]||COL[0]}
 
 S.seeded=1;const save=()=>{try{const key=window.__activeUserId?K+':'+window.__activeUserId:K;localStorage.setItem(key,JSON.stringify(S))}catch(e){};if(window.__cloudSave)window.__cloudSave(S)};
 let view='d',mode='m',ref=new Date(),open={};
@@ -172,8 +192,8 @@ function line(B,P){const W=340,H=180,L=30,Bt=24,T=10,w=W-L-10;let c=0;const cum=
  return`<svg viewBox="0 0 ${W} ${H}">${s}</svg>`}
 function donut(es){const m={};es.forEach(e=>m[e.subj]=(m[e.subj]||0)+e.q);const L=Object.entries(m).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]),t=L.reduce((s,x)=>s+x[1],0);
  if(!t)return'<div class="empty">Sem questões registradas</div>';const C=2*Math.PI*48;let off=0,s='';
- L.forEach((x,i)=>{const l=C*x[1]/t;s+=`<circle cx="70" cy="70" r="48" fill="none" stroke="${COL[i%9]}" stroke-width="22" stroke-dasharray="${l} ${C-l}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`;off+=l});
- return`<div class="donut"><svg viewBox="0 0 140 140">${s}</svg><div class="lg">${L.map((x,i)=>`<div><span><span class="dot" style="background:${COL[i%9]}"></span>${esc(x[0])}</span><b>${x[1]}</b></div>`).join('')}</div></div>`}
+ L.forEach((x,i)=>{const l=C*x[1]/t;s+=`<circle cx="70" cy="70" r="48" fill="none" stroke="${subjectColor(x[0])}" stroke-width="22" stroke-dasharray="${l} ${C-l}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`;off+=l});
+ return`<div class="donut"><svg viewBox="0 0 140 140">${s}</svg><div class="lg">${L.map((x,i)=>`<div><span><span class="dot" style="background:${subjectColor(x[0])}"></span>${esc(x[0])}</span><b>${x[1]}</b></div>`).join('')}</div></div>`}
 function ring(v,g){const C=2*Math.PI*52,p=Math.min(1,v/g);
  return`<div class="donut"><svg viewBox="0 0 140 140"><circle cx="70" cy="70" r="52" fill="none" stroke="var(--in)" stroke-width="16"/><circle cx="70" cy="70" r="52" fill="none" stroke="var(--gr)" stroke-width="16" stroke-linecap="round" stroke-dasharray="${C*p} ${C}" transform="rotate(-90 70 70)"/><text x="70" y="76" text-anchor="middle" fill="var(--tx)" font-size="22" font-weight="700">${Math.round(p*100)}%</text></svg><div class="lg"><b>${f1(v)}h de ${f1(g)}h</b> líquidas na semana<label>Meta semanal (h)</label><input type="number" value="${g}" min="1" onchange="S.goal=+this.value||20;save();render()"></div></div>`}
 function radar(es){const m={};es.forEach(e=>{const o=m[e.subj]||(m[e.subj]={q:0,a:0});o.q+=e.q;o.a+=e.a});
@@ -213,7 +233,7 @@ const DIFFS=['Fácil','Média','Difícil'],ST_TX={done:'Pronta',prog:'Em andamen
 function mStat(m){const n=m.topics.length,d=(m.doneTopics||[]).filter(t=>m.topics.includes(t)).length;return{n,d,pc:n?Math.round(d/n*100):0,st:n&&d===n?'done':d>0?'prog':'new'}}
 function ldiFiltered(){const q=ldi.q.trim().toLowerCase();return S.edital.filter(m=>{const s=mStat(m);if(ldi.st!=='all'&&s.st!==ldi.st)return false;if(ldi.df!=='all'&&(m.diff||'')!==ldi.df)return false;if(q&&!m.name.toLowerCase().includes(q)&&!m.topics.some(t=>t.toLowerCase().includes(q)))return false;return true})}
 function ldiCard(m){const s=mStat(m),o=open[m.id],dy=m.days||[],es=S.entries.filter(e=>e.subj===m.name);
- const head=`<div class="ldh" onclick="tgO('${m.id}')"><span class="chev ${o?'o':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span><div class="g"><b>${esc(m.name)}</b><small>${s.d}/${s.n} tópicos · ${ST_TX[s.st]}${m.diff?' · '+m.diff:''}</small></div><span class="pct">${s.pc}%</span><button class="go" onclick="event.stopPropagation();tgO('${m.id}')"><span class="${o?'o':''}">↗</span></button></div>`;
+ const head=`<div class="ldh" onclick="tgO('${m.id}')"><span class="chev ${o?'o':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span><div class="g"><b><i class="dot" style="background:${subjectColor(m.name)}"></i>${esc(m.name)}</b><small>${s.d}/${s.n} tópicos · ${ST_TX[s.st]}${m.diff?' · '+m.diff:''}</small></div><span class="pct">${s.pc}%</span><button class="go" onclick="event.stopPropagation();tgO('${m.id}')"><span class="${o?'o':''}">↗</span></button></div>`;
  if(!o)return `<div class="ldc ${s.st}">${head}</div>`;
  const body=`<div class="ldb"><label>Dificuldade</label><div class="chips">${DIFFS.map(d=>`<button class="chip ${m.diff===d?'on':''}" onclick="tgDiff('${m.id}','${d}')">${d}</button>`).join('')}</div>
  <label>Dias da semana</label><div class="chips">${DN.map((n,i)=>`<button class="chip ${dy.includes(i)?'on':''}" onclick="tgD('${m.id}',${i})">${n}</button>`).join('')}</div>
@@ -286,7 +306,7 @@ function vC(){const T=S.timer,es=S.entries.filter(e=>e.subj===T.subj),tot=agg(es
  ${fin!==null?`<div style="text-align:left"><b>Sessão: ${f1(fin/36e5)}h</b><div class="two"><div><label>Questões feitas</label><input id="fq" type="number" min="0" inputmode="numeric"></div><div><label>Acertos</label><input id="fa" type="number" min="0" inputmode="numeric"></div></div><div class="two" style="margin-top:14px"><button class="cs2" onclick="resetT()">Descartar</button><button class="btn" onclick="saveFin()">Salvar sessão</button></div></div>`:
  `<div class="two"><button class="btn" onclick="tgT()">${T.run?'Pausar':el()?'Continuar':'Iniciar'}</button><button class="cs2" onclick="${T.mode==='p'&&!el()?'S.timer.ph=\'f\';save();render()':'finish()'}">${el()||T.run?'Finalizar':'Reiniciar'}</button></div>`}
  ${T.mode==='p'&&!T.run&&!el()?`<div class="two3"><div><label>Foco (min)</label><input type="number" min="1" value="${S.pomo.f}" onchange="S.pomo.f=+this.value||25;save();render()"></div><div><label>Pausa</label><input type="number" min="1" value="${S.pomo.b}" onchange="S.pomo.b=+this.value||5;save();render()"></div><div><label>Longa</label><input type="number" min="1" value="${S.pomo.l}" onchange="S.pomo.l=+this.value||15;save();render()"></div></div>`:''}</div>
- <div class="card"><h2>Tempo em ${esc(T.subj||'—')}</h2><div class="tiles"><div class="tile"><small>Hoje</small><b>${f1(hoje)}h</b></div><div class="tile"><small>Total</small><b>${f1(tot)}h</b></div></div>${breakdown(es)}</div>`}
+ <div class="card"><h2><i class="dot" style="background:${subjectColor(T.subj)}"></i>Tempo em ${esc(T.subj||'—')}</h2><div class="tiles"><div class="tile"><small>Hoje</small><b>${f1(hoje)}h</b></div><div class="tile"><small>Total</small><b>${f1(tot)}h</b></div></div>${breakdown(es)}</div>`}
 function saveE(){const v=i=>$('#'+i).value,n=i=>Math.max(0,parseFloat(v(i).replace(',','.'))||0),er=m=>$('#err').textContent=m;
  const h=n('h'),q=Math.floor(n('q')),a=Math.floor(n('a')),p=n('p');
  if(!S.edital.length)return er('Cadastre uma disciplina no Plano de Estudos.');if(!v('d'))return er('Escolha a data.');
@@ -301,7 +321,7 @@ const fHs=h=>{const m=Math.round(h*60);return Math.floor(m/60)+'h'+pad(m%60)};
 const pc=p=>p>=80?'var(--gr)':p>=60?'#fbbf24':'var(--rd)';
 const pb=(a,q)=>q?`<span class="pb" style="background:${pc(Math.round(a/q*100))}">${Math.round(a/q*100)}</span>`:'<span class="pb" style="background:var(--in);color:var(--mu)">–</span>';
 const RI=[1,7,15,30],TG=['Inscrições','Provas','Pagamentos','Outros'];
-const sCol=n=>COL[Math.max(0,S.edital.findIndex(m=>m.name===n))%9];
+const sCol=n=>subjectColor(n);
 function mkRev(subj,top,date){if(!top||S.revs.some(r=>r.subj===subj&&r.top===top))return;const d=parse(date);d.setDate(d.getDate()+RI[0]);S.revs.push({id:uid(),subj,top,due:iso(d),step:0,interval:1})}
 function addReview(){const subj=$('#rsub').value,top=$('#rtop').value||'',days=+$('#rint').value;if(!subj)return;const d=today();d.setDate(d.getDate()+days);S.revs.push({id:uid(),subj,top,due:iso(d),step:RI.indexOf(days),interval:days,manual:1});save();render()}
 function doRev(id){const r=S.revs.find(x=>x.id===id);if(!r)return;const days=+(r.interval||RI[r.step]||1),d=today();d.setDate(d.getDate()+days);r.due=iso(d);save();render()}
@@ -329,10 +349,10 @@ function exCard(){const E=S.exam;
  return`<div class="card"><div class="row" style="border:0;padding:0"><div class="g"><small>PROVA</small><b style="font-size:18px">${esc(E.name)}</b><small>${br(E.date)}</small></div><div style="text-align:center"><small>${n<0?'Prova realizada':n===0?'É hoje!':'Faltam'}</small><div class="big">${n<0?'—':n}</div><small>${n>0?(n===1?'dia para a prova':'dias para a prova'):''}</small></div><button class="x" onclick="editEx=1;render()">✎</button></div></div>`}
 const mb=(l,v,g,c)=>{const p=g?Math.min(100,Math.round(v/g*100)):0;return`<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${l}</span><b>${p}%</b></div><div class="bar" style="height:12px"><i style="width:${p}%;background:${c}"></i></div></div>`};
 function pr(n,h,a,q,c){return`<div class="pt"><span><i class="dot" style="background:${c}"></i>${esc(n)}</span><span>${h?fHs(h):'–'}</span><span style="color:var(--gr)">${a}</span><span style="color:var(--rd)">${q-a}</span><span>${q}</span><span>${pb(a,q)}</span></div>`}
-function painel(){const rows=S.edital.map((m,i)=>{const A=agg(S.entries.filter(e=>e.subj===m.name));return pr(m.name,A.h,A.a,A.q,COL[i%9])}).join(''),
+function painel(){const rows=S.edital.map((m,i)=>{const A=agg(S.entries.filter(e=>e.subj===m.name));return pr(m.name,A.h,A.a,A.q,subjectColor(m.name))}).join(''),
  sm=agg(S.sim);
  return`<div class="card"><h2>Painel</h2><div class="pt ph"><span>Disciplina</span><span>Tempo</span><span>✓</span><span>✗</span><span>Q</span><span>%</span></div>${rows||'<div class="empty">Cadastre disciplinas no LDI</div>'}<div class="pt tot"><span>Simulados</span><span>${sm.h?fHs(sm.h):'–'}</span><span style="color:var(--gr)">${sm.a}</span><span style="color:var(--rd)">${sm.q-sm.a}</span><span>${sm.q}</span><span>${pb(sm.a,sm.q)}</span></div><div class="leg" style="margin-top:10px"><span><i class="dot" style="background:var(--gr)"></i>80%+</span><span><i class="dot" style="background:#fbbf24"></i>60–79%</span><span><i class="dot" style="background:var(--rd)"></i>abaixo de 60%</span></div></div>`}
-function constCalendar(){const y=cm.getFullYear(),m=cm.getMonth(),n=new Date(y,m+1,0).getDate(),off=(new Date(y,m,1).getDay()+6)%7,st={};S.entries.forEach(e=>{if(net(e)>0||e.q>0)st[e.date]=(st[e.date]||0)+net(e)});S.sim.forEach(e=>{st[e.date]=(st[e.date]||0)+net(e)});const tk=iso(today());let cells='';for(let i=0;i<off;i++)cells+='<span></span>';for(let i=1;i<=n;i++){const k=y+'-'+pad(m+1)+'-'+pad(i);cells+=`<button class="cal ${k in st?'on':''} ${k===tk?'now':''} ${cs===k?'sel':''}" onclick="cs='${k}';render()">${i}</button>`}const L=cs?[...S.entries.filter(e=>e.date===cs),...S.sim.filter(e=>e.date===cs)]:[];return`<div class="top" style="margin:0 0 10px;font-size:16px"><button onclick="cmv(-1)">‹</button>${MES[m]} ${y}<button onclick="cmv(1)">›</button></div><div class="calh">${DN.map(x=>`<span>${x}</span>`).join('')}</div><div class="calg">${cells}</div><div class="leg">Verde = dia com estudo · selecione uma data para ver os registros</div>`+(cs?`<div style="margin-top:10px"><b>${br(cs)}</b>${L.map(e=>`<div class="row"><div class="g"><b>${esc(e.subj||'Simulado')}${e.top?' · '+esc(e.top):''}</b><small>${f1(net(e))}h líquidas · ${e.a||0}/${e.q||0} acertos</small></div></div>`).join('')||'<div class="empty">Nenhum estudo registrado nesta data</div>'}</div>`:'')}
+function constCalendar(){const y=cm.getFullYear(),m=cm.getMonth(),n=new Date(y,m+1,0).getDate(),off=(new Date(y,m,1).getDay()+6)%7,st={};S.entries.forEach(e=>{if(net(e)>0||e.q>0)st[e.date]=(st[e.date]||0)+net(e)});S.sim.forEach(e=>{st[e.date]=(st[e.date]||0)+net(e)});const tk=iso(today());let cells='';for(let i=0;i<off;i++)cells+='<span></span>';for(let i=1;i<=n;i++){const k=y+'-'+pad(m+1)+'-'+pad(i);cells+=`<button class="cal ${k in st?'on':''} ${k===tk?'now':''} ${cs===k?'sel':''}" onclick="cs='${k}';render()">${i}</button>`}const L=cs?[...S.entries.filter(e=>e.date===cs),...S.sim.filter(e=>e.date===cs)]:[];return`<div class="top" style="margin:0 0 10px;font-size:16px"><button onclick="cmv(-1)">‹</button>${MES[m]} ${y}<button onclick="cmv(1)">›</button></div><div class="calh">${DN.map(x=>`<span>${x}</span>`).join('')}</div><div class="calg">${cells}</div><div class="leg">Verde = dia com estudo · selecione uma data para ver os registros</div>`+(cs?`<div style="margin-top:10px"><b>${br(cs)}</b>${L.map(e=>`<div class="row"><div class="g"><b><i class="dot" style="background:${subjectColor(e.subj)}"></i>${esc(e.subj||'Simulado')}${e.top?' · '+esc(e.top):''}</b><small>${f1(net(e))}h líquidas · ${e.a||0}/${e.q||0} acertos</small></div></div>`).join('')||'<div class="empty">Nenhum estudo registrado nesta data</div>'}</div>`:'')}
 
 function vG(){const t=today(),k=iso(t),w0=mon(t),w1=new Date(w0);w1.setDate(w0.getDate()+6);
  const W=sumP(w0,w1),A=agg(S.entries),pa=A.q?Math.round(A.a/A.q*100):0,
@@ -387,7 +407,7 @@ function fQ(es,T,B,P){
  const er=TF.q-TF.a,pa=TF.q?Math.round(TF.a/TF.q*100):0,m={};
  f.forEach(e=>{if(!e.q)return;const o=m[e.subj]||(m[e.subj]={q:0,a:0,t:{}});o.q+=e.q;o.a+=e.a;const k=e.top||'Geral',z=o.t[k]||(o.t[k]={q:0,a:0});z.q+=e.q;z.a+=e.a});
  const L=Object.entries(m).sort((a,b)=>b[1].q-a[1].q);
- const colorOf=n=>{const ix=S.edital.findIndex(x=>x.name===n);return COL[(ix>=0?ix:subs.indexOf(n))%COL.length]};
+ const colorOf=n=>subjectColor(n);
  const chips=`<div class="card"><div class="disc-filter-head"><span>TOQUE NAS MATÉRIAS PARA FILTRAR</span><button onclick="qs=[];render()">Mostrar todas</button></div><div class="disc-filter"><button class="disc-chip all ${all?'on':''}" style="border-color:${all?'var(--ac)':'var(--bd)'};color:${all?'var(--tx)':'var(--mu)'}" onclick="qs=[];render()"><span class="mark" style="background:var(--mu)"></span>Todas</button>${subs.map(n=>{const c=colorOf(n),on=qs.includes(n);return `<button class="disc-chip ${on?'on':''}" aria-pressed="${on}" style="border-color:${on?c:'var(--bd)'};background:${on?c+'25':'var(--in)'};color:${on?c:'var(--tx)'}" onclick="qs.includes('${esc(n).replace(/'/g,"\\'")}')?qs=qs.filter(x=>x!=='${esc(n).replace(/'/g,"\\'")}'):qs=[...qs,'${esc(n).replace(/'/g,"\\'")}'];render()"><span class="mark" style="background:${c}"></span>${esc(n)}</button>`}).join('')}</div><div class="sub" style="margin:0;text-align:left">${all?'Visualizando todas as disciplinas':qs.length+' disciplina(s) selecionada(s)'}</div></div>`;
  const label=all?'todas as matérias':selected.map(esc).join(' + ');
  const big=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div class="bn">${nf(TF.q)}</div><div class="bl">questões selecionadas</div></div><div class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/></svg></div></div><div class="bf">${label} · ${P.title}${all?'':' · de '+nf(T.q)+' no total'}</div></div>`;
@@ -400,19 +420,19 @@ function fQ(es,T,B,P){
 function fH(es,T,B,P){const t=today(),w0=mon(t),w1=new Date(w0);w1.setDate(w0.getDate()+6);const wk=sumP(w0,w1).h,L=byS(es),mx=L.length?L[0][1]:1;
  return`<div class="tiles"><div class="tile"><small>Horas líquidas</small><b style="color:var(--gr)">${f1(T.h)}h</b><small>no período</small></div><div class="tile"><small>Horas na semana</small><b>${f1(wk)}h</b><small>meta ${f1(S.goal)}h</small></div></div>
  <div class="card"><h2>Horas por período</h2>${hbars(B,P)}</div><div class="card"><h2>Horas líquidas acumuladas</h2>${line(B,P)}</div><div class="card"><h2>Meta da semana</h2>${ring(wk,S.goal)}</div>
- <div class="card"><h2>Horas por disciplina</h2>`+(L.map(([n,h],i)=>`<div class="row"><div class="g"><b><i class="dot" style="background:${COL[i%9]}"></i>${esc(n)}</b><small>${f1(h)}h · ${Math.round(h/T.h*100)}% do total</small><div class="bar"><i style="width:${h/mx*100}%;background:${COL[i%9]}"></i></div></div></div>`).join('')||'<div class="empty">Nenhum estudo no período</div>')+`</div>`}
+ <div class="card"><h2>Horas por disciplina</h2>`+(L.map(([n,h],i)=>`<div class="row"><div class="g"><b><i class="dot" style="background:${subjectColor(n)}"></i>${esc(n)}</b><small>${f1(h)}h · ${Math.round(h/T.h*100)}% do total</small><div class="bar"><i style="width:${h/mx*100}%;background:${subjectColor(n)}"></i></div></div></div>`).join('')||'<div class="empty">Nenhum estudo no período</div>')+`</div>`}
 function cmv(k){cm.setDate(1);cm.setMonth(cm.getMonth()+k);cs=null;render()}
 function fC(){const y=cm.getFullYear(),m=cm.getMonth(),n=new Date(y,m+1,0).getDate(),off=new Date(y,m,1).getDay(),tk=iso(today()),daily={},bySubject={};
  S.entries.forEach(e=>{if(!e.date.startsWith(y+'-'+pad(m+1)))return;const h=net(e);if(h<=0&&!e.q)return;(daily[e.date]||(daily[e.date]=[])).push(e);bySubject[e.subj]=(bySubject[e.subj]||0)+h});
  S.sim.forEach(e=>{if(e.date.startsWith(y+'-'+pad(m+1)))(daily[e.date]||(daily[e.date]=[])).push({...e,subj:e.subj||'Simulado'})});
  const simHours=S.sim.filter(e=>e.date.startsWith(y+'-'+pad(m+1))).reduce((a,e)=>a+net(e),0),total=Object.values(bySubject).reduce((a,b)=>a+b,0)+simHours,days=Object.keys(daily).length,elapsed=y===today().getFullYear()&&m===today().getMonth()?today().getDate():y+'-'+pad(m+1)<iso(today())?n:0,noStudy=Math.max(0,elapsed-days),avg=days?total/days:0;
  let cells='';for(let i=0;i<off;i++)cells+='<div class="mday emptyday"></div>';
- for(let i=1;i<=n;i++){const k=y+'-'+pad(m+1)+'-'+pad(i),L=daily[k]||[],hrs=L.reduce((a,e)=>a+net(e),0);cells+=`<div class="mday ${k===tk?'today':''} ${cs===k?'selected':''}" onclick="cs='${k}';render()" style="cursor:pointer"><div class="num">${i}</div>${L.slice(0,3).map(e=>`<span class="study">${esc(e.subj)} · ${f1(net(e))}h</span>`).join('')}${L.length>3?`<span class="study">+${L.length-3} registros</span>`:''}</div>`}
+ for(let i=1;i<=n;i++){const k=y+'-'+pad(m+1)+'-'+pad(i),L=daily[k]||[],hrs=L.reduce((a,e)=>a+net(e),0);cells+=`<div class="mday ${k===tk?'today':''} ${cs===k?'selected':''}" onclick="cs='${k}';render()" style="cursor:pointer"><div class="num">${i}</div>${L.slice(0,3).map(e=>`<span class="study" style="border-left:3px solid ${subjectColor(e.subj)}">${esc(e.subj)} · ${f1(net(e))}h</span>`).join('')}${L.length>3?`<span class="study">+${L.length-3} registros</span>`:''}</div>`}
  const L=cs?daily[cs]||[]:[];
  return`<div class="monthstats"><div class="tile"><small>Total de horas</small><b>${f1(total)}h</b></div><div class="tile"><small>Dias com estudo</small><b>${days}</b></div><div class="tile"><small>Dias sem estudo</small><b>${noStudy}</b></div><div class="tile"><small>Média diária</small><b>${f1(avg)}h</b></div></div>
  <div class="card"><div class="top" style="margin:0 0 10px;font-size:17px"><button onclick="cmv(-1)">‹</button>${MES[m]} ${y}<button onclick="cmv(1)">›</button></div><div class="monthhead">${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(x=>`<span>${x}</span>`).join('')}</div><div class="monthcal">${cells}</div><div class="leg">Selecione um dia para consultar os estudos registrados</div></div>
- <div class="card"><h2>Disciplinas</h2>${Object.entries(bySubject).sort((a,b)=>b[1]-a[1]).map(([name,h])=>`<div class="row"><div class="g"><b>${esc(name)}</b></div><b>${f1(h)}h</b></div>`).join('')||'<div class="empty">Nenhuma hora registrada neste período geral</div>'}</div>
- ${cs?`<div class="card"><h2>${br(cs)}</h2>${L.map(e=>`<div class="row"><div class="g"><b>${esc(e.subj||'Simulado')}${e.top?' · '+esc(e.top):''}</b><small>${f1(net(e))}h líquidas · ${e.a||0}/${e.q||0} acertos</small></div></div>`).join('')||'<div class="empty">Nenhum estudo registrado nesta data</div>'}</div>`:''}`}
+ <div class="card"><h2>Disciplinas</h2>${Object.entries(bySubject).sort((a,b)=>b[1]-a[1]).map(([name,h])=>`<div class="row"><div class="g"><b><i class="dot" style="background:${subjectColor(name)}"></i>${esc(name)}</b></div><b>${f1(h)}h</b></div>`).join('')||'<div class="empty">Nenhuma hora registrada neste período geral</div>'}</div>
+ ${cs?`<div class="card"><h2>${br(cs)}</h2>${L.map(e=>`<div class="row"><div class="g"><b><i class="dot" style="background:${subjectColor(e.subj)}"></i>${esc(e.subj||'Simulado')}${e.top?' · '+esc(e.top):''}</b><small>${f1(net(e))}h líquidas · ${e.a||0}/${e.q||0} acertos</small></div></div>`).join('')||'<div class="empty">Nenhum estudo registrado nesta data</div>'}</div>`:''}`}
 function fG(es){const m={};es.forEach(e=>{const o=m[e.subj]||(m[e.subj]={q:0,a:0,h:0});o.q+=e.q;o.a+=e.a;o.h+=net(e)});
  const L=Object.entries(m).filter(x=>x[1].q>0).sort((a,b)=>b[1].q-a[1].q);if(!L.length)return'<div class="card"><div class="empty">Registre questões para ver o gráfico por disciplina</div></div>';
  const W=340,H=310,Lm=34,Rm=10,Tm=10,Bm=34,ym=Math.max(100,Math.ceil(Math.max(...L.map(x=>x[1].q))/10)*10),X=p=>Lm+(W-Lm-Rm)*p/100,Y=q=>Tm+(H-Tm-Bm)*(1-q/ym);
@@ -420,11 +440,11 @@ function fG(es){const m={};es.forEach(e=>{const o=m[e.subj]||(m[e.subj]={q:0,a:0
  [0,.25,.5,.75,1].forEach(k=>{const q=ym*k;s+=`<line x1="${Lm}" x2="${W-Rm}" y1="${Y(q)}" y2="${Y(q)}" stroke="var(--bd)" stroke-dasharray="3 4"/><text x="${Lm-5}" y="${Y(q)+3}" text-anchor="end" fill="var(--mu)" font-size="10">${Math.round(q)}</text>`});
  s+=`<line x1="${X(50)}" x2="${X(50)}" y1="${Tm}" y2="${H-Bm}" stroke="var(--tx)" stroke-width="1.5"/><line x1="${Lm}" x2="${W-Rm}" y1="${Y(50)}" y2="${Y(50)}" stroke="var(--tx)" stroke-width="1.5"/>`;
  [[.25,Tm+14,'Q2 · muitas questões,','desempenho baixo'],[.75,Tm+14,'Q3 · muitas questões,','desempenho promissor'],[.25,H-Bm-20,'Q1 · poucas questões,','desempenho baixo'],[.75,H-Bm-20,'Q4 · poucas questões,','desempenho bom']].forEach(z=>s+=`<text text-anchor="middle" fill="var(--mu)" opacity=".7" font-size="8.5"><tspan x="${X(z[0]*100)}" y="${z[1]}">${z[2]}</tspan><tspan x="${X(z[0]*100)}" dy="11">${z[3]}</tspan></text>`);
- L.forEach(([n,o],i)=>{const r=Math.max(11,Math.min(28,9+Math.sqrt(o.h)*5)),cx=Math.min(W-Rm-r,Math.max(Lm+r,X(o.a/o.q*100))),cy=Math.min(H-Bm-r,Math.max(Tm+r,Y(o.q)));s+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${COL[i%9]}" fill-opacity=".85" stroke="var(--bg)" stroke-width="2"/><text x="${cx}" y="${cy+4}" text-anchor="middle" fill="#04121a" font-size="12" font-weight="700">${String.fromCharCode(65+i)}</text>`});
+ L.forEach(([n,o],i)=>{const r=Math.max(11,Math.min(28,9+Math.sqrt(o.h)*5)),cx=Math.min(W-Rm-r,Math.max(Lm+r,X(o.a/o.q*100))),cy=Math.min(H-Bm-r,Math.max(Tm+r,Y(o.q)));s+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${subjectColor(n)}" fill-opacity=".85" stroke="var(--bg)" stroke-width="2"/><text x="${cx}" y="${cy+4}" text-anchor="middle" fill="#04121a" font-size="12" font-weight="700">${String.fromCharCode(65+i)}</text>`});
  return`<div class="card"><h2>Disciplinas: desempenho × questões</h2><div class="sub" style="text-align:left;margin:0 0 8px">Eixo X: % de acertos · eixo Y: questões resolvidas · tamanho da bolha: horas estudadas</div><svg viewBox="0 0 ${W} ${H}">${s}</svg></div>
- <div class="card"><h2>Legenda</h2>${L.map(([n,o],i)=>`<div class="row"><span class="lt" style="background:${COL[i%9]}">${String.fromCharCode(65+i)}</span><div class="g"><b>${esc(n)}</b><small>${o.q} questões · ${f1(o.h)}h</small></div><b>${Math.round(o.a/o.q*100)}%</b></div>`).join('')}</div>`}
+ <div class="card"><h2>Legenda</h2>${L.map(([n,o],i)=>`<div class="row"><span class="lt" style="background:${subjectColor(n)}">${String.fromCharCode(65+i)}</span><div class="g"><b>${esc(n)}</b><small>${o.q} questões · ${f1(o.h)}h</small></div><b>${Math.round(o.a/o.q*100)}%</b></div>`).join('')}</div>`}
 
-function render(){if(!S.edital.find(x=>x.name===S.timer.subj))S.timer.subj=S.edital[0]?S.edital[0].name:'';
+function render(){if(ensureSubjectColors())save();if(!S.edital.find(x=>x.name===S.timer.subj))S.timer.subj=S.edital[0]?S.edital[0].name:'';
  $('#app').innerHTML={d:vG,p:vP,s:vS,c:vC,f:vF}[view]();
  $('#nav div').innerHTML=[['d','Visão Geral'],['p','LDI'],['s','Agenda'],['c','Foco'],['f','Desempenho']].map(x=>`<button class="${view===x[0]?'on':''}" onclick="go('${x[0]}')"><span>${ICON[x[0]]}</span>${x[1]}</button>`).join('');
  if(view==='c')fillTop('ts','tt2',S.timer.top);if(view==='d'){fillTop('s','tp');fillTop('rsub','rtop')}if(view==='s'&&sheet)fillTop('ss','st')}
@@ -458,7 +478,7 @@ function showApp(email){
  document.getElementById('cloud-email').textContent=email||'Conta conectada';
  document.getElementById('cloud-user').style.display='flex';
 }
-function defaults(){return {edital:[],entries:[],reviews:[],tasks:[],sched:[],goal:20,goalQ:120,exam:{name:'',date:''},rem:[],sim:[],revs:[],pomo:{f:25,b:5,l:15},timer:{mode:'c',subj:'',top:'',run:0,st:0,acc:0,ph:'f',n:0},seeded:1}}
+function defaults(){return {edital:[],entries:[],reviews:[],tasks:[],sched:[],goal:20,goalQ:120,subjectColors:{},exam:{name:'',date:''},rem:[],sim:[],revs:[],pomo:{f:25,b:5,l:15},timer:{mode:'c',subj:'',top:'',run:0,st:0,acc:0,ph:'f',n:0},seeded:1}}
 function normalizeState(value){
  const d=defaults();
  if(!value||typeof value!=='object'||Array.isArray(value))return d;
@@ -466,6 +486,7 @@ function normalizeState(value){
  ['edital','entries','reviews','tasks','sched','rem','sim','revs'].forEach(k=>{if(!Array.isArray(s[k]))s[k]=[]});
  if(!s.pomo||typeof s.pomo!=='object')s.pomo=d.pomo;
  if(!s.timer||typeof s.timer!=='object')s.timer=d.timer;
+ if(!s.subjectColors||typeof s.subjectColors!=='object'||Array.isArray(s.subjectColors))s.subjectColors={};
  if(!Number.isFinite(Number(s.goal))||Number(s.goal)<=0)s.goal=20;
  if(!Number.isFinite(Number(s.goalQ))||Number(s.goalQ)<=0)s.goalQ=120;
  return s;
