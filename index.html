@@ -114,7 +114,7 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 const K='estudos-v1',$=s=>document.querySelector(s);
 const COL=['#4cc7ff','#4ade80','#fbbf24','#f87171','#a78bfa','#fb923c','#2dd4bf','#f472b6','#94a3b8'];
 const MES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-let S={edital:[],entries:[],reviews:[],tasks:[],sched:[],goal:20,goalQ:120,exam:{name:'',date:''},rem:[],sim:[],revs:[],pomo:{f:25,b:5,l:15},timer:{mode:'c',subj:'',top:'',run:0,st:0,acc:0,ph:'f',n:0}};
+var S={edital:[],entries:[],reviews:[],tasks:[],sched:[],goal:20,goalQ:120,exam:{name:'',date:''},rem:[],sim:[],revs:[],pomo:{f:25,b:5,l:15},timer:{mode:'c',subj:'',top:'',run:0,st:0,acc:0,ph:'f',n:0}};
 Object.defineProperty(window,'__appState',{configurable:true,get:()=>S,set:value=>{S=value}});
 try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
@@ -358,7 +358,8 @@ function vG(){const t=today(),k=iso(t),w0=mon(t),w1=new Date(w0);w1.setDate(w0.g
 function delE(id){S.entries=S.entries.filter(x=>x.id!==id);save();render()}
 
 /* ---------- DESEMPENHO ---------- */
-let dt='q',ex={},cm=new Date(),cs=null;
+let dt='q',ex={},cm=new Date(),cs=null,qs='all';
+const nf=n=>Number(n).toLocaleString('pt-BR');
 function pHead(){const P=period();return`<div class="top"><button onclick="shift(-1)">‹</button>${P.title}<button onclick="shift(1)">›</button></div><div class="seg">${[['w','Semana'],['m','Mês'],['y','Ano']].map(x=>`<button class="${mode===x[0]?'on':''}" onclick="setMode('${x[0]}')">${x[1]}</button>`).join('')}</div>`}
 function hbars(B,P){const W=340,H=170,L=30,Bt=24,T=10,mx=Math.max(1,...B.map(b=>b.h)),cw=(W-L)/P.n,bw=Math.min(22,cw*.6),ch=H-Bt-T;let s=grid(W,H,L,T,Bt,mx,f1);
  B.forEach((b,i)=>{const cx=L+cw*i+cw/2,h=ch*b.h/mx;s+=`<rect x="${cx-bw/2}" y="${H-Bt-h}" width="${bw}" height="${h}" rx="4" fill="var(--ac)"/><text x="${cx}" y="${H-7}" text-anchor="middle" fill="var(--mu)" font-size="10">${P.names[i]}</text>`});return`<svg viewBox="0 0 ${W} ${H}">${s}</svg>`}
@@ -512,7 +513,7 @@ async function activate(user){
   showApp(user.email);
  }catch(e){
   activeUid=null;window.__activeUserId=null;ready=false;queuedState=null;submit.disabled=false;
-  message('Erro ao carregar seus estudos: '+friendlyError(e),'error');
+  console.error('Erro ao carregar seus estudos:',e);message('Erro ao carregar seus estudos: '+friendlyError(e),'error');
  }
 }
 async function init(){
