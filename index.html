@@ -115,6 +115,7 @@ const K='estudos-v1',$=s=>document.querySelector(s);
 const COL=['#4cc7ff','#4ade80','#fbbf24','#f87171','#a78bfa','#fb923c','#2dd4bf','#f472b6','#94a3b8'];
 const MES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 let S={edital:[],entries:[],reviews:[],tasks:[],sched:[],goal:20,goalQ:120,exam:{name:'',date:''},rem:[],sim:[],revs:[],pomo:{f:25,b:5,l:15},timer:{mode:'c',subj:'',top:'',run:0,st:0,acc:0,ph:'f',n:0}};
+Object.defineProperty(window,'__appState',{configurable:true,get:()=>S,set:value=>{S=value}});
 try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 if(S.subjects){S.edital=S.subjects.map(n=>({id:uid(),name:n,topics:[]}));delete S.subjects}
@@ -486,24 +487,24 @@ async function activate(user){
    const usePending=confirm('Encontramos alterações deste usuário que não chegaram à nuvem.\n\nOK = recuperar as alterações locais e sincronizar.\nCancelar = manter a versão que está na nuvem.');
    if(usePending){
     if(cloudState)saveJsonFile({app:'Meu App Estudos',version:1,exportedAt:new Date().toISOString(),userId:user.id,data:cloudState},'meu-app-estudos-estado-nuvem-antes-da-recuperacao.json');
-    S=normalizeState(pending.state);
+    window.__appState=normalizeState(pending.state);
     window.__activeUserId=user.id;ready=true;
-    localStorage.setItem(cacheKey,JSON.stringify(S));
-    queuedState=JSON.parse(JSON.stringify(S));
+    localStorage.setItem(cacheKey,JSON.stringify(window.__appState));
+    queuedState=JSON.parse(JSON.stringify(window.__appState));
    }else{
     localStorage.removeItem(pendingKey);
-    S=cloudState||defaults();
+    window.__appState=cloudState||defaults();
    }
   }else if(cloudState){
-   S=cloudState;
+   window.__appState=cloudState;
   }else{
    const userCache=localStorage.getItem(cacheKey);
-   S=userCache?normalizeState(JSON.parse(userCache)):defaults();
-   const saved=await client.from('estudos').upsert({id:user.id,dados:S,atualizado_em:new Date().toISOString()},{onConflict:'id'});
+   window.__appState=userCache?normalizeState(JSON.parse(userCache)):defaults();
+   const saved=await client.from('estudos').upsert({id:user.id,dados:window.__appState,atualizado_em:new Date().toISOString()},{onConflict:'id'});
    if(saved.error)throw saved.error;
   }
   window.__activeUserId=user.id;
-  localStorage.setItem(cacheKey,JSON.stringify(S));
+  localStorage.setItem(cacheKey,JSON.stringify(window.__appState));
   ready=true;
   if(queuedState){setCloudStatus('Recuperando alterações...');clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,50)}
   else setCloudStatus('Sincronizado');
@@ -564,7 +565,7 @@ document.getElementById('cloud-logout').addEventListener('click',async()=>{
 });
 function downloadBackup(){
  if(!ready||!activeUid)return;
- const backup={app:'Meu App Estudos',version:1,exportedAt:new Date().toISOString(),userId:activeUid,data:S};
+ const backup={app:'Meu App Estudos',version:1,exportedAt:new Date().toISOString(),userId:activeUid,data:window.__appState};
  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download='meu-app-estudos-backup-'+new Date().toISOString().slice(0,10)+'.json';
@@ -576,7 +577,7 @@ document.getElementById('cloud-save-snapshot').addEventListener('click',async()=
  const b=document.getElementById('cloud-save-snapshot');if(!ready||!activeUid)return;
  b.disabled=true;setCloudStatus('Salvando cópia na nuvem...');
  try{
-  const {error}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:S,atualizado_em:new Date().toISOString()});
+  const {error}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:window.__appState,atualizado_em:new Date().toISOString()});
   if(error)throw error;
   setCloudStatus('Cópia salva na nuvem');
  }catch(e){alert('Não foi possível salvar a cópia: '+friendlyError(e));setCloudStatus('Falha ao salvar cópia',true)}
@@ -608,13 +609,13 @@ document.getElementById('cloud-restore').addEventListener('click',async()=>{
  try{
   const row=await getLatestCloudBackup();
   if(!confirm('Restaurar a cópia '+(row.backup_type==='manual'?'manual':'automática')+' de '+row.backup_date+'? Isso substituirá os dados atuais. Antes, será criada uma cópia do estado atual na nuvem e baixada uma cópia para seu computador.'))return;
-  const {error:preError}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:S,atualizado_em:new Date().toISOString()});
+  const {error:preError}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:window.__appState,atualizado_em:new Date().toISOString()});
   if(preError)throw preError;
   downloadBackup();
-  S=normalizeState(row.dados);
-  localStorage.setItem(K+':'+activeUid,JSON.stringify(S));
+  window.__appState=normalizeState(row.dados);
+  localStorage.setItem(K+':'+activeUid,JSON.stringify(window.__appState));
   if(typeof render==='function')render();
-  window.__cloudSave(S);
+  window.__cloudSave(window.__appState);
   setCloudStatus('Cópia restaurada; sincronizando...');
  }catch(e){alert(friendlyError(e));setCloudStatus('Falha ao restaurar cópia',true)}
  finally{b.disabled=false}
@@ -630,12 +631,12 @@ importInput.addEventListener('change',()=>{
    if(!backup||!backup.data||typeof backup.data!=='object'||Array.isArray(backup.data))throw new Error('O arquivo não parece ser um backup válido do Meu App Estudos.');
    if(backup.userId&&backup.userId!==activeUid){alert('Este backup pertence a outra conta. Entre na conta correspondente para importá-lo.');return;}
    if(!confirm('Importar este backup vai substituir os registros atuais desta conta. Você já baixou um backup do estado atual?'))return;
-   const {error:preError}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:S,atualizado_em:new Date().toISOString()});
+   const {error:preError}=await client.from('estudos_backups').insert({user_id:activeUid,backup_date:new Date().toISOString().slice(0,10),backup_type:'manual',dados:window.__appState,atualizado_em:new Date().toISOString()});
    if(preError)throw preError;
-   S=normalizeState(backup.data);
-   localStorage.setItem(K+':'+activeUid,JSON.stringify(S));
+   window.__appState=normalizeState(backup.data);
+   localStorage.setItem(K+':'+activeUid,JSON.stringify(window.__appState));
    if(typeof render==='function')render();
-   window.__cloudSave(S);
+   window.__cloudSave(window.__appState);
    setCloudStatus('Backup importado; sincronizando...');
   }catch(e){alert('Não foi possível importar: '+(e.message||e))}
   finally{importInput.value=''}
