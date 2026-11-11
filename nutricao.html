@@ -839,7 +839,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(111,191,140,.35)!
 .demo-notice{display:flex;flex-direction:column;gap:6px;margin:0 0 13px;padding:12px 14px;border:1px solid #756344;border-radius:14px;background:linear-gradient(135deg,#292419,#171711);color:#e8dfca}.demo-notice b{font-size:10px;letter-spacing:.12em;color:#e3c98f}.demo-notice span{font-size:11px;line-height:1.5;color:#c6bdab}.demo-notice button{align-self:flex-start;border:1px solid #74684f;background:#302a1d;color:#f0dfb8;border-radius:9px;padding:7px 10px;font-size:10px;font-weight:700;margin-top:3px}
 </style></head><body><a id="central-link" href="https://doiserrer1895-dotcom.github.io/meu-app-estudos/">⌂ Central do Aplicativo</a><div id="app"></div><div id="nav"><div></div></div>
 <script>
-const K='nutri-v1',$=s=>document.querySelector(s),GR=['#a78bfa','#facc15','#f5f5f5','#38bdf8','#fb923c'];
+const K='nutri-v1',RESET_KEY='nutri-config-reset-v2',$=s=>document.querySelector(s),GR=['#a78bfa','#facc15','#f5f5f5','#38bdf8','#fb923c'];
 const F=['k','p','c','f','fib','sug','sod','sat','col','pot'],FL=['Calorias (kcal)','Proteínas (g)','Carboidratos (g)','Gorduras (g)','Fibras (g)','Açúcares (g)','Sódio (mg)','Gord. saturadas (g)','Colesterol (mg)','Potássio (mg)'];
 const MEALS=[['cafe','Café da manhã'],['almoco','Almoço'],['tarde','Café da tarde'],['janta','Janta']];
 const M=[
@@ -849,29 +849,18 @@ const M=[
 ];
 let bodyTab='corpo';
 let bodyEvoMetric='pe',bodyEvoRange='all';
-let S={diary:[],market:[],water:{},body:[],plan:{cafe:'',almoco:'',tarde:'',janta:'',supl:0,suplTxt:'',suplOk:{}},goal:{k:2000,p:120,c:250,f:60,w:3000}};
+// Limpeza única da configuração antiga: preserva os dados de outras áreas do aplicativo.
+try{if(localStorage.getItem(RESET_KEY)!=='1'){localStorage.removeItem(K);localStorage.setItem(RESET_KEY,'1')}}catch(e){}
+let S={diary:[],market:[],marketShoppingList:[],marketDiary:[],marketCart:[],water:{},body:[],health:{},act:{},plan:{cafe:'',almoco:'',tarde:'',janta:'',supl:0,suplTxt:'',suplOk:{}},goal:{k:0,p:0,c:0,f:0,w:0,fib:0,sug:0,sat:0,sod:0,col:0,pot:0}};
 try{const r=JSON.parse(localStorage.getItem(K));if(r)S=Object.assign(S,r)}catch(e){}
-S.goal=Object.assign({k:2000,p:120,c:250,f:60,w:3000,fib:30,sug:50,sat:20,sod:2000,col:300,pot:3500},S.goal);
+S.goal=Object.assign({k:0,p:0,c:0,f:0,w:0,fib:0,sug:0,sat:0,sod:0,col:0,pot:0},S.goal);
 S.health=S.health||{};
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
 const pad=n=>String(n).padStart(2,'0'),iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),td=()=>iso(new Date());
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-// Dados demonstrativos temporários: só são criados quando ainda não existe avaliação real.
-// Todos os registros carregam demo:true e podem ser removidos pelo botão da faixa de demonstração.
-if(!Array.isArray(S.body))S.body=[];
-if(S.body.length===0){
- const demoPoints=[
-  {d:30,pe:67.4,mm:29.1,gd:19.8,ag:55.8,mlg:54.1,mo:3.0,gv:6,mb:1580,omb:109.5,tor:91.8,pt:94.0,brd:31.0,bre:30.8,ard:26.0,are:25.8,ci:78.2,ab:84.0,qu:96.0,cdd:55.0,cde:54.8,pad:36.0,pae:35.8},
-  {d:23,pe:67.6,mm:29.2,gd:19.7,ag:55.9,mlg:54.3,mo:3.0,gv:6,mb:1585,omb:109.6,tor:91.9,pt:94.1,brd:31.0,bre:30.9,ard:26.0,are:25.9,ci:78.1,ab:83.9,qu:96.0,cdd:55.1,cde:54.9,pad:36.0,pae:35.9},
-  {d:15,pe:67.8,mm:29.2,gd:19.7,ag:56.0,mlg:54.4,mo:3.0,gv:6,mb:1587,omb:109.7,tor:92.0,pt:94.2,brd:31.1,bre:30.9,ard:26.1,are:25.9,ci:78.0,ab:83.8,qu:96.1,cdd:55.1,cde:55.0,pad:36.1,pae:35.9},
-  {d:7,pe:68.0,mm:29.3,gd:19.6,ag:56.0,mlg:54.7,mo:3.0,gv:6,mb:1590,omb:109.8,tor:92.1,pt:94.3,brd:31.1,bre:31.0,ard:26.1,are:26.0,ci:77.9,ab:83.7,qu:96.1,cdd:55.2,cde:55.0,pad:36.1,pae:36.0},
-  {d:0,pe:68.1,mm:29.4,gd:19.5,ag:56.1,mlg:54.8,mo:3.0,gv:6,mb:1592,omb:109.9,tor:92.2,pt:94.4,brd:31.2,bre:31.0,ard:26.2,are:26.0,ci:77.8,ab:83.6,qu:96.2,cdd:55.2,cde:55.1,pad:36.2,pae:36.0}
- ];
- S.body=demoPoints.map(p=>{const dt=new Date();dt.setDate(dt.getDate()-p.d);const date=iso(dt);const {d,...values}=p;return {date,sex:'',age:0,al:171,...values,demo:true}});
- save();
-}
-const hasDemoBody=()=>Array.isArray(S.body)&&S.body.some(x=>x.demo===true);
+// A aba começa sem avaliações corporais pré-preenchidas.
+const hasDemoBody=()=>false;
 function removeDemoBody(){S.body=(S.body||[]).filter(x=>!x.demo);save();render()}
 const f1=n=>(Math.round(n*10)/10).toString().replace('.',','),R$=n=>'R$ '+(+n).toFixed(2).replace('.',','),uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 const num=i=>Math.max(0,parseFloat(($('#'+i).value||'').replace(',','.'))||0),br=s=>s.split('-').reverse().join('/');
