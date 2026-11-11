@@ -121,6 +121,33 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 .disc-chip.all{border-style:dashed}
 .disc-filter-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 8px;color:var(--mu);font-size:12px}
 .disc-filter-head button{border:0;background:none;color:var(--ac);font:700 12px inherit;cursor:pointer;padding:5px}
+/* Central de aplicativos */
+#app.home-shell{max-width:760px;padding:clamp(18px,4vw,34px) 18px 40px}
+.home-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:14px 0 28px}
+.home-eyebrow{color:var(--mu);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px}
+.home-greeting{font-size:clamp(27px,5vw,38px);font-weight:800;letter-spacing:-.05em;line-height:1.08;margin:0}
+.home-welcome{color:var(--mu);font-size:14px;margin-top:9px;line-height:1.5}
+.home-clock{flex:none;text-align:right;border:1px solid var(--bd);background:linear-gradient(145deg,var(--card),var(--in));border-radius:18px;padding:12px 15px;min-width:112px;box-shadow:0 8px 24px #00000016}
+.home-clock small{display:block;color:var(--mu);font-size:10px;font-weight:700;letter-spacing:.12em;margin-bottom:5px}
+.home-clock strong{display:block;font-size:clamp(24px,5vw,32px);font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.home-prompt{font-size:13px;color:var(--mu);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:0 0 12px}
+.home-area{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);align-items:stretch;gap:0;min-height:160px;border:1px solid var(--bd);border-radius:22px;overflow:hidden;margin:0 0 14px;background:var(--card);box-shadow:0 10px 28px #00000012;transition:transform .18s,border-color .18s}
+.home-area:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--area-accent) 55%,var(--bd))}
+.home-art{position:relative;min-height:160px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(135deg,var(--area-bg),var(--area-accent-soft));color:var(--area-accent)}
+.home-art:before{content:"";position:absolute;width:170px;height:170px;border-radius:50%;background:var(--area-accent);opacity:.10;right:-48px;top:-60px}
+.home-art:after{content:"";position:absolute;width:110px;height:110px;border-radius:28px;border:1px solid var(--area-accent);opacity:.17;transform:rotate(28deg);left:-24px;bottom:-38px}
+.home-art .home-symbol{position:relative;z-index:1;font-size:54px;filter:drop-shadow(0 8px 14px #00000018)}
+.home-info{padding:20px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:9px}
+.home-info h2{font-size:22px;letter-spacing:-.04em;margin:0;font-weight:800}
+.home-info p{font-size:13px;color:var(--mu);line-height:1.5;margin:0}
+.home-access{margin-top:5px;border:0;border-radius:12px;background:var(--area-accent);color:var(--area-button-text,#07110b);font:700 13px inherit;padding:11px 15px;cursor:pointer;display:inline-flex;align-items:center;gap:10px;transition:filter .15s}
+.home-access:hover{filter:brightness(1.08)}
+.home-area.study{--area-accent:#8be0a6;--area-bg:#14251b;--area-accent-soft:#254a32;--area-button-text:#092012}
+.home-area.nutrition{--area-accent:#9ac8ff;--area-bg:#142033;--area-accent-soft:#294d77;--area-button-text:#08192c}
+.home-footer{margin-top:18px;color:var(--mu);font-size:12px;text-align:center}
+.home-back{border:1px solid var(--bd);background:var(--card);color:var(--mu);border-radius:10px;padding:7px 10px;font:600 12px inherit;cursor:pointer;white-space:nowrap}
+@media(max-width:520px){.home-head{align-items:flex-start;margin:8px 0 24px}.home-clock{min-width:94px;padding:10px 11px}.home-area{grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr);min-height:142px}.home-art{min-height:142px}.home-art .home-symbol{font-size:42px}.home-info{padding:14px}.home-info h2{font-size:19px}.home-info p{font-size:12px}.home-access{padding:10px 11px;font-size:12px}}
+@media(max-width:360px){.home-area{grid-template-columns:1fr}.home-art{min-height:105px}.home-art .home-symbol{font-size:38px}}
 </style></head><body><div id="app"></div><div id="nav"><div></div></div>
 <script>
 const K='estudos-v1',$=s=>document.querySelector(s);
@@ -152,7 +179,7 @@ function ensureSubjectColors(){
 function subjectColor(n){return S.subjectColors&&S.subjectColors[n]||COL[0]}
 
 S.seeded=1;const save=()=>{try{const key=window.__activeUserId?K+':'+window.__activeUserId:K;localStorage.setItem(key,JSON.stringify(S))}catch(e){};if(window.__cloudSave)window.__cloudSave(S)};
-let view='d',mode='m',ref=new Date(),open={};
+let view='d',mode='m',ref=new Date(),open={},inStudies=false;
 const pad=n=>String(n).padStart(2,'0');
 const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const parse=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
@@ -291,7 +318,7 @@ const el=()=>S.timer.acc+(S.timer.run?Date.now()-S.timer.st:0);
 const plen=()=>S.pomo[S.timer.ph]*6e4;
 const clk=ms=>{ms=Math.max(0,Math.floor(ms));const h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000);return pad(h)+':'+pad(m)+':'+pad(s)};
 const shown=()=>S.timer.mode==='p'?clk(Math.max(0,plen()-el())):clk(el());
-function tick(){const T=S.timer,c=$('#clk');if(T.run&&T.mode==='p'&&el()>=plen()){endPhase();return}if(c)c.textContent=shown()}
+function tick(){const T=S.timer,c=$('#clk'),ht=$('#home-time');if(ht)ht.textContent=homeClock();if(T.run&&T.mode==='p'&&el()>=plen()){endPhase();return}if(c)c.textContent=shown()}
 function endPhase(){const T=S.timer;if(T.ph==='f'){addEntry(plen()/36e5);T.n++;T.ph=T.n%4===0?'l':'b'}else T.ph='f';T.acc=0;T.run=0;save();try{navigator.vibrate&&navigator.vibrate([300,150,300])}catch(e){}render()}
 function tgT(){const T=S.timer;if(T.run){T.acc+=Date.now()-T.st;T.run=0}else{T.st=Date.now();T.run=1}save();render()}
 function tmode(m){const T=S.timer;if(T.run)return;T.mode=m;T.acc=0;T.ph='f';save();render()}
@@ -444,8 +471,14 @@ function fG(es){const m={};es.forEach(e=>{const o=m[e.subj]||(m[e.subj]={q:0,a:0
  return`<div class="card"><h2>Disciplinas: desempenho × questões</h2><div class="sub" style="text-align:left;margin:0 0 8px">Eixo X: % de acertos · eixo Y: questões resolvidas · tamanho da bolha: horas estudadas</div><svg viewBox="0 0 ${W} ${H}">${s}</svg></div>
  <div class="card"><h2>Legenda</h2>${L.map(([n,o],i)=>`<div class="row"><span class="lt" style="background:${subjectColor(n)}">${String.fromCharCode(65+i)}</span><div class="g"><b>${esc(n)}</b><small>${o.q} questões · ${f1(o.h)}h</small></div><b>${Math.round(o.a/o.q*100)}%</b></div>`).join('')}</div>`}
 
-function render(){if(ensureSubjectColors())save();if(!S.edital.find(x=>x.name===S.timer.subj))S.timer.subj=S.edital[0]?S.edital[0].name:'';
- $('#app').innerHTML={d:vG,p:vP,s:vS,c:vC,f:vF}[view]();
+function homeGreeting(){const h=new Date().getHours();return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'}
+function homeClock(){const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())}
+function enterStudies(){inStudies=true;view='d';render();scrollTo(0,0)}
+function enterNutrition(){alert('A área de Nutrição será conectada em uma próxima etapa. Por enquanto, vamos testar a entrada em Estudos.')}
+function backHome(){inStudies=false;render();scrollTo(0,0)}
+function homeScreen(){return `<section class="home-head"><div><div class="home-eyebrow">Central de Aplicativos</div><h1 class="home-greeting">${homeGreeting()}, Raphael!</h1><div class="home-welcome">Bem-vindo de volta. O que vamos fazer hoje?</div></div><div class="home-clock"><small>HORÁRIO</small><strong id="home-time">${homeClock()}</strong></div></section><div class="home-prompt">Escolha uma área</div><article class="home-area study"><div class="home-art"><span class="home-symbol">✦</span></div><div class="home-info"><h2>Estudos</h2><p>Questões, disciplinas, desempenho e organização em um só lugar.</p><button class="home-access" onclick="enterStudies()">Acessar área <span>→</span></button></div></article><article class="home-area nutrition"><div class="home-art"><span class="home-symbol">✚</span></div><div class="home-info"><h2>Nutrição</h2><p>Alimentos, refeições e acompanhamento nutricional.</p><button class="home-access" onclick="enterNutrition()">Acessar área <span>→</span></button></div></article><div class="home-footer">Seu espaço, suas áreas, sua rotina.</div>`}
+function render(){if(!inStudies){$('#app').classList.add('home-shell');$('#app').innerHTML=homeScreen();$('#nav').style.display='none';return;}$('#app').classList.remove('home-shell');$('#nav').style.display='';if(ensureSubjectColors())save();if(!S.edital.find(x=>x.name===S.timer.subj))S.timer.subj=S.edital[0]?S.edital[0].name:'';
+ $('#app').innerHTML={d:vG,p:vP,s:vS,c:vC,f:vF}[view]();const top=$('#app .top');if(top){top.style.display='flex';top.style.alignItems='center';top.style.justifyContent='space-between';top.innerHTML=esc(({d:'Visão Geral',p:'LDI',s:'Agenda',c:'Foco',f:'Desempenho'})[view]||'Estudos')+'<button class="home-back" onclick="backHome()">⌂ Central</button>';}
  $('#nav div').innerHTML=[['d','Visão Geral'],['p','LDI'],['s','Agenda'],['c','Foco'],['f','Desempenho']].map(x=>`<button class="${view===x[0]?'on':''}" onclick="go('${x[0]}')"><span>${ICON[x[0]]}</span>${x[1]}</button>`).join('');
  if(view==='c')fillTop('ts','tt2',S.timer.top);if(view==='d'){fillTop('s','tp');fillTop('rsub','rtop')}if(view==='s'&&sheet)fillTop('ss','st')}
 render();setInterval(tick,250);
