@@ -1,0 +1,15 @@
+{
+  "id": "/meu-app-estudos/",
+  "name": "Meu App de Estudos",
+  "short_name": "Estudos",
+  "description": "Seu espaço pessoal de estudos",
+  "start_url": "/meu-app-estudos/",
+  "scope": "/meu-app-estudos/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    { "src": "/meu-app-estudos/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
