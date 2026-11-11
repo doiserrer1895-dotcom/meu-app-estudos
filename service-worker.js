@@ -1,4 +1,4 @@
-const CACHE_NAME = "meu-app-estudos-shell-v7";
+const CACHE_NAME = "meu-app-estudos-shell-v8";
 const BASE = "/meu-app-estudos/";
 const SHELL = [BASE, BASE + "index.html", BASE + "nutricao.html", BASE + "manifest.webmanifest", BASE + "icons/icon.svg", BASE + "assets/nutricao-card-square.svg"];
 self.addEventListener("install", (event) => {
