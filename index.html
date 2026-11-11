@@ -148,6 +148,24 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 .home-back{border:1px solid var(--bd);background:var(--card);color:var(--mu);border-radius:10px;padding:7px 10px;font:600 12px inherit;cursor:pointer;white-space:nowrap}
 @media(max-width:520px){.home-head{align-items:flex-start;margin:8px 0 24px}.home-clock{min-width:94px;padding:10px 11px}.home-area{grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr);min-height:142px}.home-art{min-height:142px}.home-art .home-symbol{font-size:42px}.home-info{padding:14px}.home-info h2{font-size:19px}.home-info p{font-size:12px}.home-access{padding:10px 11px;font-size:12px}}
 @media(max-width:360px){.home-area{grid-template-columns:1fr}.home-art{min-height:105px}.home-art .home-symbol{font-size:38px}}
+
+/* Configurações: ações da conta ficam organizadas dentro da aba, sem barra superior */
+#cloud-user{display:none!important}
+.settings-shell{padding-bottom:110px}
+.settings-shell .top{margin-bottom:8px}
+.settings-intro{color:var(--mu);font-size:13px;margin:0 0 16px}
+.settings-card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:16px;margin:12px 0}
+.settings-card h2{font-size:15px;margin:0 0 7px}
+.settings-account{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-bottom:12px;font-size:12px}
+.settings-account #cloud-email{color:var(--tx);font-weight:700;max-width:100%;overflow-wrap:anywhere}
+.settings-account #cloud-status{color:var(--gr)}
+#settings-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+#settings-actions button{min-width:0;width:100%;white-space:normal;text-align:center;padding:12px 9px;border:1px solid var(--bd);border-radius:13px;background:var(--in);color:var(--tx);font-weight:700;font-size:13px;cursor:pointer}
+#settings-actions #cloud-logout{border-color:#f87171;color:#f87171}
+#settings-actions #cloud-retry[hidden]{display:none}
+#nav button.settings-tab{color:var(--mu)}
+#nav button.settings-tab.on{color:var(--tx);background:var(--card)}
+@media(max-width:420px){#settings-actions{grid-template-columns:1fr 1fr}.settings-card{padding:14px}}
 </style></head><body><div id="app"></div><div id="nav"><div></div></div>
 <script>
 const K='estudos-v1',$=s=>document.querySelector(s);
@@ -199,7 +217,11 @@ function period(){const y=ref.getFullYear(),m=ref.getMonth();
  return{a:new Date(y,0,1),b:new Date(y,11,31),n:12,names:MES.map(s=>s.slice(0,3)),idx:x=>x.getMonth(),title:String(y)}}
 function shift(k){if(mode==='w')ref.setDate(ref.getDate()+7*k);else if(mode==='m'){ref.setDate(1);ref.setMonth(ref.getMonth()+k)}else{ref.setDate(1);ref.setFullYear(ref.getFullYear()+k)}render()}
 function setMode(m){mode=m;ref=new Date();render()}
-function go(v){view=v;scrollTo(0,0);render()}
+
+function parkCloudControls(){const box=$('#cloud-user');['cloud-email','cloud-status','cloud-backup','cloud-save-snapshot','cloud-cloud-backup','cloud-restore','cloud-import-button','cloud-retry','cloud-logout','cloud-import-file'].forEach(id=>{const el=document.getElementById(id);if(el&&el.parentElement!==box)box.appendChild(el)})}
+function settingsPanel(){return '<div class="top">Configurações</div><p class="settings-intro">Gerencie sua conta e as cópias dos seus dados. Essas opções ficam aqui para liberar espaço na tela do celular.</p><section class="settings-card"><h2>Conta e sincronização</h2><div class="settings-account"><span id="settings-email-slot"></span><span id="settings-status-slot"></span></div><div id="settings-actions"></div></section>'}
+function go(v){if(v!=='settings')parkCloudControls();view=v;scrollTo(0,0);render()}
+
 
 function grid(W,H,L,T,Bt,mx,fmt){let s='';for(let i=0;i<=3;i++){const y=T+(H-Bt-T)*i/3;s+=`<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--bd)" stroke-dasharray="3 4"/><text x="${L-6}" y="${y+4}" text-anchor="end" fill="var(--mu)" font-size="10">${fmt(mx*(1-i/3))}</text>`}return s}
 function bars(B,P){const W=340,H=190,L=30,Bt=24,T=10,mx=Math.max(1,...B.map(b=>b.q)),cw=(W-L)/P.n,bw=Math.min(14,cw/2.6),ch=H-Bt-T;let s=grid(W,H,L,T,Bt,mx,v=>Math.round(v));
@@ -477,9 +499,9 @@ function enterStudies(){inStudies=true;view='d';render();scrollTo(0,0)}
 function enterNutrition(){alert('A área de Nutrição será conectada em uma próxima etapa. Por enquanto, vamos testar a entrada em Estudos.')}
 function backHome(){inStudies=false;render();scrollTo(0,0)}
 function homeScreen(){return `<section class="home-head"><div><div class="home-eyebrow">Central de Aplicativos</div><h1 class="home-greeting">${homeGreeting()}, Raphael!</h1><div class="home-welcome">Bem-vindo de volta. O que vamos fazer hoje?</div></div><div class="home-clock"><small>HORÁRIO</small><strong id="home-time">${homeClock()}</strong></div></section><div class="home-prompt">Escolha uma área</div><article class="home-area study"><div class="home-art"><span class="home-symbol">✦</span></div><div class="home-info"><h2>Estudos</h2><p>Questões, disciplinas, desempenho e organização em um só lugar.</p><button class="home-access" onclick="enterStudies()">Acessar área <span>→</span></button></div></article><article class="home-area nutrition"><div class="home-art"><span class="home-symbol">✚</span></div><div class="home-info"><h2>Nutrição</h2><p>Alimentos, refeições e acompanhamento nutricional.</p><button class="home-access" onclick="enterNutrition()">Acessar área <span>→</span></button></div></article><div class="home-footer">Seu espaço, suas áreas, sua rotina.</div>`}
-function render(){if(!inStudies){$('#app').classList.add('home-shell');$('#app').innerHTML=homeScreen();$('#nav').style.display='none';return;}$('#app').classList.remove('home-shell');$('#nav').style.display='';if(ensureSubjectColors())save();if(!S.edital.find(x=>x.name===S.timer.subj))S.timer.subj=S.edital[0]?S.edital[0].name:'';
+function render(){if(view!=='settings')parkCloudControls();if(!inStudies){$('#app').classList.add('home-shell');$('#app').innerHTML=homeScreen();$('#nav').style.display='none';return;}$('#app').classList.remove('home-shell');$('#nav').style.display='';if(view==='settings'){parkCloudControls();$('#app').classList.add('settings-shell');$('#app').innerHTML=settingsPanel();const acts=$('#settings-actions');['cloud-backup','cloud-save-snapshot','cloud-cloud-backup','cloud-restore','cloud-import-button','cloud-retry','cloud-logout','cloud-import-file'].forEach(id=>{const el=document.getElementById(id);if(el)acts.appendChild(el)});$('#settings-email-slot').appendChild($('#cloud-email'));$('#settings-status-slot').appendChild($('#cloud-status'));$('#nav div').innerHTML=[['d','Visão Geral'],['p','LDI'],['s','Agenda'],['c','Foco'],['f','Desempenho']].map(x=>`<button class="${view===x[0]?'on':''}" onclick="go('${x[0]}')"><span>${ICON[x[0]]}</span>${x[1]}</button>`).join('')+'<button class="settings-tab on" onclick="go(\'settings\')"><span>⚙</span>Config.</button>';return;}$('#app').classList.remove('settings-shell');if(ensureSubjectColors())save();if(!S.edital.find(x=>x.name===S.timer.subj))S.timer.subj=S.edital[0]?S.edital[0].name:'';
  $('#app').innerHTML={d:vG,p:vP,s:vS,c:vC,f:vF}[view]();const top=$('#app .top');if(top){top.style.display='flex';top.style.alignItems='center';top.style.justifyContent='space-between';top.innerHTML=esc(({d:'Visão Geral',p:'LDI',s:'Agenda',c:'Foco',f:'Desempenho'})[view]||'Estudos')+'<button class="home-back" onclick="backHome()">⌂ Central</button>';}
- $('#nav div').innerHTML=[['d','Visão Geral'],['p','LDI'],['s','Agenda'],['c','Foco'],['f','Desempenho']].map(x=>`<button class="${view===x[0]?'on':''}" onclick="go('${x[0]}')"><span>${ICON[x[0]]}</span>${x[1]}</button>`).join('');
+ $('#nav div').innerHTML=[['d','Visão Geral'],['p','LDI'],['s','Agenda'],['c','Foco'],['f','Desempenho']].map(x=>`<button class="${view===x[0]?'on':''}" onclick="go('${x[0]}')"><span>${ICON[x[0]]}</span>${x[1]}</button>`).join('');$('#nav div').innerHTML+='<button class="settings-tab" onclick="go(\'settings\')"><span>⚙</span>Config.</button>';
  if(view==='c')fillTop('ts','tt2',S.timer.top);if(view==='d'){fillTop('s','tp');fillTop('rsub','rtop')}if(view==='s'&&sheet)fillTop('ss','st')}
 render();setInterval(tick,250);
 </script>
