@@ -167,7 +167,15 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 #nav button.settings-tab{color:var(--mu)}
 #nav button.settings-tab.on{color:var(--tx);background:var(--card)}
 @media(max-width:420px){#settings-actions{grid-template-columns:1fr 1fr}.settings-card{padding:14px}}
-</style></head><body><div id="app"></div><div id="nav"><div></div></div>
+</style>
+<link rel="manifest" href="/meu-app-estudos/manifest.webmanifest">
+<meta name="theme-color" content="#171717">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="/meu-app-estudos/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/meu-app-estudos/icons/icon.svg">
+</head><body><div id="app"></div><div id="nav"><div></div></div>
 <script>
 const K='estudos-v1',$=s=>document.querySelector(s);
 const COL=['#4cc7ff','#4ade80','#fbbf24','#f87171','#a78bfa','#fb923c','#2dd4bf','#f472b6','#94a3b8'];
@@ -775,5 +783,15 @@ document.getElementById('cloud-retry').addEventListener('click',()=>{
 });
 init();
 })();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/meu-app-estudos/service-worker.js").catch((erro) => {
+      console.warn("Não foi possível ativar o modo instalável:", erro);
+    });
+  });
+}
 </script>
 </body></html>
