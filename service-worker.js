@@ -1,6 +1,6 @@
-const CACHE_NAME = "meu-app-estudos-shell-v4";
+const CACHE_NAME = "meu-app-estudos-shell-v5";
 const BASE = "/meu-app-estudos/";
-const SHELL = [BASE, BASE + "index.html", BASE + "nutricao.html", BASE + "manifest.webmanifest", BASE + "icons/icon.svg"];
+const SHELL = [BASE, BASE + "index.html", BASE + "nutricao.html", BASE + "manifest.webmanifest", BASE + "icons/icon.svg", BASE + "assets/nutricao-card.webp"];
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
 });
