@@ -837,6 +837,77 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(111,191,140,.35)!
 @media(min-width:650px){.evo-dashboard{max-width:980px;margin:0 auto}.evo-hero{padding:24px}.evo-overview-main{min-height:150px;padding:18px}.evo-overview-main>strong{font-size:40px}.evo-panorama-grid{grid-template-columns:1fr 1fr}.evo-panel{padding:18px}.evo-chart-feature{padding:20px!important}}
 
 .demo-notice{display:flex;flex-direction:column;gap:6px;margin:0 0 13px;padding:12px 14px;border:1px solid #756344;border-radius:14px;background:linear-gradient(135deg,#292419,#171711);color:#e8dfca}.demo-notice b{font-size:10px;letter-spacing:.12em;color:#e3c98f}.demo-notice span{font-size:11px;line-height:1.5;color:#c6bdab}.demo-notice button{align-self:flex-start;border:1px solid #74684f;background:#302a1d;color:#f0dfb8;border-radius:9px;padding:7px 10px;font-size:10px;font-weight:700;margin-top:3px}
+
+/* IDENTIDADE VISUAL COMPARTILHADA COM ESTUDOS */
+:root,:root[data-theme="dark"]{
+ --bg:#0a0a0a;--card:#121212;--bd:#303030;--tx:#fff;--mu:#a3a3a3;
+ --ac:#f5f5f5;--in:#1c1c1c;--cg:linear-gradient(150deg,#171717,#0a0a0a 70%);
+ --gb:rgba(255,255,255,.3);color-scheme:dark;
+}
+body{background:var(--bg)!important;color:var(--tx)!important}
+.card,.tile,.zcard,.zrow,.mkt-analysis-picker,.mkt-chart-card,.mkt-analysis-stat,
+.mkt-purchase-total,.mkt-purchase-average,.mkt-spend-bars,.mkt-recent-purchases,
+.mkt-premium-chart{background:var(--card)!important;color:var(--tx)!important;border-color:var(--bd)!important;box-shadow:none!important}
+.card h2,.st,.top,.hd,.hero,.row,.zrow,.zmn,.zt{color:var(--tx)!important}
+.top small,.row small,.empty,.mt small,.st small{color:var(--mu)!important}
+input,select,textarea{background:var(--in)!important;color:var(--tx)!important;border-color:var(--bd)!important}
+input:focus,select:focus,textarea:focus{outline:2px solid rgba(74,222,128,.22);border-color:#4ade80!important}
+.btn{background:var(--ac)!important;color:var(--actx,#111)!important;box-shadow:none!important}
+.btn.gh{background:var(--in)!important;color:var(--tx)!important;border-color:var(--bd)!important}
+.seg,.tabs,.mkt-rangebar{background:var(--card)!important;border-color:var(--bd)!important}
+.seg button,.tabs button{color:var(--mu)!important}
+.seg button.on,.tabs button.on{background:var(--ac)!important;color:var(--actx,#111)!important;box-shadow:none!important}
+#nav{background:var(--bg)!important;border-top:1px solid var(--bd)!important}
+#nav div{background:var(--card)!important;border:1px solid var(--bd)!important;box-shadow:none!important}
+#nav button{color:var(--mu)!important}
+#nav button.on{color:var(--tx)!important;background:var(--in)!important}
+.ck{border-color:var(--ac)!important;color:var(--ac)!important}
+.ck.on,.chk.on{background:#4ade80!important;border-color:#4ade80!important;color:#04121a!important}
+.bar,.mb,.mkt-spend-track{background:var(--in)!important}
+.bar i,.mb i{background:#4ade80!important}
+.tag{background:var(--in)!important;color:var(--mu)!important}
+.tag.dn,.rt.dn{color:#4ade80!important}
+.tip{background:var(--card)!important;border-color:var(--bd)!important}
+.tip b,.nv .nb b,.tile b{color:var(--gr,#4ade80)!important}
+.hero{background:var(--card)!important;border-color:var(--bd)!important}
+.nv .card{border-color:var(--bd)!important;box-shadow:none!important}
+.nv .nh b,.mkt-analysis-subtitle b,.mkt-analysis-stat strong,.mkt-purchase-average b{color:var(--tx)!important}
+.nv .nh small,.nv .dt,.nr small,.nm em,.mkt-analysis-subtitle small{color:var(--mu)!important}
+.nv .dt svg,.st a,.nv .nh a{color:#4ade80!important}
+.mini button{background:var(--in)!important;color:var(--tx)!important;border-color:var(--bd)!important}
+.dd{background:var(--card)!important;color:var(--tx)!important;border-color:var(--bd)!important}
+.dd.on{border-color:#4ade80!important;box-shadow:0 0 0 1px #4ade80!important}
+.dd.on b,.dsh .dl b{color:#4ade80!important}
+.zdc{background:var(--in)!important;color:var(--tx)!important}
+.zdc.on{border-color:#4ade80!important}
+.mkt-analysis-hero,.mkt-analysis-stat,.mkt-chart-card,.mkt-analysis-picker,
+.mkt-purchase-total,.mkt-purchase-average,.mkt-spend-bars,.mkt-recent-purchases,
+.mkt-premium-chart{background:var(--card)!important;border-color:var(--bd)!important;color:var(--tx)!important}
+.mkt-analysis-hero h2,.mkt-analysis-hero b,.mkt-analysis-stat strong,
+.mkt-chart-heading b,.mkt-picker-top b,.mkt-picker-selected b,
+.mkt-analysis-subtitle b,.mkt-purchase-overview b,.mkt-spend-label b,
+.mkt-recent-purchases b,.mkt-cat-legend b{color:var(--tx)!important}
+.mkt-analysis-hero p,.mkt-analysis-stat small,.mkt-chart-heading small,
+.mkt-picker-top small,.mkt-picker-hint,.mkt-purchase-overview small,
+.mkt-purchase-overview span,.mkt-spend-row>small,.mkt-recent-purchases small{color:var(--mu)!important}
+@media(prefers-color-scheme:light){
+ :root:not([data-theme="dark"]){
+  --bg:#f5f5f5;--card:#fff;--bd:#dedede;--tx:#111;--mu:#666;
+  --ac:#111;--in:#f0f0f0;--cg:#fff;--gb:var(--bd);color-scheme:light;
+ }
+ body{background:var(--bg)!important;color:var(--tx)!important}
+ .card,.tile,.zcard,.zrow,.mkt-analysis-picker,.mkt-chart-card,.mkt-analysis-stat,
+ .mkt-purchase-total,.mkt-purchase-average,.mkt-spend-bars,.mkt-recent-purchases,
+ .mkt-premium-chart{background:var(--card)!important;color:var(--tx)!important;border-color:var(--bd)!important}
+ .btn{background:var(--ac)!important;color:#fff!important}
+ .seg button.on,.tabs button.on{background:var(--ac)!important;color:#fff!important}
+ #nav{background:var(--bg)!important;border-color:var(--bd)!important}
+ #nav div{background:var(--card)!important;border-color:var(--bd)!important}
+ #nav button.on{color:var(--tx)!important;background:var(--in)!important}
+ .ck{border-color:var(--ac)!important;color:var(--ac)!important}
+ .ck.on,.chk.on,.bar i,.mb i{background:#4ade80!important;border-color:#4ade80!important}
+}
+
 </style></head><body><a id="central-link" href="https://doiserrer1895-dotcom.github.io/meu-app-estudos/">⌂ Central do Aplicativo</a><div id="app"></div><div id="nav"><div></div></div>
 <script>
 const K='nutri-v1',RESET_KEY='nutri-config-reset-v2',$=s=>document.querySelector(s),GR=['#a78bfa','#facc15','#f5f5f5','#38bdf8','#fb923c'];
