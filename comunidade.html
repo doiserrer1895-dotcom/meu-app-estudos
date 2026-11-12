@@ -830,7 +830,7 @@ function enviarPedido(){
  }
  function enviar(nome){
   var m=chk(nome);if(m){er.textContent=m;return}
-  FR.env.push(nome);if(ON.pedido)ON.pedido(nome);
+  FR.env.push(nome);if(ON.pedido)Promise.resolve(ON.pedido(nome)).catch(function(e){FR.env=FR.env.filter(function(x){return ck(x)!==ck(nome)});renderAmigos();toast("Não foi possível enviar: "+(e.message||e));});
   fecharAdd();renderAmigos();toast("Pedido enviado para "+nome+". Quando aceitar, você é avisado.");
  }
  var m0=chk(v);if(m0){er.textContent=m0;return}
@@ -859,7 +859,7 @@ $("amigos").addEventListener("click",function(e){
  if(a==="add"){abrirAdd();return}
  if(a==="pick"){FR.sel=b.dataset.n;renderAmigos();return}
  if(a==="acc"){var r=FR.rec.splice(k,1)[0];virarAmigo(r.n,{concurso:r.c,patente:r.pt});if(ON.aceitar)ON.aceitar(r.n);toast(r.n+" agora é seu amigo. Bons estudos!");return}
- if(a==="okn"){FR.nt.splice(k,1);renderAmigos();return}
+ if(a==="okn"){FR.nt.splice(k,1);if(ON.lerAvisos)ON.lerAvisos();renderAmigos();return}
  if(a==="rec"){var q=FR.rec.splice(k,1)[0];if(ON.recusar)ON.recusar(q.n);renderAmigos();return}
  if(a==="cancel"){var c=FR.env.splice(k,1)[0];if(ON.cancelar)ON.cancelar(c);renderAmigos();return}
  if(a==="cheer"&&row){if(ON.incentivo)ON.incentivo(row.dataset.n);toast("Incentivo enviado para "+row.dataset.n+"!");return}
@@ -926,7 +926,7 @@ async function communityInit(){
  if(!window.supabase||!window.supabase.createClient)throw new Error("A conexão do Supabase não carregou.");
  db=window.supabase.createClient(COMMUNITY_URL,COMMUNITY_KEY);
  var sessionResult=await db.auth.getSession();if(sessionResult.error)throw sessionResult.error;
- if(!sessionResult.data.session){$("fmsg").textContent="Entre na sua conta pela Central para acessar a Comunidade.";return false;}
+ if(!sessionResult.data.session){window.location.href="index.html";return false;}
  AUTH_USER=sessionResult.data.session.user;
  var studyResult=await db.from("estudos").select("dados").eq("id",AUTH_USER.id).maybeSingle();if(studyResult.error)throw studyResult.error;
  var study=studyResult.data&&studyResult.data.dados||{},cm=communityConstancia(),sm=communityStudy(study),name=cm.name||(AUTH_USER.user_metadata&&AUTH_USER.user_metadata.name)||(AUTH_USER.email||"estudante").split("@")[0];
@@ -939,7 +939,7 @@ async function communityInit(){
  if(sessions.length){var sr=await db.from("community_sessions").upsert(sessions,{onConflict:"user_id,source_id"});if(sr.error)console.warn("Sessões pendentes:",sr.error);}
  var sessResult=await db.from("community_sessions").select("started_at,minutes").eq("user_id",AUTH_USER.id).gte("started_at",new Date(Date.now()-90*864e5).toISOString());if(sessResult.error)throw sessResult.error;
  LOG=(sessResult.data||[]).map(function(x){return{i:+new Date(x.started_at),m:+x.minutes}}).filter(function(x){return isFinite(x.i)&&x.m>0});
- HORAS=sm.daily;recalcSess();$("user-name").textContent=ME.split(" ")[0];
+ HORAS=sm.daily;recalcSess();clock(true);$("user-name").textContent=ME.split(" ")[0];
  await communityRefreshLists();
  var platform=await db.rpc("community_platform_stats");if(platform.error)throw platform.error;
  atualizarPlataforma(platform.data||{});
@@ -954,6 +954,9 @@ ON.cancelar=async function(name){var p=communityFindProfile(name);if(!p)return;v
 ON.remover=async function(name){var p=communityFindProfile(name);if(!p)return;var r=await db.rpc("community_remove_friend",{p_friend_id:p.user_id});if(r.error)throw r.error;await communityRefreshLists();refazer()};
 ON.incentivo=async function(name){var p=communityFindProfile(name);if(!p)return;var r=await db.rpc("community_send_cheer",{p_friend_id:p.user_id});if(r.error)throw r.error;toast("Incentivo enviado para "+name+"!")};
 ON.sessao=async function(o){var ini=new Date(o.inicio),mins=Math.max(1,Math.min(1440,Math.round(+o.minutos||0)));var r=await db.from("community_sessions").upsert({user_id:AUTH_USER.id,source_id:"manual:"+ini.getTime()+":"+mins,started_at:ini.toISOString(),minutes:mins},{onConflict:"user_id,source_id"});if(r.error)throw r.error;var p=await db.rpc("community_platform_stats");if(!p.error)atualizarPlataforma(p.data||{})};
+ON.lerAvisos=async function(){var r=await db.from("community_notifications").update({read_at:new Date().toISOString()}).eq("recipient_id",AUTH_USER.id).eq("kind","friend_accepted");if(r.error)throw r.error};
+function communitySafeAction(fn){return async function(){try{return await fn.apply(null,arguments)}catch(e){toast("Não foi possível concluir: "+(e.message||e));try{await communityRefreshLists();refazer()}catch(x){console.error(x)}return null}}}
+["pedido","aceitar","recusar","cancelar","remover","incentivo","sessao","lerAvisos"].forEach(function(k){ON[k]=communitySafeAction(ON[k])});
 
 /* ---------- init ---------- */
 communityInit().catch(function(e){console.error("Falha na integração da Comunidade:",e);clock(true);D=montar();segBuild();initChart();view();renderAmigos();evBuild();evFx();toast("A Comunidade precisa da configuração do Supabase. Confira o arquivo SQL.");});
