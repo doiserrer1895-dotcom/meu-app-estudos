@@ -235,7 +235,12 @@ function shift(k){if(mode==='w')ref.setDate(ref.getDate()+7*k);else if(mode==='m
 function setMode(m){mode=m;ref=new Date();render()}
 
 function parkCloudControls(){const box=$('#cloud-user');['cloud-email','cloud-status','cloud-backup','cloud-save-snapshot','cloud-cloud-backup','cloud-restore','cloud-import-button','cloud-retry','cloud-logout','cloud-import-file'].forEach(id=>{const el=document.getElementById(id);if(el&&el.parentElement!==box)box.appendChild(el)})}
-function settingsPanel(){return '<div class="top">Configurações <button class="home-back" onclick="backHome()">⌂ Central</button></div><p class="settings-intro">Gerencie sua conta e as cópias dos seus dados. Essas opções ficam aqui para liberar espaço na tela do celular.</p><section class="settings-card"><h2>Conta e sincronização</h2><div class="settings-account"><span id="settings-email-slot"></span><span id="settings-status-slot"></span></div><div id="settings-actions"></div></section>'}
+function settingsPanel(){
+ let cs='Aguardando sincronização da Constância.',cc='var(--gr)';
+ try{cs=localStorage.getItem('constancia-cloud-status')||cs}catch(e){}
+ if(/pendente|indisponível|sem conexão|execute/i.test(cs))cc='var(--gold)';
+ return '<div class="top">Configurações <button class="home-back" onclick="backHome()">⌂ Central</button></div><p class="settings-intro">Gerencie sua conta e as cópias dos seus dados. Essas opções ficam aqui para liberar espaço na tela do celular.</p><section class="settings-card"><h2>Conta e sincronização</h2><div class="settings-account"><span id="settings-email-slot"></span><span id="settings-status-slot"></span></div><div id="settings-actions"></div></section><section class="settings-card"><h2>Constância Pessoal</h2><div class="settings-account"><span style="color:'+cc+';font-weight:700">● '+esc(cs)+'</span></div><p class="settings-intro" style="margin:0">Status da sincronização dos seus dados de Constância.</p></section>';
+}
 function go(v){if(v!=='settings')parkCloudControls();view=v;scrollTo(0,0);render()}
 
 
