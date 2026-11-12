@@ -84,7 +84,7 @@ create table if not exists public.community_notifications (
   id bigint generated always as identity primary key,
   recipient_id uuid not null references auth.users(id) on delete cascade,
   sender_id uuid not null references auth.users(id) on delete cascade,
-  kind text not null check (kind in ('cheer')),
+  kind text not null check (kind in ('cheer','friend_accepted')),
   created_at timestamptz not null default now(),
   read_at timestamptz,
   constraint community_notifications_not_self check (sender_id <> recipient_id)
@@ -228,6 +228,8 @@ begin
     b := greatest(req.sender_id, req.receiver_id);
     insert into public.community_friendships(user_a,user_b)
     values(a,b) on conflict do nothing;
+    insert into public.community_notifications(recipient_id,sender_id,kind)
+    values(req.sender_id,req.receiver_id,'friend_accepted');
   end if;
   delete from public.community_friend_requests where id = req.id;
 end;
