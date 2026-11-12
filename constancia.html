@@ -401,7 +401,7 @@ async function initConstanciaCloud(){
  if(cloudResult.data&&cloudResult.data.data){
   const cloudState=cloudResult.data.data;
   if(pending){
-   const recover=confirm('Encontramos alterações deste aparelho que ainda não chegaram à nuvem.\\n\\nOK = recuperar essas alterações (a cópia atual da nuvem será preservada neste aparelho).\\nCancelar = manter a versão da nuvem e guardar as alterações pendentes como cópia local.');
+   const recover=confirm('Encontramos alterações deste aparelho que ainda não chegaram à nuvem.\n\nOK = recuperar essas alterações (a cópia atual da nuvem será preservada neste aparelho).\nCancelar = manter a versão da nuvem e guardar as alterações pendentes como cópia local.');
    if(recover){
     localStorage.setItem(K+':cloud-before-recovery:'+user.id,JSON.stringify({savedAt:new Date().toISOString(),data:cloudState}));
     S=pending;
@@ -420,7 +420,7 @@ async function initConstanciaCloud(){
   S=userCache;
  }else if(legacy&&Array.isArray(legacy.items)&&legacy.items.length){
   const legacyDecisionKey=K+':legacy-decision:'+user.id;
-  const includeLegacy=!localStorage.getItem(legacyDecisionKey)?confirm('Encontramos dados antigos da Constância salvos neste navegador. Eles pertencem a esta conta e devem ser migrados para a nuvem?\\n\\nOK = migrar preservando os dados.\\nCancelar = não importar esses dados para esta conta.'):false;
+  const includeLegacy=!localStorage.getItem(legacyDecisionKey)?confirm('Encontramos dados antigos da Constância salvos neste navegador. Eles pertencem a esta conta e devem ser migrados para a nuvem?\n\nOK = migrar preservando os dados.\nCancelar = não importar esses dados para esta conta.'):false;
   localStorage.setItem(legacyDecisionKey,includeLegacy?'accepted':'declined');
   if(includeLegacy)S=legacy;
   else S={items:[],skills:(S.skills||[]).filter(isVitalidade),profile:{}};
