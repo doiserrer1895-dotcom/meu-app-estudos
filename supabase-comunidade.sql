@@ -48,6 +48,16 @@ create trigger community_profile_after_signup
 
 alter table public.community_profiles add column if not exists evolution_score numeric not null default 10 check (evolution_score between 0 and 100);
 
+create table if not exists public.community_daily_totals (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  study_date date not null,
+  minutes integer not null check (minutes between 0 and 1440),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, study_date)
+);
+create index if not exists community_daily_totals_date_idx
+  on public.community_daily_totals (study_date);
+
 create table if not exists public.community_sessions (
   id bigint generated always as identity primary key,
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -94,6 +104,7 @@ create index if not exists community_notifications_recipient_idx
 
 alter table public.community_profiles enable row level security;
 alter table public.community_sessions enable row level security;
+alter table public.community_daily_totals enable row level security;
 alter table public.community_friend_requests enable row level security;
 alter table public.community_friendships enable row level security;
 alter table public.community_notifications enable row level security;
@@ -144,8 +155,9 @@ create policy community_notifications_update_recipient on public.community_notif
 
 revoke all on public.community_profiles, public.community_sessions,
   public.community_friend_requests, public.community_friendships,
-  public.community_notifications from anon, public, authenticated;
+  public.community_notifications, public.community_daily_totals from anon, public, authenticated;
 grant select, insert, update on public.community_profiles to authenticated;
+grant select, insert, update on public.community_daily_totals to authenticated;
 grant select, insert, update on public.community_sessions to authenticated;
 grant select, insert, delete on public.community_friend_requests to authenticated;
 grant select on public.community_friendships to authenticated;
@@ -169,12 +181,12 @@ as $$
     from today cross join generate_series(6, 0, -1) as n
   ),
   totals as (
-    select (s.started_at at time zone 'America/Sao_Paulo')::date as day,
-           s.user_id,
-           sum(s.minutes)::integer as minutes
-    from public.community_sessions s
+    select t.study_date as day,
+           t.user_id,
+           sum(t.minutes)::integer as minutes
+    from public.community_daily_totals t
     cross join today
-    where (s.started_at at time zone 'America/Sao_Paulo')::date between today.day - 6 and today.day
+    where t.study_date between today.day - 6 and today.day
     group by 1,2
   ),
   daily_avg as (
