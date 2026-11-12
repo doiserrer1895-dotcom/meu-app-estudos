@@ -110,13 +110,15 @@ create policy community_notifications_update_recipient on public.community_notif
 
 revoke all on public.community_profiles, public.community_sessions,
   public.community_friend_requests, public.community_friendships,
-  public.community_notifications from anon, public;
+  public.community_notifications from anon, public, authenticated;
 grant select, insert, update on public.community_profiles to authenticated;
 grant select, insert, update on public.community_sessions to authenticated;
 grant select, insert, delete on public.community_friend_requests to authenticated;
 grant select on public.community_friendships to authenticated;
 grant select, update on public.community_notifications to authenticated;
-grant usage, select on all sequences in schema public to authenticated;
+grant usage, select on sequence public.community_sessions_id_seq to authenticated;
+grant usage, select on sequence public.community_friend_requests_id_seq to authenticated;
+grant usage, select on sequence public.community_notifications_id_seq to authenticated;
 
 create or replace function public.community_platform_stats()
 returns jsonb
