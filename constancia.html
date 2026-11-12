@@ -349,32 +349,19 @@ function constanciaCloudStatus(message,warning){
  if(!el){el=document.createElement('div');el.id='constancia-cloud-status';el.style.cssText='position:fixed;right:12px;bottom:86px;z-index:90;padding:7px 11px;border:1px solid #333;border-radius:999px;background:#151515;color:#9a9a96;font:700 11px system-ui;box-shadow:0 4px 18px #0008';document.body.appendChild(el)}
  el.textContent=message;el.style.color=warning?'#fbbf24':'#4ade80';
 }
-function mergeConstanciaState(remote,local){
- const out=Object.assign({},local||{},remote||{});
- ['items','skills'].forEach(function(key){
-  const merged=[],seen={};
-  (Array.isArray(remote&&remote[key])?remote[key]:[]).concat(Array.isArray(local&&local[key])?local[key]:[]).forEach(function(item){
-   if(!item||!item.id)return;
-   const id=String(item.id);
-   if(seen[id]===undefined){seen[id]=merged.length;merged.push(item)}
-   // Em IDs iguais, a versão da nuvem prevalece; registros locais novos são preservados.
-  });
-  out[key]=merged;
- });
- out.profile=Object.assign({},(local&&local.profile)||{},(remote&&remote.profile)||{});
- return out;
-}
 async function flushConstanciaCloud(){
  if(!CONSTANCIA_CLOUD_READY||!CONSTANCIA_USER_ID||!CONSTANCIA_DB)return;
  if(CONSTANCIA_SAVING)return;
  CONSTANCIA_SAVING=true;
+ const pendingKey=K+':pending:'+CONSTANCIA_USER_ID;
  try{
   do{
    CONSTANCIA_CLOUD_DIRTY=false;
-   const snapshot=JSON.parse(JSON.stringify(S));
-   const result=await CONSTANCIA_DB.from('constancia_data').upsert({user_id:CONSTANCIA_USER_ID,data:snapshot,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+   const snapshot=JSON.stringify(S);
+   const result=await CONSTANCIA_DB.from('constancia_data').upsert({user_id:CONSTANCIA_USER_ID,data:JSON.parse(snapshot),updated_at:new Date().toISOString()},{onConflict:'user_id'});
    if(result.error)throw result.error;
-   localStorage.setItem(K+':'+CONSTANCIA_USER_ID,JSON.stringify(snapshot));
+   localStorage.setItem(K+':'+CONSTANCIA_USER_ID,snapshot);
+   if(localStorage.getItem(pendingKey)===snapshot)localStorage.removeItem(pendingKey);
   }while(CONSTANCIA_CLOUD_DIRTY);
   constanciaCloudStatus('Constância sincronizada');
  }catch(error){
@@ -386,6 +373,7 @@ async function flushConstanciaCloud(){
 function scheduleConstanciaCloud(){
  if(!CONSTANCIA_CLOUD_READY)return;
  CONSTANCIA_CLOUD_DIRTY=true;
+ try{localStorage.setItem(K+':pending:'+CONSTANCIA_USER_ID,JSON.stringify(S))}catch(e){}
  clearTimeout(CONSTANCIA_SAVE_TIMER);
  constanciaCloudStatus('Salvando na nuvem…');
  CONSTANCIA_SAVE_TIMER=setTimeout(flushConstanciaCloud,650);
@@ -398,31 +386,44 @@ async function initConstanciaCloud(){
  const user=sessionResult.data.session&&sessionResult.data.session.user;
  if(!user){window.location.href='index.html';return}
  CONSTANCIA_USER_ID=user.id;
- const userKey=K+':'+user.id;
- let userCache=null,legacy=null;
+ const userKey=K+':'+user.id,pendingKey=K+':pending:'+user.id;
+ let userCache=null,legacy=null,pending=null;
  try{const raw=localStorage.getItem(userKey);if(raw)userCache=JSON.parse(raw)}catch(e){}
  try{const raw=localStorage.getItem(K);if(raw)legacy=JSON.parse(raw)}catch(e){}
+ try{const raw=localStorage.getItem(pendingKey);if(raw)pending=JSON.parse(raw)}catch(e){}
  const cloudResult=await CONSTANCIA_DB.from('constancia_data').select('data').eq('user_id',user.id).maybeSingle();
  if(cloudResult.error){
   console.error('Tabela de Constância ainda não disponível:',cloudResult.error);
   constanciaCloudStatus('Execute supabase-constancia.sql',true);
-  if(userCache)S=userCache;
+  if(pending)S=pending;else if(userCache)S=userCache;
   return;
  }
- const legacyDecisionKey=K+':legacy-decision:'+user.id;
- let includeLegacy=false;
- if(!userCache&&legacy&&Array.isArray(legacy.items)&&legacy.items.length&&!localStorage.getItem(legacyDecisionKey)){
-  includeLegacy=confirm('Encontramos dados antigos da Constância salvos neste navegador. Eles pertencem a esta conta e devem ser migrados ou mesclados com os dados da nuvem?\n\nOK = preservar e mesclar os registros.\nCancelar = manter somente os dados já vinculados a esta conta.');
-  localStorage.setItem(legacyDecisionKey,includeLegacy?'accepted':'declined');
- }
  if(cloudResult.data&&cloudResult.data.data){
-  S=mergeConstanciaState(cloudResult.data.data,userCache);
-  if(includeLegacy)S=mergeConstanciaState(S,legacy);
+  const cloudState=cloudResult.data.data;
+  if(pending){
+   const recover=confirm('Encontramos alterações deste aparelho que ainda não chegaram à nuvem.\\n\\nOK = recuperar essas alterações (a cópia atual da nuvem será preservada neste aparelho).\\nCancelar = manter a versão da nuvem e guardar as alterações pendentes como cópia local.');
+   if(recover){
+    localStorage.setItem(K+':cloud-before-recovery:'+user.id,JSON.stringify({savedAt:new Date().toISOString(),data:cloudState}));
+    S=pending;
+   }else{
+    localStorage.setItem(K+':pending-backup:'+user.id,JSON.stringify({savedAt:new Date().toISOString(),data:pending}));
+    localStorage.removeItem(pendingKey);
+    S=cloudState;
+   }
+  }else{
+   // A nuvem é a fonte oficial; cache antigo nunca é mesclado automaticamente para não ressuscitar itens excluídos.
+   S=cloudState;
+  }
+ }else if(pending){
+  S=pending;
  }else if(userCache){
   S=userCache;
-  if(includeLegacy)S=mergeConstanciaState(S,legacy);
- }else if(includeLegacy){
-  S=legacy;
+ }else if(legacy&&Array.isArray(legacy.items)&&legacy.items.length){
+  const legacyDecisionKey=K+':legacy-decision:'+user.id;
+  const includeLegacy=!localStorage.getItem(legacyDecisionKey)?confirm('Encontramos dados antigos da Constância salvos neste navegador. Eles pertencem a esta conta e devem ser migrados para a nuvem?\\n\\nOK = migrar preservando os dados.\\nCancelar = não importar esses dados para esta conta.'):false;
+  localStorage.setItem(legacyDecisionKey,includeLegacy?'accepted':'declined');
+  if(includeLegacy)S=legacy;
+  else S={items:[],skills:(S.skills||[]).filter(isVitalidade),profile:{}};
  }else{
   S={items:[],skills:(S.skills||[]).filter(isVitalidade),profile:{}};
  }
