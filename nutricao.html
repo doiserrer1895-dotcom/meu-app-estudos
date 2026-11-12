@@ -1267,6 +1267,8 @@ function mCartQty(id,d){const a=S.marketCart||[],x=a.find(z=>z.id===id);if(x){x.
 function mCartDel(id){S.marketCart=(S.marketCart||[]).filter(x=>x.id!==id);save();render()}
 function mPriceRows(){const list=S.market.filter(x=>x.priceHistory?.length||x.price>0);return list.map(e=>{const pct=e.old?(e.price-e.old)/e.old*100:0;return`<div class="mkt-food"><div class="mkt-emoji">${mFoodEmoji(e.name)}</div><div class="mf-info"><b>${esc(e.name)}</b><small>Base de comparação: 100 ${mMarketCat(e.cat)==='beb'?'ml':'g'}</small><div class="mkt-price"><div><span class="mkt-mini">Anterior</span><br><b>${R$(e.old||e.price)}</b></div><div><span class="mkt-mini">Atual</span><br><b class="now">${R$(e.price)}</b></div></div>${e.old?`<span class="mkt-change" style="color:${pct>0?'#f87171':'var(--ac)'}">${pct>0?'↑':'↓'} ${f1(Math.abs(pct))}%</span>`:'<span class="mkt-mini">Primeiro registro</span>'}</div><button class="mkt-plus" onclick="mSetPrice('${mCatalog().find(x=>x.name.toLowerCase()===e.name.toLowerCase())?.id||''}')">＋</button></div>`}).join('')}
 function mPricePer100(x){const e=mEntry(x.name);if(!e)return null;return e.product?e.price*100/(e.packageG||100):(e.price||null)}
+function mDeletePriceHistory(foodId,index){const e=S.market.find(x=>x.id===foodId);if(!e||!Array.isArray(e.priceHistory)||index<0||index>=e.priceHistory.length)return;if(!confirm('Apagar este registro de preço? Ele também será removido das Análises.'))return;e.priceHistory.splice(index,1);const valid=e.priceHistory.map((h,i)=>({...h,_i:i})).filter(h=>h.mode!=='old'&&Number.isFinite(+h.per100)).sort((a,b)=>(String(a.date||'').localeCompare(String(b.date||'')))||a._i-b._i);const latest=valid[valid.length-1],prev=valid.length>1?valid[valid.length-2]:null,oldEntries=e.priceHistory.map((h,i)=>({...h,_i:i})).filter(h=>h.mode==='old'&&Number.isFinite(+h.per100)).sort((a,b)=>(String(a.date||'').localeCompare(String(b.date||'')))||a._i-b._i),oldFallback=oldEntries[oldEntries.length-1];const factor=e.product?Math.max(1,+e.packageG||100)/100:1;e.price=latest?+latest.per100*factor:0;e.old=prev?+prev.per100*factor:oldFallback?+oldFallback.per100*factor:0;e.priceGrams=latest?Math.max(1,+latest.grams||100):Math.max(1,+e.packageG||100);save();render()}
+function mDeleteShoppingListPrice(id){const item=(S.marketShoppingList||[]).find(x=>x.id===id);if(!item)return;if(!confirm('Apagar este valor registrado na lista de compras?'))return;item.estimatedPrice=null;item.done=false;item.doneAt=null;save();render()}
 function mBest(){
  const cat=mMarketCat(marketCompareId||'prot'),grams=Math.max(1,+marketCompareGrams||100),unit=cat==='beb'?'ml':'g';
  const defs={prot:[['p',1,4],['fe',1,1],['zn',1,1],['f',-1,1],['sat',-1,2],['sod',-1,1],['col',-1,1],['k',-1,.5]],carb:[['fib',1,3],['sug',-1,2],['sod',-1,1],['p',1,1],['f',-1,.5]],leg:[['fib',1,3],['va',1,1],['vc',1,1],['ca',1,1],['pot',1,1],['sug',-1,1],['sod',-1,1],['p',1,1]],ver:[['fib',1,3],['va',1,1],['vc',1,1],['ca',1,1],['pot',1,1],['sug',-1,1],['sod',-1,1],['p',1,1]],sal:[['fib',1,3],['ag',1,1],['vc',1,1],['va',1,1],['pot',1,1],['sug',-1,1],['sod',-1,1]],aco:[['fib',1,2],['p',1,1],['pot',1,1],['sug',-1,1],['sod',-1,2],['sat',-1,1]],beb:[['sug',-1,3],['k',-1,2],['p',1,1],['sod',-1,1],['vc',1,1],['fib',1,1]]};
@@ -1578,12 +1580,12 @@ function mAnalysisSpendData(){
  const cutoff=mAnalysisDateCutoff(marketAnalysisRange),labels={prot:'Proteínas',carb:'Carboidratos',leg:'Legumes',ver:'Verduras',sal:'Saladas',fru:'Frutas',aco:'Acompanhamentos',beb:'Bebidas',doc:'Doces',out:'Outros'};
  const rows=[],seen=new Set();
  (S.market||[]).forEach(food=>{
-  (food.priceHistory||[]).forEach(h=>{
+  (food.priceHistory||[]).forEach((h,historyIndex)=>{
    if(h.mode==='old'||!h.date||h.date<cutoff)return;
    const paid=Number.isFinite(+h.paid)?+h.paid:(Number.isFinite(+h.per100)?(+h.per100)*(+h.grams||100)/100:0);
    if(!(paid>0))return;
    const cat=mMarketCat(food.cat||'out'),key=mTextKey(food.name)+'|'+h.date;
-   rows.push({name:food.name,price:paid,cat,label:labels[cat]||'Outros',date:h.date,source:'price'});seen.add(key);
+   rows.push({name:food.name,price:paid,cat,label:labels[cat]||'Outros',date:h.date,source:'price',foodId:food.id,historyIndex});seen.add(key);
   });
  });
  (S.marketShoppingList||[]).forEach(item=>{
@@ -1594,7 +1596,7 @@ function mAnalysisSpendData(){
   if(seen.has(key))return;
   const catalogItem=mCatalog().find(f=>mTextKey(f.name)===mTextKey(item.name));
   const cat=mMarketCat(catalogItem?.cat||mListCategory(item.name));
-  rows.push({name:item.name,price:+item.estimatedPrice,cat,label:labels[cat]||'Outros',date,source:'list'});seen.add(key);
+  rows.push({name:item.name,price:+item.estimatedPrice,cat,label:labels[cat]||'Outros',date,source:'list',id:item.id});seen.add(key);
  });
  const sums={};rows.forEach(x=>sums[x.cat]=(sums[x.cat]||0)+x.price);
  const parts=Object.entries(sums).map(([cat,value])=>({cat,label:labels[cat]||'Outros',value})).sort((a,b)=>b.value-a.value);
