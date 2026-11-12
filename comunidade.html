@@ -28,6 +28,7 @@ input{width:100%;border:1px solid var(--line);background:#111113;color:var(--tx)
 <section class="section" id="amigos">
  <div class="card"><h2>Seu código de convite</h2><div class="sub">Compartilhe com alguém para enviar um pedido de amizade.</div><div class="code"><strong id="invite-code">GERANDO…</strong><button class="secondary" onclick="copyCode()">Copiar</button></div></div>
  <div class="card"><h2>Adicionar amigo</h2><div class="sub" style="margin-bottom:10px">Busque pelo nome de perfil ou pelo código de convite.</div><div class="formrow"><input id="search-user" placeholder="Nome ou código"><button class="primary" id="search-btn" onclick="searchUser()">Buscar</button></div><div id="search-result"></div></div>
+ <div class="card" id="notice-card" hidden><div class="topline"><h2>Avisos</h2><span class="pill" id="notice-count">0</span></div><div id="notices"></div></div>
  <div class="card"><div class="topline"><h2>Pedidos recebidos</h2><span class="pill" id="request-count">0</span></div><div id="requests"><div class="empty">Nenhum pedido recebido.</div></div></div>
  <div class="card"><div class="topline"><h2>Pedidos enviados</h2><span class="pill" id="sent-count">0</span></div><div id="sent-requests"><div class="empty">Nenhum pedido enviado.</div></div></div>
  <div class="card"><div class="topline"><h2>Seus amigos</h2><span class="pill" id="friend-count">0</span></div><div id="friends"><div class="empty">Você ainda não adicionou amigos.</div></div><div class="compare" id="friend-compare"></div></div>
@@ -42,7 +43,7 @@ input{width:100%;border:1px solid var(--line);background:#111113;color:var(--tx)
 const SUPABASE_URL='https://nwwwydwevgftbpjuasgz.supabase.co';
 const SUPABASE_KEY='sb_publishable_7-zqJxrp67zBzWZcwUmlQw_wLpb-Gqc';
 const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let db=null,me=null,profiles=[],friends=[],incoming=[],outgoing=[],selectedFriend=null,metric='streak',myProfile=null,studyState={};
+let db=null,me=null,profiles=[],friends=[],incoming=[],outgoing=[],notifications=[],selectedFriend=null,metric='streak',myProfile=null,studyState={};
 const patentRanks=[['Recruta',0],['Soldado',50],['Cabo',150],['Sargento',300],['Segundo Sargento',500],['Primeiro Sargento',700],['Subtenente',900],['Aspirante a Oficial',1200],['Segundo Tenente',1600],['Primeiro Tenente',2000],['Capitão',2500],['Major',3100],['Tenente-Coronel',3800],['Coronel',4600],['General de Brigada',5500],['General de Exército',6500],['Marechal',8000]];
 function toast(t){$('toast').textContent=t;$('toast').classList.add('on');setTimeout(()=>$('toast').classList.remove('on'),2600)}
 function minutes(v){v=Math.max(0,Math.round(v||0));return v>=60?Math.floor(v/60)+'h'+String(v%60).padStart(2,'0'):v+'m'}
@@ -85,18 +86,19 @@ async function load(){
  await refresh();
 }
 async function refresh(){
- const [{data:p,error:pe},{data:req,error:re},{data:sent,error:se},{data:fs,error:fe},{data:platform,error:plErr}]=await Promise.all([
+ const [{data:p,error:pe},{data:req,error:re},{data:sent,error:se},{data:fs,error:fe},{data:platform,error:plErr},{data:noticeData,error:noticeErr}]=await Promise.all([
   db.from('community_profiles').select('*').order('updated_at',{ascending:false}),
   db.from('community_friend_requests').select('*').eq('receiver_id',me.id),
   db.from('community_friend_requests').select('*').eq('sender_id',me.id),
   db.from('community_friendships').select('*').or('user_a.eq.'+me.id+',user_b.eq.'+me.id),
-  db.rpc('community_platform_stats')
+  db.rpc('community_platform_stats'),
+  db.from('community_notifications').select('*').eq('recipient_id',me.id).is('read_at',null).order('created_at',{ascending:false}).limit(10)
  ]);
  if(pe||re||se||fe)throw pe||re||se||fe;
- profiles=p||[];incoming=req||[];outgoing=sent||[];
+ profiles=p||[];incoming=req||[];outgoing=sent||[];notifications=noticeData||[];if(noticeErr)console.warn('Avisos indisponíveis:',noticeErr);
  const ids=(fs||[]).map(x=>x.user_a===me.id?x.user_b:x.user_a);
  if(ids.length){const {data,error}=await db.from('community_profiles').select('*').in('user_id',ids);if(error)throw error;friends=data||[]}else friends=[];
- renderRank();renderFriends();
+ renderRank();renderFriends();renderNotices();
  if(!plErr&&platform){const arr=platform.days||[],avg=arr.length?Math.round(arr.reduce((a,b)=>a+Number(b||0),0)/7):0;const mine=myProfile.average_daily_minutes;$('platform-average').textContent=minutes(avg);const diff=avg?Math.round((mine/avg-1)*100):null;$('platform-diff').textContent=diff===null?'—':(diff>0?'+':'')+diff+'%';$('platform-note').textContent=avg?'Média calculada a partir das sessões registradas por usuários da Comunidade.':'Ainda não há sessões suficientes para calcular a média geral.'}
 }
 function value(p){return metric==='streak'?Number(p.streak_days||0):metric==='patent'?Number(p.patent_level||1):Number(p.average_daily_minutes||0)}
@@ -107,6 +109,11 @@ function renderRank(){
  const podium=sorted.slice(0,3),order=[1,0,2],medals=['🥇','🥈','🥉'];$('podium').innerHTML=order.map(i=>{const p=podium[i];return p?'<div class="pod '+(i===0?'first':'')+'"><div class="medal">'+medals[i]+'</div><b>'+esc(p.display_name.split(' ')[0])+'</b><small>'+esc(p.patent||'Recruta')+'</small><strong>'+esc(labelValue(p))+'</strong></div>':'<div></div>'}).join('');
  $('ranking').innerHTML=sorted.slice(3).map((p,i)=>'<div class="rankrow"><span class="place">'+(i+4)+'</span><span class="avatar">'+esc(p.display_name.charAt(0).toUpperCase())+'</span><span class="who"><b>'+esc(p.display_name)+(p.user_id===me.id?' · Você':'')+'</b><small>'+esc(p.exam_name||'Estudante')+' · '+esc(p.patent||'Recruta')+'</small></span><span class="value">'+esc(labelValue(p))+'</span></div>').join('')||(sorted.length<=3?'<div class="empty">'+(sorted.length===1?'Você é o primeiro por aqui. Compartilhe seu código para chamar outros estudantes.':'Ranking atualizado.')+'</div>':'');
 }
+function renderNotices(){
+ $('notice-card').hidden=!notifications.length;$('notice-count').textContent=notifications.length;
+ $('notices').innerHTML=notifications.map(n=>{const p=profiles.find(x=>x.user_id===n.sender_id);return '<div class="requestrow"><span class="avatar">✦</span><span class="who"><b>'+esc(p?.display_name||'Um amigo')+'</b><small>Enviou um incentivo para você.</small></span><button class="secondary" onclick="readNotice('+n.id+')">OK</button></div>'}).join('');
+}
+async function readNotice(id){try{const {error}=await db.from('community_notifications').update({read_at:new Date().toISOString()}).eq('id',id).eq('recipient_id',me.id);if(error)throw error;await refresh()}catch(e){toast('Não foi possível marcar o aviso: '+e.message)}}
 function renderFriends(){
  $('request-count').textContent=incoming.length;$('friend-count').textContent=friends.length;$('sent-count').textContent=outgoing.length;
  $('requests').innerHTML=incoming.map(r=>{const p=profiles.find(x=>x.user_id===r.sender_id);return '<div class="requestrow"><span class="avatar">'+esc((p?.display_name||'E').charAt(0))+'</span><span class="who"><b>'+esc(p?.display_name||'Estudante')+'</b><small>Quer adicionar você</small></span><span class="actions"><button class="primary" onclick="respond('+r.id+',true)">Aceitar</button><button class="secondary" onclick="respond('+r.id+',false)">Recusar</button></span></div>'}).join('')||'<div class="empty">Nenhum pedido recebido.</div>';
