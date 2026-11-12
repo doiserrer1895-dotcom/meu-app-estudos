@@ -399,9 +399,12 @@ function setEx(){const n=$('#en').value.trim(),d=$('#ed').value;if(!d)return;S.e
 function addR(){const t=$('#rtx').value.trim();if(!t)return;S.rem.push({id:uid(),text:t,tag:$('#rtg').value,date:$('#rdt').value,done:0});save();render()}
 function tgR(id){const r=S.rem.find(x=>x.id===id);r.done=r.done?0:1;save();render()}
 function delR(id){S.rem=S.rem.filter(x=>x.id!==id);save();render()}
-function saveSim(){const n=i=>Math.max(0,parseFloat($('#'+i).value.replace(',','.'))||0),er=m=>$('#err2').textContent=m,h=n('sh'),q=Math.floor(n('sq')),a=Math.floor(n('sa'));
- if(!$('#sd').value)return er('Escolha a data.');if(a>q)return er('Acertos não podem passar de questões feitas.');if(!h&&!q)return er('Informe horas ou questões.');
- S.sim.push({id:uid(),date:$('#sd').value,h,p:0,q,a});save();render()}
+function saveSim(){const n=i=>Math.max(0,parseFloat($('#'+i).value.replace(',','.'))||0),er=m=>$('#err2').textContent=m,h=n('sh'),q=Math.floor(n('sq')),a=Math.floor(n('sa')),date=$('#sd').value,time=$('#sim-start-time').value;
+ if(!date)return er('Escolha a data.');if(a>q)return er('Acertos não podem passar de questões feitas.');if(!h&&!q)return er('Informe horas ou questões.');
+ const sim={id:uid(),date,h,p:0,q,a,source:'manual-simulado'};
+ // O horário do simulado é opcional e nunca é estimado.
+ if(time){const start=new Date(date+'T'+time);if(!Number.isFinite(start.getTime()))return er('Confira o horário informado.');sim.startedAt=start.toISOString()}
+ S.sim.push(sim);save();render()}
 function delSim(id){S.sim=S.sim.filter(x=>x.id!==id);save();render()}
 function studied(){const s=new Set();S.entries.forEach(e=>{if(net(e)>0||e.q>0)s.add(e.date)});S.sim.forEach(e=>s.add(e.date));return s}
 function streak(){const st=studied(),L=[...st].sort();let rec=0,run=0,prev=null;
@@ -442,6 +445,7 @@ function vG(){const t=today(),k=iso(t),w0=mon(t),w1=new Date(w0);w1.setDate(w0.g
  painel()+
  `<details class="card"><summary>Registrar simulado</summary><label>Data</label><input type="date" id="sd" value="${k}">
  <div class="two"><div><label>Horas</label><input id="sh" type="number" step="0.25" min="0" inputmode="decimal"></div><div><label>Questões feitas</label><input id="sq" type="number" min="0" inputmode="numeric"></div></div>
+ <label>Horário de início (opcional)</label><input id="sim-start-time" type="time"><small style="display:block;color:var(--mu);font-size:12px;margin-top:5px">Só informe se souber o horário real. As horas contam mesmo sem esse campo.</small>
  <label>Acertos</label><input id="sa" type="number" min="0" inputmode="numeric"><div id="err2" style="color:var(--rd);font-size:13px;margin-top:10px"></div><button class="btn" style="width:100%;margin-top:14px" onclick="saveSim()">Salvar simulado</button>
  ${S.sim.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<div class="row"><div class="g"><b>Simulado · ${br(e.date)}</b><small>${fHs(net(e))}h · ${e.a}/${e.q} acertos</small></div><button class="x" onclick="delSim('${e.id}')">×</button></div>`).join('')}</details>`+
  `<div class="card"><h2>Revisões</h2><label>Disciplina</label>${selS('rsub',"fillTop('rsub','rtop')")}<label>Conteúdo (opcional)</label><select id="rtop"><option value="">Matéria inteira</option></select><label>Intervalo da revisão</label><div class="chips">${RI.map(n=>`<button type="button" class="chip ${n===7?'on':''}" onclick="$('#rint').value=${n};this.parentNode.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));this.classList.add('on')">${n} ${n===1?'dia':'dias'}</button>`).join('')}</div><input id="rint" type="hidden" value="7"><button class="btn" style="width:100%;margin-top:12px" onclick="addReview()">Agendar revisão</button><div class="leg">Branco: distante · verde: até 7 dias · vermelho: amanhã ou atrasada</div>`+(S.revs.slice().sort((a,b)=>a.due.localeCompare(b.due)).map(r=>`<div class="row"><button class="ck" title="Marcar revisão feita e reagendar" onclick="doRev('${r.id}')">✓</button><div class="g"><b>${esc(r.subj)}</b><small>${r.top?esc(r.top):'Matéria inteira'} · repetir a cada ${r.interval||RI[r.step]||1} ${((r.interval||RI[r.step]||1)===1)?'dia':'dias'} · ${br(r.due)}</small></div>${revBadge(r.due)}<button class="x" onclick="delRev('${r.id}')">×</button></div>`).join('')||'<div class="empty">Nenhuma revisão agendada</div>')+`</div>`+
