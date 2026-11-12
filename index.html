@@ -287,7 +287,7 @@ function fillTop(sid,tid,sel){const m=S.edital.find(x=>x.name===$('#'+sid).value
 function byS(es){const m={};es.forEach(e=>m[e.subj]=(m[e.subj]||0)+net(e));return Object.entries(m).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1])}
 function breakdown(es){const m={};es.forEach(e=>{const k=e.top||'Geral';m[k]=(m[k]||0)+net(e)});const L=Object.entries(m).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]),t=L.reduce((s,x)=>s+x[1],0);
  return L.map(([k,h])=>{const p=t?Math.round(h/t*100):0;return`<div class="row"><div class="g"><b>${esc(k)}</b><small>${f1(h)}h · ${p}% da matéria</small><div class="bar"><i style="width:${p}%"></i></div></div></div>`}).join('')||'<div class="empty">Sem horas registradas</div>'}
-function addEntry(h,q,a){const T=S.timer;const date=iso(new Date());S.entries.push({id:uid(),date,subj:T.subj,top:T.top,h,p:0,q:q||0,a:a||0,startedAt:T.sessionStartedAt||new Date(Date.now()-h*36e5).toISOString()});T.sessionStartedAt=null;mkRev(T.subj,T.top,date)}
+function addEntry(h,q,a){const T=S.timer;const date=iso(new Date()),entry={id:uid(),date,subj:T.subj,top:T.top,h,p:0,q:q||0,a:a||0,source:'timer'};if(T.sessionStartedAt)entry.startedAt=T.sessionStartedAt;S.entries.push(entry);T.sessionStartedAt=null;mkRev(T.subj,T.top,date)}
 
 /* ---------- PLANO DE ESTUDOS / LDI CONFIGURÁVEL ---------- */
 function topicDone(m,t){return (m.doneTopics||[]).includes(t)}
