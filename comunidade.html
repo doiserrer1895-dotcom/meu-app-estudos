@@ -883,10 +883,11 @@ function communityStudy(data){
  d=new Date(now);if(!daily[dateKey(d)])d.setDate(d.getDate()-1);while(daily[dateKey(d)]){streak++;d.setDate(d.getDate()-1);if(streak>730)break;}
  return{daily:daily,logs:logs,average:Math.round(sum/7),streak:streak};
 }
-/* DADOS DA CONSTÂNCIA: atualmente lê constancia-v1 do localStorage deste navegador. Esses dados não são enviados à nuvem por esta função; por isso, podem não acompanhar o usuário em outro aparelho. */
-function communityConstancia(){
+/* DADOS DA CONSTÂNCIA: recebe o JSON privado carregado da tabela constancia_data para a conta autenticada. */
+function communityConstancia(c){
  try{
-  var c=JSON.parse(localStorage.getItem("constancia-v1")||"{}"),items=Array.isArray(c.items)?c.items:[],skills=Array.isArray(c.skills)?c.skills:[],profile=c.profile||{},total=0,byAttr={},i,it,done,multi,rec,n,attrs,k,values=[];
+  c=c&&typeof c==="object"?c:{};
+  var items=Array.isArray(c.items)?c.items:[],skills=Array.isArray(c.skills)?c.skills:[],profile=c.profile||{},total=0,byAttr={},i,it,done,multi,rec,n,attrs,k,values=[];
   for(i=0;i<items.length;i++){it=items[i];done=it.done&&typeof it.done==="object"?it.done:{};multi=it.type==="principal"||it.type==="batalha";rec=Array.isArray(it.days)&&it.days.length>0;
    if(multi)n=Object.keys(done).filter(function(day){return Array.isArray(it.slots)&&it.slots.length>0&&it.slots.every(function(_,ix){return !!(done[day]||[])[ix]})}).length;
    else if(rec)n=Object.keys(done).filter(function(day){return !!done[day]}).length;
@@ -932,7 +933,17 @@ async function communityInit(){
  if(!sessionResult.data.session){window.location.href="index.html";return false;}
  AUTH_USER=sessionResult.data.session.user;
  var studyResult=await db.from("estudos").select("dados").eq("id",AUTH_USER.id).maybeSingle();if(studyResult.error)throw studyResult.error;
- var study=studyResult.data&&studyResult.data.dados||{},cm=communityConstancia(),sm=communityStudy(study),name=cm.name||(AUTH_USER.user_metadata&&AUTH_USER.user_metadata.name)||(AUTH_USER.email||"estudante").split("@")[0];
+ var constanciaState=null,constanciaResult=await db.from("constancia_data").select("data").eq("user_id",AUTH_USER.id).maybeSingle();
+ if(constanciaResult.error){
+  // Compatibilidade temporária enquanto a migração SQL ainda não foi executada: usa apenas cache vinculado a esta conta.
+  console.warn("Sincronização da Constância pendente; execute supabase-constancia.sql:",constanciaResult.error);
+  try{constanciaState=JSON.parse(localStorage.getItem("constancia-v1:"+AUTH_USER.id)||"{}")}catch(e){constanciaState={}}
+ }else if(constanciaResult.data&&constanciaResult.data.data){
+  constanciaState=constanciaResult.data.data;
+ }else{
+  try{constanciaState=JSON.parse(localStorage.getItem("constancia-v1:"+AUTH_USER.id)||"{}")}catch(e){constanciaState={}}
+ }
+ var study=studyResult.data&&studyResult.data.dados||{},cm=communityConstancia(constanciaState),sm=communityStudy(study),name=cm.name||(AUTH_USER.user_metadata&&AUTH_USER.user_metadata.name)||(AUTH_USER.email||"estudante").split("@")[0];
  var old=await db.from("community_profiles").select("invite_code").eq("user_id",AUTH_USER.id).maybeSingle();if(old.error)throw old.error;
  ME=name;MY_INVITE_CODE=old.data&&old.data.invite_code||("EST-"+AUTH_USER.id.replace(/-/g,"").slice(0,8).toUpperCase());
  SK="comunidade:v1:"+ck(ME);SLK="comunidade:v1:"+ck(ME)+":sessoes";HK="comunidade:v1:"+ck(ME)+":horas";SCK="comunidade:v1:"+ck(ME)+":concurso";
