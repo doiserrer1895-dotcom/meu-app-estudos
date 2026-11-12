@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Constância</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap">
 <style>
@@ -337,7 +338,93 @@ const K='constancia-v1',$=s=>document.querySelector(s);
 let S={items:[]};
 try{const r=JSON.parse(localStorage.getItem(K));if(r&&Array.isArray(r.items))S=r}catch(e){}
 S.skills=Array.isArray(S.skills)?S.skills:[];
-const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+// Salva primeiro no dispositivo; depois agenda a sincronização privada da conta autenticada.
+let CONSTANCIA_USER_ID=null,CONSTANCIA_DB=null,CONSTANCIA_CLOUD_READY=false,CONSTANCIA_SAVE_TIMER=null,CONSTANCIA_SAVING=false;
+const save=()=>{
+ try{localStorage.setItem(CONSTANCIA_USER_ID?K+':'+CONSTANCIA_USER_ID:K,JSON.stringify(S))}catch(e){}
+ if(window.__constanciaCloudSave)window.__constanciaCloudSave();
+};
+function constanciaCloudStatus(message,warning){
+ let el=document.getElementById('constancia-cloud-status');
+ if(!el){el=document.createElement('div');el.id='constancia-cloud-status';el.style.cssText='position:fixed;right:12px;bottom:86px;z-index:90;padding:7px 11px;border:1px solid #333;border-radius:999px;background:#151515;color:#9a9a96;font:700 11px system-ui;box-shadow:0 4px 18px #0008';document.body.appendChild(el)}
+ el.textContent=message;el.style.color=warning?'#fbbf24':'#4ade80';
+}
+function mergeConstanciaState(remote,local){
+ const out=Object.assign({},local||{},remote||{});
+ ['items','skills'].forEach(function(key){
+  const merged=[],seen={};
+  (Array.isArray(remote&&remote[key])?remote[key]:[]).concat(Array.isArray(local&&local[key])?local[key]:[]).forEach(function(item){
+   if(!item||!item.id)return;
+   const id=String(item.id);
+   if(seen[id]===undefined){seen[id]=merged.length;merged.push(item)}
+   // Em IDs iguais, a versão da nuvem prevalece; registros locais novos são preservados.
+  });
+  out[key]=merged;
+ });
+ out.profile=Object.assign({},(local&&local.profile)||{},(remote&&remote.profile)||{});
+ return out;
+}
+async function flushConstanciaCloud(){
+ if(!CONSTANCIA_CLOUD_READY||!CONSTANCIA_USER_ID||!CONSTANCIA_DB)return;
+ if(CONSTANCIA_SAVING)return;
+ CONSTANCIA_SAVING=true;
+ try{
+  const snapshot=JSON.parse(JSON.stringify(S));
+  const result=await CONSTANCIA_DB.from('constancia_data').upsert({user_id:CONSTANCIA_USER_ID,data:snapshot,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+  if(result.error)throw result.error;
+  localStorage.setItem(K+':'+CONSTANCIA_USER_ID,JSON.stringify(snapshot));
+  constanciaCloudStatus('Constância sincronizada');
+ }catch(error){
+  console.error('Falha ao sincronizar Constância:',error);
+  constanciaCloudStatus('Salvo neste aparelho · nuvem pendente',true);
+ }finally{CONSTANCIA_SAVING=false}
+}
+function scheduleConstanciaCloud(){
+ if(!CONSTANCIA_CLOUD_READY)return;
+ clearTimeout(CONSTANCIA_SAVE_TIMER);
+ constanciaCloudStatus('Salvando na nuvem…');
+ CONSTANCIA_SAVE_TIMER=setTimeout(flushConstanciaCloud,650);
+}
+async function initConstanciaCloud(){
+ if(!window.supabase||!window.supabase.createClient){constanciaCloudStatus('Biblioteca de nuvem indisponível',true);return}
+ CONSTANCIA_DB=window.supabase.createClient('https://nwwwydwevgftbpjuasgz.supabase.co','sb_publishable_7-zqJxrp67zBzWZcwUmlQw_wLpb-Gqc');
+ const sessionResult=await CONSTANCIA_DB.auth.getSession();
+ if(sessionResult.error)throw sessionResult.error;
+ const user=sessionResult.data.session&&sessionResult.data.session.user;
+ if(!user){window.location.href='index.html';return}
+ CONSTANCIA_USER_ID=user.id;
+ const userKey=K+':'+user.id;
+ let userCache=null,legacy=null;
+ try{const raw=localStorage.getItem(userKey);if(raw)userCache=JSON.parse(raw)}catch(e){}
+ try{const raw=localStorage.getItem(K);if(raw)legacy=JSON.parse(raw)}catch(e){}
+ const cloudResult=await CONSTANCIA_DB.from('constancia_data').select('data').eq('user_id',user.id).maybeSingle();
+ if(cloudResult.error){
+  console.error('Tabela de Constância ainda não disponível:',cloudResult.error);
+  constanciaCloudStatus('Execute supabase-constancia.sql',true);
+  if(userCache)S=userCache;
+  return;
+ }
+ if(cloudResult.data&&cloudResult.data.data){
+  S=mergeConstanciaState(cloudResult.data.data,userCache);
+ }else if(userCache){
+  S=userCache;
+ }else if(legacy&&Array.isArray(legacy.items)){
+  const accepted=confirm('Encontramos dados antigos da Constância salvos neste navegador. Eles pertencem a esta conta e devem ser migrados para a nuvem?\n\nOK = migrar preservando os dados.\nCancelar = não importar esses dados para esta conta.');
+  if(accepted)S=legacy;
+  else S={items:[],skills:(S.skills||[]).filter(isVitalidade),profile:{}};
+ }else{
+  S={items:[],skills:(S.skills||[]).filter(isVitalidade),profile:{}};
+ }
+ S.items=Array.isArray(S.items)?S.items:[];
+ S.skills=Array.isArray(S.skills)?S.skills:[];
+ localStorage.setItem(userKey,JSON.stringify(S));
+ CONSTANCIA_CLOUD_READY=true;
+ window.__constanciaCloudSave=scheduleConstanciaCloud;
+ CONSTANCIA_DB.auth.onAuthStateChange(function(event){if(event==='SIGNED_OUT'){CONSTANCIA_CLOUD_READY=false;CONSTANCIA_USER_ID=null;window.location.href='index.html'}});
+ window.addEventListener('online',scheduleConstanciaCloud);
+ document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')flushConstanciaCloud()});
+ await flushConstanciaCloud();
+}
 const isLifestyle=k=>!!k&&(((k.id||'').toLowerCase()==='lifestyle')||((k.name||'').trim().toLowerCase()==='lifestyle'));
 const isVitalidade=k=>!!k&&(((k.id||'').toLowerCase()==='vitalidade')||((k.name||'').trim().toLowerCase()==='vitalidade'));
 const LIFESTYLE_COLOR='#A78BFA',VITALIDADE_COLOR='#F87171';
@@ -874,7 +961,7 @@ function render(){
   if(on){c.classList.remove('on');void c.offsetWidth;c.classList.add('on')}else{c.classList.add('on');void c.offsetWidth;c.classList.remove('on')}});
  const g=document.getElementById('gp');if(g){const to=+g.dataset.p;animG(GP,to);GP=to}
 }
-render();
+initConstanciaCloud().then(function(){render()}).catch(function(error){console.error('Falha ao iniciar sincronização da Constância:',error);constanciaCloudStatus('Dados locais preservados · nuvem indisponível',true);render()});
 </script>
 </body>
 </html>
