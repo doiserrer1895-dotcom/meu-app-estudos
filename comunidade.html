@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#222224"><title>Comunidade · Meu App Estudos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#222224;--card:#1a1a1c;--line:#37373b;--tx:#f1f1f2;--mu:#8b8b92;--ac:#f0883e;--gold:#e3b94a;--green:#4ade80;--red:#f87171;--purple:#a78bdb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px "Space Grotesk",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:480px;margin:auto;padding:calc(22px + env(safe-area-inset-top)) 18px 110px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}.eyebrow{font-size:10px;letter-spacing:.15em;color:var(--ac);font-weight:700}.hello{font-size:26px;font-weight:700;margin:5px 0}.sub{font-size:12px;color:var(--mu)}.back{border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--tx);padding:9px 12px;font-weight:700}
+.tabs{position:fixed;z-index:5;bottom:0;left:0;right:0;background:#1a1a1cf2;border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:center}.tabs>div{width:100%;max-width:450px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.tabs button{background:none;border:0;color:var(--mu);border-radius:13px;padding:8px 4px;font:600 12px inherit}.tabs button.on{background:#343438;color:var(--tx)}.tabs b{display:block;font-size:18px;margin-bottom:3px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin:0 0 12px}.card h2{font-size:15px;margin:0 0 12px}.muted{color:var(--mu)}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.stat{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:12px 7px;text-align:center}.stat small{display:block;color:var(--mu);font-size:10px}.stat strong{display:block;font-size:20px;margin:5px 0 2px}.seg{display:flex;gap:5px;background:#111113;border-radius:13px;padding:4px;margin-bottom:12px}.seg button{flex:1;border:0;background:none;color:var(--mu);border-radius:10px;padding:9px 2px;font:600 12px inherit}.seg button.on{background:#3a3a3e;color:var(--tx)}
+.podium{display:grid;grid-template-columns:1fr 1.12fr 1fr;gap:7px;align-items:end;margin:12px 0 16px}.pod{background:#242427;border:1px solid var(--line);border-radius:14px 14px 10px 10px;text-align:center;padding:12px 4px 10px;min-width:0}.pod.first{padding-top:20px;border-color:#a77c35}.pod .medal{font-size:20px}.pod b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;margin:5px 0}.pod small{color:var(--mu);font-size:10px}.pod strong{display:block;color:var(--ac);font-size:13px;margin-top:5px}.rankrow,.friendrow,.requestrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}.rankrow:last-child,.friendrow:last-child,.requestrow:last-child{border:0}.place{width:25px;color:var(--mu);font:700 12px "JetBrains Mono",monospace}.avatar{width:34px;height:34px;border-radius:12px;background:#3b3028;color:var(--ac);display:grid;place-items:center;font-weight:800;flex:none}.who{flex:1;min-width:0}.who b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.who small{display:block;color:var(--mu);font-size:10px;margin-top:3px}.value{font:700 12px "JetBrains Mono",monospace;white-space:nowrap}
+button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}
+input{width:100%;border:1px solid var(--line);background:#111113;color:var(--tx);border-radius:12px;padding:12px;font:14px inherit;outline:none}input:focus{border-color:var(--ac)}.formrow{display:flex;gap:8px}.primary,.secondary,.danger{border:0;border-radius:12px;padding:11px 13px;font:700 12px inherit;white-space:nowrap}.primary{background:var(--ac);color:#21140c}.secondary{background:#343438;color:var(--tx)}.danger{background:#482729;color:#ffb4b4}.code{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#111113;border:1px dashed #65503e;border-radius:13px;padding:12px;margin-top:8px}.code strong{font:700 15px "JetBrains Mono",monospace;letter-spacing:.06em;color:var(--ac)}.notice{padding:12px;border-radius:12px;background:#30271f;color:#e7c6a8;font-size:12px;line-height:1.5}.empty{text-align:center;color:var(--mu);padding:22px 8px;font-size:12px;line-height:1.5}.actions{display:flex;gap:6px}.actions button{padding:8px 9px}.compare{margin-top:14px}.cmp{margin:12px 0}.cmphead{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}.track{height:8px;border-radius:9px;background:#303034;overflow:hidden;margin:5px 0}.track i{display:block;height:100%;border-radius:9px;background:var(--ac)}.track.purple i{background:var(--purple)}.toast{position:fixed;left:18px;right:18px;bottom:90px;max-width:440px;margin:auto;background:#38383c;border:1px solid #55555a;border-radius:12px;padding:12px;text-align:center;font-size:12px;display:none;z-index:10}.toast.on{display:block}.section{display:none}.section.on{display:block}.topline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.topline h2{margin:0}.pill{font-size:10px;color:var(--ac);background:#3b2b20;padding:5px 8px;border-radius:99px}
+</style>
+</head>
+<body>
+<main>
+<header><div><div class="eyebrow">MEU APP ESTUDOS · COMUNIDADE</div><div class="hello" id="greet">Olá!</div><div class="sub" id="profile-sub">Conectando sua conta…</div></div><button class="back" onclick="location.href='index.html'">⌂ Central</button></header>
+<section class="section on" id="rank">
+ <div class="stats"><div class="stat"><small>SUA POSIÇÃO</small><strong id="my-rank">—</strong><small id="rank-label">Ranking</small></div><div class="stat"><small>OFENSIVA</small><strong id="my-streak">0</strong><small>dias</small></div><div class="stat"><small>MÉDIA DIÁRIA</small><strong id="my-hours">0h</strong><small>últimos 7 dias</small></div></div>
+ <div class="card"><div class="topline"><h2>Ranking geral</h2><span class="pill" id="people-count">0 estudantes</span></div><div class="seg" id="rank-tabs"><button class="on" data-metric="streak">Ofensiva</button><button data-metric="patent">Patentes</button><button data-metric="study">Estudos</button></div><div class="podium" id="podium"></div><div id="ranking"></div></div>
+ <div class="card"><h2>Eu vs. plataforma</h2><div class="sub">Média diária de estudo dos últimos sete dias.</div><div class="stats" style="margin-top:12px"><div class="stat"><small>VOCÊ</small><strong id="my-average">0m</strong></div><div class="stat"><small>PLATAFORMA</small><strong id="platform-average">—</strong></div><div class="stat"><small>DIFERENÇA</small><strong id="platform-diff">—</strong></div></div><div class="notice" id="platform-note">A comparação geral aparece quando houver sessões registradas pela comunidade.</div></div>
+</section>
+<section class="section" id="amigos">
+ <div class="card"><h2>Seu código de convite</h2><div class="sub">Compartilhe com alguém para enviar um pedido de amizade.</div><div class="code"><strong id="invite-code">GERANDO…</strong><button class="secondary" onclick="copyCode()">Copiar</button></div></div>
+ <div class="card"><h2>Adicionar amigo</h2><div class="sub" style="margin-bottom:10px">Busque pelo nome de perfil ou pelo código de convite.</div><div class="formrow"><input id="search-user" placeholder="Nome ou código"><button class="primary" id="search-btn" onclick="searchUser()">Buscar</button></div><div id="search-result"></div></div>
+ <div class="card"><div class="topline"><h2>Pedidos recebidos</h2><span class="pill" id="request-count">0</span></div><div id="requests"><div class="empty">Nenhum pedido recebido.</div></div></div>
+ <div class="card"><div class="topline"><h2>Seus amigos</h2><span class="pill" id="friend-count">0</span></div><div id="friends"><div class="empty">Você ainda não adicionou amigos.</div></div><div class="compare" id="friend-compare"></div></div>
+</section>
+<section class="section" id="missoes"><div class="card"><h2>Missões</h2><div class="empty">As missões da Comunidade serão liberadas em uma próxima etapa.</div></div></section>
+</main>
+<nav class="tabs"><div><button class="on" data-tab="rank"><b>♜</b>Rank</button><button data-tab="amigos"><b>♧</b>Amigos</button><button data-tab="missoes"><b>◎</b>Missões</button></div></nav>
+<div class="toast" id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+'use strict';
+const SUPABASE_URL='https://nwwwydwevgftbpjuasgz.supabase.co';
+const SUPABASE_KEY='sb_publishable_7-zqJxrp67zBzWZcwUmlQw_wLpb-Gqc';
+const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let db=null,me=null,profiles=[],friends=[],incoming=[],outgoing=[],selectedFriend=null,metric='streak',myProfile=null,studyState={};
+const patentRanks=[['Recruta',0],['Soldado',50],['Cabo',150],['Sargento',300],['Segundo Sargento',500],['Primeiro Sargento',700],['Subtenente',900],['Aspirante a Oficial',1200],['Segundo Tenente',1600],['Primeiro Tenente',2000],['Capitão',2500],['Major',3100],['Tenente-Coronel',3800],['Coronel',4600],['General de Brigada',5500],['General de Exército',6500],['Marechal',8000]];
+function toast(t){$('toast').textContent=t;$('toast').classList.add('on');setTimeout(()=>$('toast').classList.remove('on'),2600)}
+function minutes(v){v=Math.max(0,Math.round(v||0));return v>=60?Math.floor(v/60)+'h'+String(v%60).padStart(2,'0'):v+'m'}
+function patentFor(total){let r=patentRanks[0];patentRanks.forEach(x=>{if(total>=x[1])r=x});return{label:r[0],level:patentRanks.indexOf(r)+1}}
+function studyMetrics(data){
+ const entries=Array.isArray(data?.entries)?data.entries:[],sim=Array.isArray(data?.sim)?data.sim:[];
+ const daily={};[...entries,...sim].forEach(e=>{if(!e.date)return;const h=Math.max(0,Number(e.h)||0);daily[e.date]=(daily[e.date]||0)+Math.round(h*60)});
+ const now=new Date();now.setHours(0,0,0,0);let sum=0;for(let i=0;i<7;i++){const d=new Date(now);d.setDate(d.getDate()-i);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');sum+=daily[k]||0}
+ const days=Object.keys(daily).sort();let streak=0,d=new Date(now);const key=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');if(!daily[key(d)])d.setDate(d.getDate()-1);while(daily[key(d)]){streak++;d.setDate(d.getDate()-1);if(streak>730)break}
+ return{average:Math.round(sum/7),streak,daily,entries};
+}
+function constanciaMetrics(){
+ try{
+  const c=JSON.parse(localStorage.getItem('constancia-v1')||'{}'),items=Array.isArray(c.items)?c.items:[],profile=c.profile||{};
+  let total=0;items.forEach(it=>{if(it.doneDate)total++;if(it.done&&typeof it.done==='object')total+=Object.values(it.done).filter(Boolean).length});
+  return{name:String(profile.name||'').trim(),total};
+ }catch(e){return{name:'',total:0}}
+}
+function inviteFor(id){return 'EST-'+id.replace(/-/g,'').slice(0,8).toUpperCase()}
+async function load(){
+ if(!window.supabase?.createClient)throw Error('A conexão do Supabase não carregou. Atualize a página.');
+ db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+ const {data,error}=await db.auth.getSession();if(error)throw error;
+ if(!data.session){$('profile-sub').textContent='Entre pela Central para acessar a Comunidade.';$('greet').textContent='Conta não conectada';$('rank').innerHTML='<div class="card"><div class="empty">Sua sessão não foi encontrada. Volte à Central, entre na sua conta e abra a Comunidade novamente.<br><br><button class="primary" onclick="location.href=\'index.html\'">Voltar à Central</button></div></div>';return}
+ me=data.session.user;
+ const [{data:study,error:studyError},{data:oldProfile,error:profileError}]=await Promise.all([
+  db.from('estudos').select('dados').eq('id',me.id).maybeSingle(),
+  db.from('community_profiles').select('*').eq('user_id',me.id).maybeSingle()
+ ]);
+ if(studyError)throw studyError;if(profileError)throw profileError;
+ studyState=study?.dados||{};const sm=studyMetrics(studyState),cm=constanciaMetrics(),name=cm.name||me.user_metadata?.name||me.email?.split('@')[0]||'Estudante',pat=patentFor(cm.total);
+ const invite=oldProfile?.invite_code||inviteFor(me.id);
+ myProfile={user_id:me.id,display_name:name,exam_name:studyState.exam?.name||'',patent:pat.label,patent_level:pat.level,streak_days:sm.streak,average_daily_minutes:sm.average,invite_code:invite,updated_at:new Date().toISOString()};
+ const {error:upError}=await db.from('community_profiles').upsert(myProfile,{onConflict:'user_id'});if(upError)throw upError;
+ $('greet').textContent='Olá, '+name.split(' ')[0]+'!';$('profile-sub').textContent=(myProfile.exam_name||'Estudante')+' · Comunidade';$('invite-code').textContent=invite;
+ $('my-streak').textContent=sm.streak;$('my-hours').textContent=minutes(sm.average);$('my-average').textContent=minutes(sm.average);
+ // Registra apenas sessões que possuem horário real de início no histórico do cronômetro.
+ const sess=sm.entries.filter(e=>e.startedAt&&e.id).map(e=>({user_id:me.id,source_id:String(e.id),started_at:new Date(e.startedAt).toISOString(),minutes:Math.max(1,Math.min(1440,Math.round((Number(e.h)||0)*60)))})).filter(e=>Number.isFinite(Date.parse(e.started_at))&&e.minutes>0);
+ if(sess.length){const {error}=await db.from('community_sessions').upsert(sess,{onConflict:'user_id,source_id'});if(error)console.warn('Sessões comunitárias pendentes:',error)}
+ await refresh();
+}
+async function refresh(){
+ const [{data:p,error:pe},{data:req,error:re},{data:sent,error:se},{data:fs,error:fe},{data:platform,error:plErr}]=await Promise.all([
+  db.from('community_profiles').select('*').order('updated_at',{ascending:false}),
+  db.from('community_friend_requests').select('*').eq('receiver_id',me.id),
+  db.from('community_friend_requests').select('*').eq('sender_id',me.id),
+  db.from('community_friendships').select('*').or('user_a.eq.'+me.id+',user_b.eq.'+me.id),
+  db.rpc('community_platform_stats')
+ ]);
+ if(pe||re||se||fe)throw pe||re||se||fe;
+ profiles=p||[];incoming=req||[];outgoing=sent||[];
+ const ids=(fs||[]).map(x=>x.user_a===me.id?x.user_b:x.user_a);
+ if(ids.length){const {data,error}=await db.from('community_profiles').select('*').in('user_id',ids);if(error)throw error;friends=data||[]}else friends=[];
+ renderRank();renderFriends();
+ if(!plErr&&platform){const arr=platform.days||[],avg=arr.length?Math.round(arr.reduce((a,b)=>a+Number(b||0),0)/7):0;const mine=myProfile.average_daily_minutes;$('platform-average').textContent=minutes(avg);const diff=avg?Math.round((mine/avg-1)*100):null;$('platform-diff').textContent=diff===null?'—':(diff>0?'+':'')+diff+'%';$('platform-note').textContent=avg?'Média calculada a partir das sessões registradas por usuários da Comunidade.':'Ainda não há sessões suficientes para calcular a média geral.'}
+}
+function value(p){return metric==='streak'?Number(p.streak_days||0):metric==='patent'?Number(p.patent_level||1):Number(p.average_daily_minutes||0)}
+function labelValue(p){return metric==='streak'?(p.streak_days||0)+' dias':metric==='patent'?(p.patent||'Recruta')+' · nível '+(p.patent_level||1):minutes(p.average_daily_minutes||0)+'/dia'}
+function renderRank(){
+ const sorted=[...profiles].sort((a,b)=>value(b)-value(a)||a.display_name.localeCompare(b.display_name)),mine=sorted.findIndex(p=>p.user_id===me.id);
+ $('my-rank').textContent=mine<0?'—':'#'+(mine+1);$('rank-label').textContent=metric==='streak'?'Ofensiva':metric==='patent'?'Patentes':'Estudos';$('people-count').textContent=sorted.length+' estudantes';
+ const podium=sorted.slice(0,3),order=[1,0,2],medals=['🥇','🥈','🥉'];$('podium').innerHTML=order.map(i=>{const p=podium[i];return p?'<div class="pod '+(i===0?'first':'')+'"><div class="medal">'+medals[i]+'</div><b>'+esc(p.display_name.split(' ')[0])+'</b><small>'+esc(p.patent||'Recruta')+'</small><strong>'+esc(labelValue(p))+'</strong></div>':'<div></div>'}).join('');
+ $('ranking').innerHTML=sorted.slice(3).map((p,i)=>'<div class="rankrow"><span class="place">'+(i+4)+'</span><span class="avatar">'+esc(p.display_name.charAt(0).toUpperCase())+'</span><span class="who"><b>'+esc(p.display_name)+(p.user_id===me.id?' · Você':'')+'</b><small>'+esc(p.exam_name||'Estudante')+' · '+esc(p.patent||'Recruta')+'</small></span><span class="value">'+esc(labelValue(p))+'</span></div>').join('')||(sorted.length<=3?'<div class="empty">'+(sorted.length===1?'Você é o primeiro por aqui. Compartilhe seu código para chamar outros estudantes.':'Ranking atualizado.')+'</div>':'');
+}
+function renderFriends(){
+ $('request-count').textContent=incoming.length;$('friend-count').textContent=friends.length;
+ $('requests').innerHTML=incoming.map(r=>{const p=profiles.find(x=>x.user_id===r.sender_id);return '<div class="requestrow"><span class="avatar">'+esc((p?.display_name||'E').charAt(0))+'</span><span class="who"><b>'+esc(p?.display_name||'Estudante')+'</b><small>Quer adicionar você</small></span><span class="actions"><button class="primary" onclick="respond('+r.id+',true)">Aceitar</button><button class="secondary" onclick="respond('+r.id+',false)">Recusar</button></span></div>'}).join('')||'<div class="empty">Nenhum pedido recebido.</div>';
+ $('friends').innerHTML=friends.map(p=>'<div class="friendrow"><span class="avatar">'+esc(p.display_name.charAt(0))+'</span><span class="who"><b>'+esc(p.display_name)+'</b><small>'+esc(p.exam_name||'Estudante')+' · '+esc(p.patent||'Recruta')+' · '+(p.streak_days||0)+' dias de ofensiva</small></span><span class="actions"><button class="secondary" onclick="selectFriend(\''+p.user_id+'\')">Comparar</button><button class="danger" onclick="removeFriend(\''+p.user_id+'\')">×</button></span></div>').join('')||'<div class="empty">Você ainda não adicionou amigos. Busque pelo nome ou código acima.</div>';
+ const f=friends.find(x=>x.user_id===selectedFriend)||friends[0];selectedFriend=f?.user_id||null;
+ $('friend-compare').innerHTML=f?'<h2>Você vs. '+esc(f.display_name.split(' ')[0])+'</h2>'+compareRow('Ofensiva',myProfile.streak_days,f.streak_days,'dias')+compareRow('Patente',myProfile.patent_level,f.patent_level,'níveis')+compareRow('Estudo diário',myProfile.average_daily_minutes,f.average_daily_minutes,'minutos'):'';
+}
+function compareRow(name,a,b,unit){const max=Math.max(a,b,1);return '<div class="cmp"><div class="cmphead"><b>'+name+'</b><span>'+a+' × '+b+' '+unit+'</span></div><div class="track"><i style="width:'+(a/max*100)+'%"></i></div><div class="track purple"><i style="width:'+(b/max*100)+'%"></i></div></div>'}
+async function searchUser(){
+ const q=$('search-user').value.trim();if(!q)return toast('Digite um nome ou código.');
+ $('search-btn').disabled=true;$('search-result').innerHTML='<div class="empty">Procurando…</div>';
+ try{
+  let found=null;
+  if(/^EST-[A-Z0-9]{8}$/i.test(q)){const {data,error}=await db.from('community_profiles').select('*').eq('invite_code',q.toUpperCase()).maybeSingle();if(error)throw error;found=data}
+  else{const {data,error}=await db.from('community_profiles').select('*').ilike('display_name','%'+q.replace(/[%_]/g,'')+'%').limit(5);if(error)throw error;found=(data||[]).find(p=>p.user_id!==me.id)||null}
+  if(!found){$('search-result').innerHTML='<div class="empty">Não encontramos esse estudante.</div>';return}
+  if(found.user_id===me.id){$('search-result').innerHTML='<div class="empty">Esse é o seu próprio perfil.</div>';return}
+  const already=friends.some(x=>x.user_id===found.user_id),pending=outgoing.some(x=>x.receiver_id===found.user_id)||incoming.some(x=>x.sender_id===found.user_id);
+  $('search-result').innerHTML='<div class="friendrow"><span class="avatar">'+esc(found.display_name.charAt(0))+'</span><span class="who"><b>'+esc(found.display_name)+'</b><small>'+esc(found.exam_name||'Estudante')+' · '+esc(found.patent)+'</small></span><button class="primary" '+(already||pending?'disabled':'')+' onclick="sendRequest(\''+found.user_id+'\')">'+(already?'Amigos':pending?'Pedido pendente':'Adicionar')+'</button></div>';
+ }catch(e){$('search-result').innerHTML='<div class="empty">Falha na busca: '+esc(e.message)+'</div>'}finally{$('search-btn').disabled=false}
+}
+async function sendRequest(id){try{const {error}=await db.from('community_friend_requests').insert({sender_id:me.id,receiver_id:id});if(error)throw error;toast('Pedido enviado!');await refresh();searchUser()}catch(e){toast('Não foi possível enviar: '+e.message)}}
+async function respond(id,accept){try{const {error}=await db.rpc('community_respond_request',{p_request_id:id,p_accept:accept});if(error)throw error;toast(accept?'Amizade confirmada!':'Pedido recusado.');await refresh()}catch(e){toast('Não foi possível concluir: '+e.message)}}
+async function removeFriend(id){if(!confirm('Remover este amigo?'))return;try{const {error}=await db.rpc('community_remove_friend',{p_friend_id:id});if(error)throw error;toast('Amigo removido.');await refresh()}catch(e){toast('Não foi possível remover: '+e.message)}}
+async function cheer(id){try{const {error}=await db.rpc('community_send_cheer',{p_friend_id:id});if(error)throw error;toast('Incentivo enviado!')}catch(e){toast('Não foi possível enviar incentivo: '+e.message)}}
+function selectFriend(id){selectedFriend=id;renderFriends()}
+function copyCode(){const t=$('invite-code').textContent;navigator.clipboard?.writeText(t).then(()=>toast('Código copiado!')).catch(()=>toast('Seu código: '+t))}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.section').forEach(x=>x.classList.toggle('on',x.id===b.dataset.tab))}));
+document.querySelectorAll('#rank-tabs button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#rank-tabs button').forEach(x=>x.classList.toggle('on',x===b));metric=b.dataset.metric;renderRank()}));
+load().catch(e=>{$('profile-sub').textContent='Falha ao carregar a Comunidade';$('rank').innerHTML='<div class="card"><div class="notice">Não foi possível carregar a Comunidade: '+esc(e.message)+'<br><br>Se o SQL de configuração ainda não foi executado no Supabase, esta mensagem é esperada nesta etapa.</div></div>';console.error(e)});
+</script>
+</body></html>
