@@ -37,6 +37,9 @@ Define os arquivos essenciais em cache, atualiza o cache quando o identificador 
 ### `supabase-comunidade.sql`
 Cria as tabelas, funções, índices, políticas RLS e permissões usadas pela Comunidade. O arquivo também contém as políticas necessárias para os totais diários.
 
+### `supabase-constancia.sql`
+Cria a tabela privada `constancia_data`, com leitura e gravação limitadas à conta autenticada. É uma migração nova necessária para sincronizar a Constância entre dispositivos.
+
 ### `corrigir-permissoes-comunidade.sql`
 Bloco curto para corrigir as permissões de totais diários em bancos que já receberam uma versão anterior do SQL.
 
