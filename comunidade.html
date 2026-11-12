@@ -92,7 +92,7 @@ async function load(){
  $('greet').textContent='Olá, '+name.split(' ')[0]+'!';$('profile-sub').textContent=(myProfile.exam_name||'Estudante')+' · Comunidade';$('invite-code').textContent=invite;
  $('my-streak').textContent=sm.streak;$('my-hours').textContent=minutes(sm.average);$('my-average').textContent=minutes(sm.average);
  // Registra apenas sessões que possuem horário real de início no histórico do cronômetro.
- const sess=sm.entries.filter(e=>e.startedAt&&e.id).map(e=>({user_id:me.id,source_id:String(e.id),started_at:new Date(e.startedAt).toISOString(),minutes:Math.max(1,Math.min(1440,Math.round((Number(e.h)||0)*60)))})).filter(e=>Number.isFinite(Date.parse(e.started_at))&&e.minutes>0);
+ const sess=sm.entries.filter(e=>e.startedAt&&e.id).map(e=>({user_id:me.id,source_id:String(e.id),started_at:new Date(e.startedAt).toISOString(),minutes:Math.max(1,Math.min(1440,Math.round(Math.max(0,(Number(e.h)||0)-(Number(e.p)||0)/60)*60)))})).filter(e=>Number.isFinite(Date.parse(e.started_at))&&e.minutes>0);
  if(sess.length){const {error}=await db.from('community_sessions').upsert(sess,{onConflict:'user_id,source_id'});if(error)console.warn('Sessões comunitárias pendentes:',error)}
  await refresh();
 }
