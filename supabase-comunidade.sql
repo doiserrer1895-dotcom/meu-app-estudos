@@ -28,7 +28,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 begin
   insert into public.community_profiles(user_id,display_name,invite_code)
   values (
