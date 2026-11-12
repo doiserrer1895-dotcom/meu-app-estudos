@@ -877,7 +877,7 @@ function communityPatent(total){var r=COMMUNITY_PATENTS[0],i;for(i=0;i<COMMUNITY
 function communityStudy(data){
  var entries=[].concat(Array.isArray(data.entries)?data.entries:[],Array.isArray(data.sim)?data.sim:[]),daily={},logs=[],i,e,h,now=new Date(),sum=0,d,streak=0;
  function dateKey(x){return x.getFullYear()+"-"+p2(x.getMonth()+1)+"-"+p2(x.getDate())}
- for(i=0;i<entries.length;i++){e=entries[i];if(!e||!e.date)continue;h=Math.max(0,(+e.h||0)-(+e.p||0)/60);daily[e.date]=(daily[e.date]||0)+Math.round(h*60);if(e.startedAt&&e.id&&h>0)logs.push({source_id:String(e.id),started_at:new Date(e.startedAt).toISOString(),minutes:Math.max(1,Math.min(1440,Math.round(h*60)))});}
+ for(i=0;i<entries.length;i++){e=entries[i];if(!e||!e.date)continue;h=Math.max(0,(+e.h||0)-(+e.p||0)/60);daily[e.date]=(daily[e.date]||0)+Math.round(h*60);var stamp=e.startedAt?Date.parse(e.startedAt):NaN;if(e.id&&isFinite(stamp)&&h>0)logs.push({source_id:String(e.id),started_at:new Date(stamp).toISOString(),minutes:Math.max(1,Math.min(1440,Math.round(h*60)))});}
  now.setHours(0,0,0,0);for(i=0;i<7;i++){d=new Date(now);d.setDate(d.getDate()-i);sum+=daily[dateKey(d)]||0;}
  d=new Date(now);if(!daily[dateKey(d)])d.setDate(d.getDate()-1);while(daily[dateKey(d)]){streak++;d.setDate(d.getDate()-1);if(streak>730)break;}
  return{daily:daily,logs:logs,average:Math.round(sum/7),streak:streak};
