@@ -339,7 +339,7 @@ let S={items:[]};
 try{const r=JSON.parse(localStorage.getItem(K));if(r&&Array.isArray(r.items))S=r}catch(e){}
 S.skills=Array.isArray(S.skills)?S.skills:[];
 // Salva primeiro no dispositivo; depois agenda a sincronização privada da conta autenticada.
-let CONSTANCIA_USER_ID=null,CONSTANCIA_DB=null,CONSTANCIA_CLOUD_READY=false,CONSTANCIA_SAVE_TIMER=null,CONSTANCIA_SAVING=false;
+let CONSTANCIA_USER_ID=null,CONSTANCIA_DB=null,CONSTANCIA_CLOUD_READY=false,CONSTANCIA_SAVE_TIMER=null,CONSTANCIA_SAVING=false,CONSTANCIA_CLOUD_DIRTY=false;
 const save=()=>{
  try{localStorage.setItem(CONSTANCIA_USER_ID?K+':'+CONSTANCIA_USER_ID:K,JSON.stringify(S))}catch(e){}
  if(window.__constanciaCloudSave)window.__constanciaCloudSave();
@@ -369,18 +369,23 @@ async function flushConstanciaCloud(){
  if(CONSTANCIA_SAVING)return;
  CONSTANCIA_SAVING=true;
  try{
-  const snapshot=JSON.parse(JSON.stringify(S));
-  const result=await CONSTANCIA_DB.from('constancia_data').upsert({user_id:CONSTANCIA_USER_ID,data:snapshot,updated_at:new Date().toISOString()},{onConflict:'user_id'});
-  if(result.error)throw result.error;
-  localStorage.setItem(K+':'+CONSTANCIA_USER_ID,JSON.stringify(snapshot));
+  do{
+   CONSTANCIA_CLOUD_DIRTY=false;
+   const snapshot=JSON.parse(JSON.stringify(S));
+   const result=await CONSTANCIA_DB.from('constancia_data').upsert({user_id:CONSTANCIA_USER_ID,data:snapshot,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+   if(result.error)throw result.error;
+   localStorage.setItem(K+':'+CONSTANCIA_USER_ID,JSON.stringify(snapshot));
+  }while(CONSTANCIA_CLOUD_DIRTY);
   constanciaCloudStatus('Constância sincronizada');
  }catch(error){
+  CONSTANCIA_CLOUD_DIRTY=true;
   console.error('Falha ao sincronizar Constância:',error);
   constanciaCloudStatus('Salvo neste aparelho · nuvem pendente',true);
  }finally{CONSTANCIA_SAVING=false}
 }
 function scheduleConstanciaCloud(){
  if(!CONSTANCIA_CLOUD_READY)return;
+ CONSTANCIA_CLOUD_DIRTY=true;
  clearTimeout(CONSTANCIA_SAVE_TIMER);
  constanciaCloudStatus('Salvando na nuvem…');
  CONSTANCIA_SAVE_TIMER=setTimeout(flushConstanciaCloud,650);
@@ -404,14 +409,20 @@ async function initConstanciaCloud(){
   if(userCache)S=userCache;
   return;
  }
+ const legacyDecisionKey=K+':legacy-decision:'+user.id;
+ let includeLegacy=false;
+ if(!userCache&&legacy&&Array.isArray(legacy.items)&&legacy.items.length&&!localStorage.getItem(legacyDecisionKey)){
+  includeLegacy=confirm('Encontramos dados antigos da Constância salvos neste navegador. Eles pertencem a esta conta e devem ser migrados ou mesclados com os dados da nuvem?\\n\\nOK = preservar e mesclar os registros.\\nCancelar = manter somente os dados já vinculados a esta conta.');
+  localStorage.setItem(legacyDecisionKey,includeLegacy?'accepted':'declined');
+ }
  if(cloudResult.data&&cloudResult.data.data){
   S=mergeConstanciaState(cloudResult.data.data,userCache);
+  if(includeLegacy)S=mergeConstanciaState(S,legacy);
  }else if(userCache){
   S=userCache;
- }else if(legacy&&Array.isArray(legacy.items)){
-  const accepted=confirm('Encontramos dados antigos da Constância salvos neste navegador. Eles pertencem a esta conta e devem ser migrados para a nuvem?\n\nOK = migrar preservando os dados.\nCancelar = não importar esses dados para esta conta.');
-  if(accepted)S=legacy;
-  else S={items:[],skills:(S.skills||[]).filter(isVitalidade),profile:{}};
+  if(includeLegacy)S=mergeConstanciaState(S,legacy);
+ }else if(includeLegacy){
+  S=legacy;
  }else{
   S={items:[],skills:(S.skills||[]).filter(isVitalidade),profile:{}};
  }
