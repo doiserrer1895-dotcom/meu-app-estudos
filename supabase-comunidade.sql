@@ -161,17 +161,20 @@ stable
 security definer
 set search_path = ''
 as $$
-  with days as (
-    select (current_date - n)::date as day
-    from generate_series(6, 0, -1) as n
+  with today as (
+    select (now() at time zone 'America/Sao_Paulo')::date as day
+  ),
+  days as (
+    select (today.day - n)::date as day
+    from today cross join generate_series(6, 0, -1) as n
   ),
   totals as (
-    select (s.started_at at time zone 'UTC')::date as day,
+    select (s.started_at at time zone 'America/Sao_Paulo')::date as day,
            s.user_id,
            sum(s.minutes)::integer as minutes
     from public.community_sessions s
-    where s.started_at >= (current_date - 6)::timestamptz
-      and s.started_at < (current_date + 1)::timestamptz
+    cross join today
+    where (s.started_at at time zone 'America/Sao_Paulo')::date between today.day - 6 and today.day
     group by 1,2
   ),
   daily_avg as (
@@ -184,14 +187,14 @@ as $$
   ),
   periods as (
     select case
-      when extract(hour from s.started_at) < 6 then 0
-      when extract(hour from s.started_at) < 12 then 1
-      when extract(hour from s.started_at) < 18 then 2
+      when extract(hour from (s.started_at at time zone 'America/Sao_Paulo')) < 6 then 0
+      when extract(hour from (s.started_at at time zone 'America/Sao_Paulo')) < 12 then 1
+      when extract(hour from (s.started_at at time zone 'America/Sao_Paulo')) < 18 then 2
       else 3 end as period,
       sum(s.minutes)::numeric as minutes
     from public.community_sessions s
-    where s.started_at >= (current_date - 6)::timestamptz
-      and s.started_at < (current_date + 1)::timestamptz
+    cross join today
+    where (s.started_at at time zone 'America/Sao_Paulo')::date between today.day - 6 and today.day
     group by 1
   ),
   period_sum as (select coalesce(sum(minutes), 0) as total from periods)
