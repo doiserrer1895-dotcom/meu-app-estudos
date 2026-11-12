@@ -167,11 +167,20 @@ as $$
   ),
   totals as (
     select (s.started_at at time zone 'UTC')::date as day,
+           s.user_id,
            sum(s.minutes)::integer as minutes
     from public.community_sessions s
     where s.started_at >= (current_date - 6)::timestamptz
       and s.started_at < (current_date + 1)::timestamptz
-    group by 1
+    group by 1,2
+  ),
+  daily_avg as (
+    select d.day,
+           case when (select count(*) from public.community_profiles) = 0 then 0
+                else round(coalesce(sum(t.minutes),0)::numeric /
+                     (select count(*) from public.community_profiles))::integer end as minutes
+    from days d left join totals t using(day)
+    group by d.day
   ),
   periods as (
     select case
@@ -188,7 +197,7 @@ as $$
   period_sum as (select coalesce(sum(minutes), 0) as total from periods)
   select jsonb_build_object(
     'days', coalesce((select jsonb_agg(coalesce(t.minutes,0) order by d.day)
-      from days d left join totals t using(day)), '[]'::jsonb),
+      from days d left join daily_avg t using(day)), '[]'::jsonb),
     'periods', coalesce((select jsonb_agg(
       case when ps.total = 0 then 0 else round(100 * coalesce(p.minutes,0) / ps.total)::integer end
       order by x.period)
