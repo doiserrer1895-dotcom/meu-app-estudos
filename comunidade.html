@@ -728,8 +728,10 @@ function registrarSessao(o){
 }
 function atualizarPlataforma(o){
  o=o||{};
- if(Array.isArray(o.dias)&&o.dias.length===7)o.dias.forEach(function(v,k){PLAT[k]=Math.max(0,Math.round(+v)||0)});
- if(Array.isArray(o.periodos)&&o.periodos.length===4)o.periodos.forEach(function(v,k){PPER[k]=Math.max(0,Math.round(+v)||0)});
+ /* A RPC do Supabase retorna days/periods; aceita também os nomes antigos em português. */
+ var days=Array.isArray(o.days)?o.days:o.dias,periods=Array.isArray(o.periods)?o.periods:o.periodos;
+ if(Array.isArray(days)&&days.length===7)days.forEach(function(v,k){PLAT[k]=Math.max(0,Math.round(+v)||0)});
+ if(Array.isArray(periods)&&periods.length===4)periods.forEach(function(v,k){PPER[k]=Math.max(0,Math.round(+v)||0)});
  evBuild();evFx();
 }
 var SCK="comunidade:v1:"+ck(ME)+":concurso";
@@ -944,9 +946,14 @@ async function communityInit(){
   try{constanciaState=JSON.parse(localStorage.getItem("constancia-v1:"+AUTH_USER.id)||"{}")}catch(e){constanciaState={}}
  }
  var study=studyResult.data&&studyResult.data.dados||{},cm=communityConstancia(constanciaState),sm=communityStudy(study),name=cm.name||(AUTH_USER.user_metadata&&AUTH_USER.user_metadata.name)||(AUTH_USER.email||"estudante").split("@")[0];
- var old=await db.from("community_profiles").select("invite_code").eq("user_id",AUTH_USER.id).maybeSingle();if(old.error)throw old.error;
+ var old=await db.from("community_profiles").select("invite_code,average_daily_minutes").eq("user_id",AUTH_USER.id).maybeSingle();if(old.error)throw old.error;
  ME=name;MY_INVITE_CODE=old.data&&old.data.invite_code||("EST-"+AUTH_USER.id.replace(/-/g,"").slice(0,8).toUpperCase());
  SK="comunidade:v1:"+ck(ME);SLK="comunidade:v1:"+ck(ME)+":sessoes";HK="comunidade:v1:"+ck(ME)+":horas";SCK="comunidade:v1:"+ck(ME)+":concurso";
+ /* Recupera os totais diários já sincronizados antes de gravar. Se o JSON antigo de estudos vier sem algum dia, não zera o histórico nem a média salva. */
+ var dailyExistingResult=await db.from("community_daily_totals").select("study_date,minutes").eq("user_id",AUTH_USER.id).gte("study_date",new Date(Date.now()-90*864e5).toISOString().slice(0,10));if(dailyExistingResult.error)throw dailyExistingResult.error;
+ var dailyExisting={};(dailyExistingResult.data||[]).forEach(function(x){dailyExisting[x.study_date]=Math.max(0,Math.min(1440,Math.round(+x.minutes||0)))});
+ Object.keys(dailyExisting).forEach(function(k){if(!Object.prototype.hasOwnProperty.call(sm.daily,k))sm.daily[k]=dailyExisting[k]});
+ var weekTotal=0,weekDate=new Date();weekDate.setHours(0,0,0,0);for(var wi=0;wi<7;wi++){var wd0=new Date(weekDate);wd0.setDate(wd0.getDate()-wi);weekTotal+=sm.daily[wd0.getFullYear()+"-"+p2(wd0.getMonth()+1)+"-"+p2(wd0.getDate())]||0;}sm.average=Math.round(weekTotal/7);
  var pat=communityPatent(cm.total),profile={user_id:AUTH_USER.id,display_name:ME,exam_name:study.exam&&study.exam.name||"",patent:pat.name,patent_level:pat.level,evolution_score:cm.evolution,streak_days:sm.streak,average_daily_minutes:sm.average,invite_code:MY_INVITE_CODE,updated_at:new Date().toISOString()};
  var saved=await db.from("community_profiles").upsert(profile,{onConflict:"user_id"});if(saved.error)throw saved.error;
  var dailyRows=[],dailyDate=new Date();dailyDate.setHours(0,0,0,0);for(var di=89;di>=0;di--){var dd=new Date(dailyDate);dd.setDate(dd.getDate()-di);var dk=dd.getFullYear()+"-"+p2(dd.getMonth()+1)+"-"+p2(dd.getDate());dailyRows.push({user_id:AUTH_USER.id,study_date:dk,minutes:Math.max(0,Math.min(1440,Math.round(sm.daily[dk]||0)))});}
@@ -960,8 +967,9 @@ async function communityInit(){
  D=montar();segBuild();initChart();
  /* Renderiza os dados pessoais imediatamente; a média da plataforma não pode bloquear o gráfico do usuário. */
  evBuild();evFx();view();renderAmigos();
- var platform=await db.rpc("community_platform_stats");if(platform.error)throw platform.error;
- atualizarPlataforma(platform.data||{});
+ var platform=await db.rpc("community_platform_stats");
+ if(platform.error){console.warn("Média da plataforma indisponível; mantendo o gráfico pessoal:",platform.error);atualizarPlataforma({});}
+ else atualizarPlataforma(platform.data||{});
  return true;
 }
 function communityFindProfile(name){return communityFindByName(name)||Object.keys(PROFILE_BY_ID).map(function(k){return PROFILE_BY_ID[k]}).find(function(p){return ck(p.invite_code)===ck(name)})||null}
