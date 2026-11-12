@@ -182,6 +182,7 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="/meu-app-estudos/icons/icon.svg">
 </head><body><div id="app"></div><div id="nav"><div></div></div>
+<!-- SCRIPT PRINCIPAL: controla a tela inicial, disciplinas, cronograma, registros, desempenho e salvamento local temporário. A sincronização da conta com a nuvem fica no bloco de autenticação mais abaixo. -->
 <script>
 const K='estudos-v1',$=s=>document.querySelector(s);
 const COL=['#4cc7ff','#4ade80','#fbbf24','#f87171','#a78bfa','#fb923c','#2dd4bf','#f472b6','#94a3b8'];
@@ -524,6 +525,7 @@ function render(){if(view!=='settings')parkCloudControls();if(!inStudies){$('#ap
 render();setInterval(tick,250);
 </script>
 <div id="cloud-user"><span id="cloud-email"></span><span id="cloud-status" role="status">Conectado</span><button id="cloud-backup" type="button">Baixar</button><button id="cloud-save-snapshot" type="button">Salvar cópia</button><button id="cloud-cloud-backup" type="button">Cópia nuvem</button><button id="cloud-restore" type="button">Restaurar</button><button id="cloud-import-button" type="button">Importar</button><button id="cloud-retry" type="button" hidden>Reenviar</button><button id="cloud-logout" type="button">Sair</button><input id="cloud-import-file" type="file" accept="application/json,.json" hidden></div>
+<!-- AUTENTICAÇÃO E NUVEM: conecta a conta ao Supabase, carrega os dados privados do usuário e sincroniza alterações. Nunca inserir chave service_role neste código público. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 (function(){
