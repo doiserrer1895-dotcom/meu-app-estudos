@@ -935,6 +935,8 @@ async function communityInit(){
  SK="comunidade:v1:"+ck(ME);SLK="comunidade:v1:"+ck(ME)+":sessoes";HK="comunidade:v1:"+ck(ME)+":horas";SCK="comunidade:v1:"+ck(ME)+":concurso";
  var pat=communityPatent(cm.total),profile={user_id:AUTH_USER.id,display_name:ME,exam_name:study.exam&&study.exam.name||"",patent:pat.name,patent_level:pat.level,evolution_score:cm.evolution,streak_days:sm.streak,average_daily_minutes:sm.average,invite_code:MY_INVITE_CODE,updated_at:new Date().toISOString()};
  var saved=await db.from("community_profiles").upsert(profile,{onConflict:"user_id"});if(saved.error)throw saved.error;
+ var dailyRows=[],dailyDate=new Date();dailyDate.setHours(0,0,0,0);for(var di=89;di>=0;di--){var dd=new Date(dailyDate);dd.setDate(dd.getDate()-di);var dk=dd.getFullYear()+"-"+p2(dd.getMonth()+1)+"-"+p2(dd.getDate());dailyRows.push({user_id:AUTH_USER.id,study_date:dk,minutes:Math.max(0,Math.min(1440,Math.round(sm.daily[dk]||0)))});}
+ var dailySaved=await db.from("community_daily_totals").upsert(dailyRows,{onConflict:"user_id,study_date"});if(dailySaved.error)throw dailySaved.error;
  var sessions=sm.logs.map(function(x){return{user_id:AUTH_USER.id,source_id:x.source_id,started_at:x.started_at,minutes:x.minutes}});
  if(sessions.length){var sr=await db.from("community_sessions").upsert(sessions,{onConflict:"user_id,source_id"});if(sr.error)console.warn("Sessões pendentes:",sr.error);}
  var sessResult=await db.from("community_sessions").select("started_at,minutes").eq("user_id",AUTH_USER.id).gte("started_at",new Date(Date.now()-90*864e5).toISOString());if(sessResult.error)throw sessResult.error;
