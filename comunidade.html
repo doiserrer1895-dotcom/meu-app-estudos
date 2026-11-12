@@ -22,7 +22,7 @@ input{width:100%;border:1px solid var(--line);background:#111113;color:var(--tx)
 <header><div><div class="eyebrow">MEU APP ESTUDOS · COMUNIDADE</div><div class="hello" id="greet">Olá!</div><div class="sub" id="profile-sub">Conectando sua conta…</div></div><button class="back" onclick="location.href='index.html'">⌂ Central</button></header>
 <section class="section on" id="rank">
  <div class="stats"><div class="stat"><small>SUA POSIÇÃO</small><strong id="my-rank">—</strong><small id="rank-label">Ranking</small></div><div class="stat"><small>OFENSIVA</small><strong id="my-streak">0</strong><small>dias</small></div><div class="stat"><small>MÉDIA DIÁRIA</small><strong id="my-hours">0h</strong><small>últimos 7 dias</small></div></div>
- <div class="card"><div class="topline"><h2>Ranking geral</h2><span class="pill" id="people-count">0 estudantes</span></div><div class="seg" id="rank-tabs"><button class="on" data-metric="streak">Ofensiva</button><button data-metric="patent">Patentes</button><button data-metric="study">Estudos</button></div><div class="podium" id="podium"></div><div id="ranking"></div></div>
+ <div class="card"><div class="topline"><h2>Ranking geral</h2><span class="pill" id="people-count">0 estudantes</span></div><div class="seg" id="rank-tabs"><button class="on" data-metric="streak">Ofensiva</button><button data-metric="patent">Patentes</button><button data-metric="evolution">Evolução</button><button data-metric="study">Estudos</button></div><div class="podium" id="podium"></div><div id="ranking"></div></div>
  <div class="card"><h2>Eu vs. plataforma</h2><div class="sub">Média diária de estudo dos últimos sete dias.</div><div class="stats" style="margin-top:12px"><div class="stat"><small>VOCÊ</small><strong id="my-average">0m</strong></div><div class="stat"><small>PLATAFORMA</small><strong id="platform-average">—</strong></div><div class="stat"><small>DIFERENÇA</small><strong id="platform-diff">—</strong></div></div><div class="notice" id="platform-note">A comparação geral aparece quando houver sessões registradas pela comunidade.</div></div>
 </section>
 <section class="section" id="amigos">
@@ -50,17 +50,28 @@ function minutes(v){v=Math.max(0,Math.round(v||0));return v>=60?Math.floor(v/60)
 function patentFor(total){let r=patentRanks[0];patentRanks.forEach(x=>{if(total>=x[1])r=x});return{label:r[0],level:patentRanks.indexOf(r)+1}}
 function studyMetrics(data){
  const entries=Array.isArray(data?.entries)?data.entries:[],sim=Array.isArray(data?.sim)?data.sim:[];
- const daily={};[...entries,...sim].forEach(e=>{if(!e.date)return;const h=Math.max(0,Number(e.h)||0);daily[e.date]=(daily[e.date]||0)+Math.round(h*60)});
+ const daily={};[...entries,...sim].forEach(e=>{if(!e.date)return;const h=Math.max(0,(Number(e.h)||0)-(Number(e.p)||0)/60);daily[e.date]=(daily[e.date]||0)+Math.round(h*60)});
  const now=new Date();now.setHours(0,0,0,0);let sum=0;for(let i=0;i<7;i++){const d=new Date(now);d.setDate(d.getDate()-i);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');sum+=daily[k]||0}
  const days=Object.keys(daily).sort();let streak=0,d=new Date(now);const key=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');if(!daily[key(d)])d.setDate(d.getDate()-1);while(daily[key(d)]){streak++;d.setDate(d.getDate()-1);if(streak>730)break}
  return{average:Math.round(sum/7),streak,daily,entries};
 }
 function constanciaMetrics(){
  try{
-  const c=JSON.parse(localStorage.getItem('constancia-v1')||'{}'),items=Array.isArray(c.items)?c.items:[],profile=c.profile||{};
-  let total=0;items.forEach(it=>{if(it.doneDate)total++;if(it.done&&typeof it.done==='object')total+=Object.values(it.done).filter(Boolean).length});
-  return{name:String(profile.name||'').trim(),total};
- }catch(e){return{name:'',total:0}}
+  const c=JSON.parse(localStorage.getItem('constancia-v1')||'{}'),items=Array.isArray(c.items)?c.items:[],skills=Array.isArray(c.skills)?c.skills:[],profile=c.profile||{},tree=c.tree||{};
+  let total=0;const bySkill={},byAttr={};
+  items.forEach(it=>{
+   const done=it.done&&typeof it.done==='object'?it.done:{},multi=it.type==='principal'||it.type==='batalha',rec=Array.isArray(it.days)&&it.days.length>0;
+   let n=multi?Object.keys(done).filter(d=>Array.isArray(it.slots)&&it.slots.length>0&&it.slots.every((_,i)=>!!(done[d]||[])[i])).length:rec?Object.values(done).filter(Boolean).length:(it.doneDate?1:0);
+   total+=n;if(!n)return;bySkill[it.skill]=(bySkill[it.skill]||0)+n;
+   const attrs=Array.isArray(it.attrs)?it.attrs:[];attrs.forEach(a=>{const k=it.skill+'|'+a;byAttr[k]=(byAttr[k]||0)+n/Math.max(1,attrs.length)});
+  });
+  const WT={estudo:{'Teoria':30,'Prática':30,'Retenção':25,'Velocidade':5,'Foco':10},nutricao:{'Disciplina':30,'Hidratação':15,'Restrição':10,'Digestão':15,'Consistência':30},financas:{'Controle':25,'Aporte':20,'Previsão':20,'Corte':15,'Visão':20},treino:{'Força':25,'Resistência':25,'Mobilidade':15,'Explosão':15,'Recuperação':20}};
+  const lvl=(n,b,w)=>Math.min(99.9,Math.round((10+n*.016*((w||20)/20)+(b||0))*1000)/1000);
+  const active=skills.filter(k=>k.on!==false),attrs=[];
+  active.forEach(k=>{let bonus=0;for(let j=0;j<9;j++)if(tree[k.id+':'+j])bonus+=.18+.045*j;(k.attrs||[]).forEach(a=>attrs.push(lvl(byAttr[k.id+'|'+a]||0,0,(WT[k.id]||{})[a]||0)))});
+  const evolution=attrs.length?attrs.reduce((a,b)=>a+b,0)/attrs.length:(active.length?active.reduce((a,k)=>{let bonus=0;for(let j=0;j<9;j++)if(tree[k.id+':'+j])bonus+=.18+.045*j;return a+lvl(bySkill[k.id]||0,bonus)},0)/active.length:10);
+  return{name:String(profile.name||'').trim(),total,evolution:Math.round(evolution*10)/10};
+ }catch(e){return{name:'',total:0,evolution:10}}
 }
 function inviteFor(id){return 'EST-'+id.replace(/-/g,'').slice(0,8).toUpperCase()}
 async function load(){
@@ -76,7 +87,7 @@ async function load(){
  if(studyError)throw studyError;if(profileError)throw profileError;
  studyState=study?.dados||{};const sm=studyMetrics(studyState),cm=constanciaMetrics(),name=cm.name||me.user_metadata?.name||me.email?.split('@')[0]||'Estudante',pat=patentFor(cm.total);
  const invite=oldProfile?.invite_code||inviteFor(me.id);
- myProfile={user_id:me.id,display_name:name,exam_name:studyState.exam?.name||'',patent:pat.label,patent_level:pat.level,streak_days:sm.streak,average_daily_minutes:sm.average,invite_code:invite,updated_at:new Date().toISOString()};
+ myProfile={user_id:me.id,display_name:name,exam_name:studyState.exam?.name||'',patent:pat.label,patent_level:pat.level,evolution_score:cm.evolution,streak_days:sm.streak,average_daily_minutes:sm.average,invite_code:invite,updated_at:new Date().toISOString()};
  const {error:upError}=await db.from('community_profiles').upsert(myProfile,{onConflict:'user_id'});if(upError)throw upError;
  $('greet').textContent='Olá, '+name.split(' ')[0]+'!';$('profile-sub').textContent=(myProfile.exam_name||'Estudante')+' · Comunidade';$('invite-code').textContent=invite;
  $('my-streak').textContent=sm.streak;$('my-hours').textContent=minutes(sm.average);$('my-average').textContent=minutes(sm.average);
@@ -105,7 +116,7 @@ function value(p){return metric==='streak'?Number(p.streak_days||0):metric==='pa
 function labelValue(p){return metric==='streak'?(p.streak_days||0)+' dias':metric==='patent'?(p.patent||'Recruta')+' · nível '+(p.patent_level||1):minutes(p.average_daily_minutes||0)+'/dia'}
 function renderRank(){
  const sorted=[...profiles].sort((a,b)=>value(b)-value(a)||a.display_name.localeCompare(b.display_name)),mine=sorted.findIndex(p=>p.user_id===me.id);
- $('my-rank').textContent=mine<0?'—':'#'+(mine+1);$('rank-label').textContent=metric==='streak'?'Ofensiva':metric==='patent'?'Patentes':'Estudos';$('people-count').textContent=sorted.length+' estudantes';
+ $('my-rank').textContent=mine<0?'—':'#'+(mine+1);$('rank-label').textContent=metric==='streak'?'Ofensiva':metric==='patent'?'Patentes':metric==='evolution'?'Evolução dos atributos':'Estudos';$('people-count').textContent=sorted.length+' estudantes';
  const podium=sorted.slice(0,3),order=[1,0,2],medals=['🥇','🥈','🥉'];$('podium').innerHTML=order.map(i=>{const p=podium[i];return p?'<div class="pod '+(i===0?'first':'')+'"><div class="medal">'+medals[i]+'</div><b>'+esc(p.display_name.split(' ')[0])+'</b><small>'+esc(p.patent||'Recruta')+'</small><strong>'+esc(labelValue(p))+'</strong></div>':'<div></div>'}).join('');
  $('ranking').innerHTML=sorted.slice(3).map((p,i)=>'<div class="rankrow"><span class="place">'+(i+4)+'</span><span class="avatar">'+esc(p.display_name.charAt(0).toUpperCase())+'</span><span class="who"><b>'+esc(p.display_name)+(p.user_id===me.id?' · Você':'')+'</b><small>'+esc(p.exam_name||'Estudante')+' · '+esc(p.patent||'Recruta')+'</small></span><span class="value">'+esc(labelValue(p))+'</span></div>').join('')||(sorted.length<=3?'<div class="empty">'+(sorted.length===1?'Você é o primeiro por aqui. Compartilhe seu código para chamar outros estudantes.':'Ranking atualizado.')+'</div>':'');
 }
@@ -120,7 +131,7 @@ function renderFriends(){
  $('sent-requests').innerHTML=outgoing.map(r=>{const p=profiles.find(x=>x.user_id===r.receiver_id);return '<div class="requestrow"><span class="avatar">'+esc((p?.display_name||'E').charAt(0))+'</span><span class="who"><b>'+esc(p?.display_name||'Estudante')+'</b><small>Aguardando resposta</small></span><button class="secondary" onclick="cancelRequest('+r.id+')">Cancelar</button></div>'}).join('')||'<div class="empty">Nenhum pedido enviado.</div>';
  $('friends').innerHTML=friends.map(p=>'<div class="friendrow"><span class="avatar">'+esc(p.display_name.charAt(0))+'</span><span class="who"><b>'+esc(p.display_name)+'</b><small>'+esc(p.exam_name||'Estudante')+' · '+esc(p.patent||'Recruta')+' · '+(p.streak_days||0)+' dias de ofensiva</small></span><span class="actions"><button class="secondary" onclick="selectFriend(\''+p.user_id+'\')">Comparar</button><button class="secondary" onclick="cheer(\''+p.user_id+'\')">Incentivar</button><button class="danger" onclick="removeFriend(\''+p.user_id+'\')">×</button></span></div>').join('')||'<div class="empty">Você ainda não adicionou amigos. Busque pelo nome ou código acima.</div>';
  const f=friends.find(x=>x.user_id===selectedFriend)||friends[0];selectedFriend=f?.user_id||null;
- $('friend-compare').innerHTML=f?'<h2>Você vs. '+esc(f.display_name.split(' ')[0])+'</h2>'+compareRow('Ofensiva',myProfile.streak_days,f.streak_days,'dias')+compareRow('Patente',myProfile.patent_level,f.patent_level,'níveis')+compareRow('Estudo diário',myProfile.average_daily_minutes,f.average_daily_minutes,'minutos'):'';
+ $('friend-compare').innerHTML=f?'<h2>Você vs. '+esc(f.display_name.split(' ')[0])+'</h2>'+compareRow('Ofensiva',myProfile.streak_days,f.streak_days,'dias')+compareRow('Patente',myProfile.patent_level,f.patent_level,'níveis')+compareRow('Evolução dos atributos',myProfile.evolution_score,f.evolution_score,'%')+compareRow('Estudo diário',myProfile.average_daily_minutes,f.average_daily_minutes,'minutos'):'';
 }
 function compareRow(name,a,b,unit){const max=Math.max(a,b,1);return '<div class="cmp"><div class="cmphead"><b>'+name+'</b><span>'+a+' × '+b+' '+unit+'</span></div><div class="track"><i style="width:'+(a/max*100)+'%"></i></div><div class="track purple"><i style="width:'+(b/max*100)+'%"></i></div></div>'}
 async function searchUser(){
