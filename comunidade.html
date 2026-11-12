@@ -859,7 +859,7 @@ $("amigos").addEventListener("click",function(e){
  if(a==="add"){abrirAdd();return}
  if(a==="pick"){FR.sel=b.dataset.n;renderAmigos();return}
  if(a==="acc"){var r=FR.rec.splice(k,1)[0];virarAmigo(r.n,{concurso:r.c,patente:r.pt});if(ON.aceitar)ON.aceitar(r.n);toast(r.n+" agora é seu amigo. Bons estudos!");return}
- if(a==="okn"){FR.nt.splice(k,1);if(ON.lerAvisos)ON.lerAvisos();renderAmigos();return}
+ if(a==="okn"){var aviso=FR.nt.splice(k,1)[0];if(ON.lerAvisos)ON.lerAvisos(aviso);renderAmigos();return}
  if(a==="rec"){var q=FR.rec.splice(k,1)[0];if(ON.recusar)ON.recusar(q.n);renderAmigos();return}
  if(a==="cancel"){var c=FR.env.splice(k,1)[0];if(ON.cancelar)ON.cancelar(c);renderAmigos();return}
  if(a==="cheer"&&row){if(ON.incentivo)ON.incentivo(row.dataset.n);toast("Incentivo enviado para "+row.dataset.n+"!");return}
@@ -955,7 +955,7 @@ ON.cancelar=async function(name){var p=communityFindProfile(name);if(!p)return;v
 ON.remover=async function(name){var p=communityFindProfile(name);if(!p)return;var r=await db.rpc("community_remove_friend",{p_friend_id:p.user_id});if(r.error)throw r.error;await communityRefreshLists();refazer()};
 ON.incentivo=async function(name){var p=communityFindProfile(name);if(!p)return;var r=await db.rpc("community_send_cheer",{p_friend_id:p.user_id});if(r.error)throw r.error;toast("Incentivo enviado para "+name+"!")};
 ON.sessao=async function(o){var ini=new Date(o.inicio),mins=Math.max(1,Math.min(1440,Math.round(+o.minutos||0)));var r=await db.from("community_sessions").upsert({user_id:AUTH_USER.id,source_id:"manual:"+ini.getTime()+":"+mins,started_at:ini.toISOString(),minutes:mins},{onConflict:"user_id,source_id"});if(r.error)throw r.error;var p=await db.rpc("community_platform_stats");if(!p.error)atualizarPlataforma(p.data||{})};
-ON.lerAvisos=async function(){var r=await db.from("community_notifications").update({read_at:new Date().toISOString()}).eq("recipient_id",AUTH_USER.id).eq("kind","friend_accepted");if(r.error)throw r.error};
+ON.lerAvisos=async function(name){var p=communityFindProfile(name);if(!p)return;var r=await db.from("community_notifications").update({read_at:new Date().toISOString()}).eq("recipient_id",AUTH_USER.id).eq("sender_id",p.user_id).eq("kind","friend_accepted");if(r.error)throw r.error};
 function communitySafeAction(fn){return async function(){try{return await fn.apply(null,arguments)}catch(e){toast("Não foi possível concluir: "+(e.message||e));try{await communityRefreshLists();refazer()}catch(x){console.error(x)}return null}}}
 ["pedido","aceitar","recusar","cancelar","remover","incentivo","sessao","lerAvisos"].forEach(function(k){ON[k]=communitySafeAction(ON[k])});
 
