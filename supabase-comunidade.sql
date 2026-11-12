@@ -39,7 +39,7 @@ begin
   on conflict (user_id) do nothing;
   return new;
 end;
-$;
+$$;
 revoke all on function public.community_create_profile_on_signup() from public, anon, authenticated;
 drop trigger if exists community_profile_after_signup on auth.users;
 create trigger community_profile_after_signup
