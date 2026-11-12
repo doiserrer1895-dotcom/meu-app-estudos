@@ -1707,6 +1707,17 @@ function evoSvgChart(rows,key){const vals=rows.map(r=>({r,v:evoMetricValue(r,key
  const marks=vals.map((x,i)=>`<circle class="evo-point-halo" cx="${X(i)}" cy="${Y(x.v)}" r="8"/><circle class="evo-point" cx="${X(i)}" cy="${Y(x.v)}" r="4"><title>${evoDateLabel(x.r.date)} · ${f1(x.v)} ${evoMetricMeta(key)[1]}</title></circle>`).join('');
  return `<div class="evo-chart-wrap"><svg class="evo-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de ${evoMetricMeta(key)[0]}"><defs><linearGradient id="evoFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#b6b6b6" stop-opacity=".25"/><stop offset="100%" stop-color="#b6b6b6" stop-opacity="0"/></linearGradient></defs>${grid}<path class="evo-area" d="${area}" fill="url(#evoFill)"/><path class="evo-line" d="${path}"/>${marks}${labels}</svg></div><div class="evo-chart-foot"><span>${vals.length} registro(s) com informação</span><span>${vals.length===1?'Adicione outra avaliação para comparar':'Dados registrados no Corpo'}</span></div>`;
 }
+function bodyCalorieWeightEstimate(latestActual){
+ const nut=S;const calorieGoal=Number(nut.goal?.k||0);if(!(Number(latestActual?.pe)>0)||!(calorieGoal>0)||!latestActual.date)return null;
+ const daily={};(nut.diary||[]).forEach(entry=>{const date=String(entry.date||''),kcal=Number(entry.k);if(!date||date<=latestActual.date||date>td()||!Number.isFinite(kcal)||kcal<=0)return;daily[date]=(daily[date]||0)+kcal});
+ const days=Object.keys(daily).sort();if(!days.length)return {weight:Number(latestActual.pe),delta:0,days:0,goal:calorieGoal,avgIntake:0};
+ const balance=days.reduce((sum,date)=>sum+(daily[date]-calorieGoal),0),delta=balance/7700,avgIntake=days.reduce((sum,date)=>sum+daily[date],0)/days.length;
+ return {weight:Number(latestActual.pe)+delta,delta,days:days.length,goal:calorieGoal,avgIntake};
+}
+function bodyCalorieWeightEstimateHTML(estimate){
+ if(!estimate)return '';
+ return '<section class="evo-panel" style="margin:0 0 12px"><div class="evo-section-heading"><div><span class="evo-kicker">ESTIMATIVA NUTRICIONAL</span><h3>Peso projetado pela alimentação</h3><p>Integração do diário de calorias com a meta diária da Nutrição.</p></div></div><div class="evo-overview-grid"><div class="evo-overview-main"><span class="evo-overline">PESO ESTIMADO</span><strong>'+f1(estimate.weight)+' <small>kg</small></strong><div class="evo-overview-foot"><span>Variação estimada</span><b>'+(estimate.delta>0?'+':'')+f1(estimate.delta)+' kg</b></div></div><div class="evo-mini-stat"><span>Dias com registros calculados</span><b>'+estimate.days+'</b><small>Média registrada: '+Math.round(estimate.avgIntake)+' kcal/dia · Meta: '+Math.round(estimate.goal)+' kcal/dia</small></div></div><p class="evo-disclaimer">Estimativa aproximada baseada na diferença entre calorias registradas e meta diária (referência aproximada de 7.700 kcal/kg). Não altera seu peso real medido e não substitui avaliação da nutricionista; a meta de ingestão não é necessariamente seu gasto energético.</p></section>';
+}
 function bodyEvolutionHTML(){
  const all=[...(S.body||[])].sort((a,b)=>a.date.localeCompare(b.date));
  const rows=evoRecords(),latest=all[all.length-1],previous=all.length>1?all[all.length-2]:null;
@@ -1716,6 +1727,7 @@ function bodyEvolutionHTML(){
  const delta=firstVal!==null&&lastVal!==null&&vals.length>1?lastVal-firstVal:null;
  const deltaText=delta===null?'Aguardando outra avaliação':`${delta>0?'+':''}${f1(delta)} ${unit} no período`;
  const bmi=evoMetricValue(latest,'bmi');
+ const latestWeight=all.filter(r=>Number(r.pe)>0).at(-1)||latest,estimate=bodyCalorieWeightEstimate(latestWeight);
  const days=all.length>1?Math.max(0,Math.round((new Date(latest.date+'T00:00')-new Date(all[0].date+'T00:00'))/86400000)):0;
  const filled=[['Peso',latest.pe],['Altura',latest.al],['Massa muscular',latest.mm],['Gordura corporal',latest.gd],['Cintura',latest.ci],['Quadril',latest.qu]].filter(x=>Number(x[1])>0).length;
  const metrics=[['pe','Peso','kg'],['mm','Massa muscular','kg'],['gd','Gordura corporal','%'],['ci','Cintura','cm'],['bmi','IMC','kg/m²']];
@@ -1732,6 +1744,7 @@ function bodyEvolutionHTML(){
    <div class="evo-overview-main"><span class="evo-overline">PESO ATUAL</span><strong>${latest.pe?f1(latest.pe):'—'} <small>${latest.pe?'kg':''}</small></strong><div class="evo-overview-foot"><span>Último registro</span><b>${evoDateLabel(latest.date)}</b></div></div>
    <div class="evo-overview-side"><div class="evo-mini-stat"><span>IMC calculado</span><b>${bmi!==null?f1(bmi):'—'}</b><small>Com peso e altura registrados</small></div><div class="evo-mini-stat"><span>Período acompanhado</span><b>${all.length>1?days+' dias':'Iniciando'}</b><small>${all.length>1?evoDateLabel(all[0].date)+' até '+evoDateLabel(latest.date):'Registre novas avaliações para comparar'}</small></div></div>
   </section>
+  ${bodyCalorieWeightEstimateHTML(estimate)}
   <section class="evo-chart-card evo-chart-feature"><div class="evo-section-top"><div><span class="evo-kicker">TENDÊNCIA</span><h3>Histórico de medidas</h3><p>Escolha um indicador para acompanhar seus registros.</p></div><span class="evo-chart-badge">${rows.length} PONTOS</span></div>
    <div class="evo-metric-selector">${metricButtons}</div><div class="evo-range-selector">${ranges}</div>
    <div class="evo-selected-metric"><div><small>${metricName.toUpperCase()}</small><b>${lastVal!==null?f1(lastVal)+' '+unit:'—'}</b></div><span class="${delta===null?'muted':delta>0?'up':'down'}">${deltaText}</span></div>
