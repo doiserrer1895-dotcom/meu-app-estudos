@@ -8,6 +8,7 @@ create table if not exists public.community_profiles (
   exam_name text not null default '',
   patent text not null default 'Recruta',
   patent_level integer not null default 1 check (patent_level >= 1),
+  evolution_score numeric not null default 10 check (evolution_score between 0 and 100),
   streak_days integer not null default 0 check (streak_days >= 0),
   average_daily_minutes integer not null default 0 check (average_daily_minutes between 0 and 1440),
   invite_code text not null unique,
@@ -44,6 +45,8 @@ drop trigger if exists community_profile_after_signup on auth.users;
 create trigger community_profile_after_signup
   after insert on auth.users
   for each row execute function public.community_create_profile_on_signup();
+
+alter table public.community_profiles add column if not exists evolution_score numeric not null default 10 check (evolution_score between 0 and 100);
 
 create table if not exists public.community_sessions (
   id bigint generated always as identity primary key,
