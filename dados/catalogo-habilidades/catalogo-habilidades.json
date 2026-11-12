@@ -1,0 +1,529 @@
+{
+  "schema_version": 1,
+  "title": "Catálogo de Árvores de Habilidades",
+  "purpose": "Arquivo de referência para planejamento futuro. Não é importado pelo aplicativo e não ativa automações.",
+  "status": "reference_only_not_integrated",
+  "point_rules": {
+    "default_sequence": [
+      5,
+      7,
+      9,
+      12,
+      15,
+      18,
+      22,
+      27,
+      32
+    ],
+    "note": "Finanças mantém o custo final 35 no código atual; demais árvores seguem 32."
+  },
+  "tree_rules": {
+    "visual": "Preservar o desenho original ramificado de cada árvore; não redesenhar os nós como uma linha cronológica.",
+    "progression": "Desbloqueio sequencial controlado pela regra de pré-requisito, sem alterar a posição visual dos ícones."
+  },
+  "skills": {
+    "financas": {
+      "name": "Finanças",
+      "color": null,
+      "point_costs": [
+        5,
+        7,
+        9,
+        12,
+        15,
+        18,
+        22,
+        27,
+        32
+      ],
+      "unlock_order": "sequential",
+      "visual_layout": "original branched 1-3-5 tree; no connecting chronological line",
+      "achievements": [
+        {
+          "order": 1,
+          "icon": "💰",
+          "title": "Primeiro Cofrinho",
+          "description": "Guardar uma quantia definida e mantê-la separada durante 7 dias."
+        },
+        {
+          "order": 2,
+          "icon": "🏦",
+          "title": "Mestre do Dinheiro",
+          "description": "Registrar entradas e saídas durante 14 dias, incluindo pequenos gastos, e conferir o saldo."
+        },
+        {
+          "order": 3,
+          "icon": "💼",
+          "title": "Carteira Blindada",
+          "description": "Cumprir o limite de gastos definido durante 15 dias, evitando compras por impulso e estouros do orçamento."
+        },
+        {
+          "order": 4,
+          "icon": "🧾",
+          "title": "Contas em Dia",
+          "description": "Organizar contas e vencimentos e manter os pagamentos dentro do prazo."
+        },
+        {
+          "order": 5,
+          "icon": "📈",
+          "title": "Investidor Iniciante",
+          "description": "Estudar uma modalidade de investimento, seus riscos e custos, e elaborar um plano de aporte compatível com a própria realidade."
+        },
+        {
+          "order": 6,
+          "icon": "🐷",
+          "title": "Reserva de Emergência",
+          "description": "Definir uma meta baseada nas despesas essenciais e manter depósitos durante 30 dias, sem usar a reserva para consumo."
+        },
+        {
+          "order": 7,
+          "icon": "🛒",
+          "title": "Compras Conscientes",
+          "description": "Comparar pelo menos 3 opções antes de uma compra, avaliar necessidade e orçamento e aguardar 48 horas antes de compras não essenciais."
+        },
+        {
+          "order": 8,
+          "icon": "✂️",
+          "title": "Corte de Gastos",
+          "description": "Reduzir 3 despesas e manter as reduções durante 30 dias, registrando a economia obtida."
+        },
+        {
+          "order": 9,
+          "icon": "💎",
+          "title": "Liberdade Financeira",
+          "description": "Elaborar um planejamento financeiro de longo prazo, organizar a quitação das dívidas pendentes, manter uma reserva, estabelecer metas mensuráveis de patrimônio e revisar o plano para os próximos 12 meses."
+        }
+      ]
+    },
+    "estudo": {
+      "name": "Estudo",
+      "color": null,
+      "point_costs": [
+        5,
+        7,
+        9,
+        12,
+        15,
+        18,
+        22,
+        27,
+        32
+      ],
+      "unlock_order": "sequential",
+      "visual_layout": "original branched 1-3-5 tree; no connecting chronological line",
+      "achievements": [
+        {
+          "order": 1,
+          "icon": "📚",
+          "title": "Primeira Página",
+          "description": "Realizar um bloco de estudo de 25 minutos, afastar distrações e registrar a matéria estudada."
+        },
+        {
+          "order": 2,
+          "icon": "🧠",
+          "title": "Mente Afiada",
+          "description": "Revisar o conteúdo do dia anterior e responder 5 questões sem consultar o material."
+        },
+        {
+          "order": 3,
+          "icon": "✏️",
+          "title": "Anotador",
+          "description": "Produzir um resumo escrito com as próprias palavras sobre um conteúdo estudado."
+        },
+        {
+          "order": 4,
+          "icon": "⏱️",
+          "title": "Foco Profundo",
+          "description": "Concluir 3 blocos de estudo planejados em um dia e registrar cada um."
+        },
+        {
+          "order": 5,
+          "icon": "🎓",
+          "title": "Revisão Ativa",
+          "description": "Resolver 20 questões sem consultar a teoria e corrigir os erros."
+        },
+        {
+          "order": 6,
+          "icon": "💡",
+          "title": "Ideia Brilhante",
+          "description": "Explicar um conteúdo de memória e registrar as dúvidas que permanecerem."
+        },
+        {
+          "order": 7,
+          "icon": "🗂️",
+          "title": "Organizado",
+          "description": "Montar um planejamento semanal e cumprir pelo menos 80% do que foi planejado."
+        },
+        {
+          "order": 8,
+          "icon": "🔬",
+          "title": "Pesquisador",
+          "description": "Consultar 2 fontes confiáveis sobre um tema e produzir uma síntese própria."
+        },
+        {
+          "order": 9,
+          "icon": "🏆",
+          "title": "Mestre dos Estudos",
+          "description": "Cumprir 7 dias consecutivos de estudo conforme o planejamento e realizar uma revisão semanal."
+        }
+      ]
+    },
+    "nutricao": {
+      "name": "Nutrição",
+      "color": null,
+      "point_costs": [
+        5,
+        7,
+        9,
+        12,
+        15,
+        18,
+        22,
+        27,
+        32
+      ],
+      "unlock_order": "sequential",
+      "visual_layout": "original branched 1-3-5 tree; no connecting chronological line",
+      "achievements": [
+        {
+          "order": 1,
+          "icon": "🥗",
+          "title": "Prato Colorido",
+          "description": "Montar uma refeição principal com alimentos de pelo menos 3 grupos ou cores diferentes."
+        },
+        {
+          "order": 2,
+          "icon": "💧",
+          "title": "Hidratado",
+          "description": "Cumprir a própria meta de hidratação durante 3 dias."
+        },
+        {
+          "order": 3,
+          "icon": "🍎",
+          "title": "Fruta do Dia",
+          "description": "Incluir uma fruta na alimentação em 5 dias e registrar as escolhas."
+        },
+        {
+          "order": 4,
+          "icon": "🥦",
+          "title": "Verde na Mesa",
+          "description": "Incluir vegetais no almoço e no jantar durante 5 dias."
+        },
+        {
+          "order": 5,
+          "icon": "🍳",
+          "title": "Café da Manhã Forte",
+          "description": "Planejar e realizar um café da manhã com fonte de proteína durante 5 dias."
+        },
+        {
+          "order": 6,
+          "icon": "🚫",
+          "title": "Sem Açúcar",
+          "description": "Reduzir doces e bebidas açucaradas durante 7 dias, sem recorrer a restrições extremas."
+        },
+        {
+          "order": 7,
+          "icon": "🥩",
+          "title": "Proteína em Dia",
+          "description": "Planejar 5 dias de alimentação incluindo fontes de proteína nas refeições."
+        },
+        {
+          "order": 8,
+          "icon": "🍽️",
+          "title": "Porção Certa",
+          "description": "Durante 7 dias, prestar atenção à fome e à saciedade, comer com calma e reduzir distrações durante as refeições."
+        },
+        {
+          "order": 9,
+          "icon": "🏅",
+          "title": "Mestre da Nutrição",
+          "description": "Planejar e seguir as quatro refeições diárias durante 7 dias, buscando variedade e registrando a alimentação."
+        }
+      ]
+    },
+    "treino": {
+      "name": "Treino",
+      "color": null,
+      "point_costs": [
+        5,
+        7,
+        9,
+        12,
+        15,
+        18,
+        22,
+        27,
+        32
+      ],
+      "unlock_order": "sequential",
+      "visual_layout": "original branched 1-3-5 tree; no connecting chronological line",
+      "achievements": [
+        {
+          "order": 1,
+          "icon": "🏋️",
+          "title": "Primeiro Treino",
+          "description": "Realizar uma sessão planejada e registrar os exercícios feitos."
+        },
+        {
+          "order": 2,
+          "icon": "👟",
+          "title": "Cardio",
+          "description": "Realizar 20 minutos de atividade cardiovascular em intensidade adequada."
+        },
+        {
+          "order": 3,
+          "icon": "🔥",
+          "title": "Queima",
+          "description": "Realizar 3 sessões de atividade física na semana, respeitando os intervalos de recuperação."
+        },
+        {
+          "order": 4,
+          "icon": "💪",
+          "title": "Força Bruta",
+          "description": "Registrar uma evolução na técnica, nas repetições ou na carga de um exercício."
+        },
+        {
+          "order": 5,
+          "icon": "🧘",
+          "title": "Mobilidade",
+          "description": "Realizar uma rotina de mobilidade ou alongamento em 4 dias da semana."
+        },
+        {
+          "order": 6,
+          "icon": "⚡",
+          "title": "Explosão",
+          "description": "Executar exercícios de potência adequados ao nível de treino, priorizando técnica e controle."
+        },
+        {
+          "order": 7,
+          "icon": "😴",
+          "title": "Recuperação",
+          "description": "Manter durante 7 dias uma rotina de recuperação, respeitando descanso e sono."
+        },
+        {
+          "order": 8,
+          "icon": "🏃",
+          "title": "Resistência",
+          "description": "Registrar uma melhora mensurável no condicionamento cardiovascular ao longo de 2 semanas, sem aumentar a carga abruptamente."
+        },
+        {
+          "order": 9,
+          "icon": "🥇",
+          "title": "Mestre do Treino",
+          "description": "Concluir as sessões planejadas da semana e registrar o desempenho e a recuperação."
+        }
+      ]
+    },
+    "lifestyle": {
+      "name": "Lifestyle",
+      "color": "#A78BFA",
+      "point_costs": [
+        5,
+        7,
+        9,
+        12,
+        15,
+        18,
+        22,
+        27,
+        32
+      ],
+      "unlock_order": "sequential",
+      "visual_layout": "original branched 1-3-5 tree; no connecting chronological line",
+      "achievements": [
+        {
+          "order": 1,
+          "icon": "🙏",
+          "title": "Momento de fé",
+          "description": "Separe diariamente um momento para oração, devoção ou reflexão."
+        },
+        {
+          "order": 2,
+          "icon": "📚",
+          "title": "Leitor iniciante",
+          "description": "Leia pelo menos 50 páginas de um livro."
+        },
+        {
+          "order": 3,
+          "icon": "💬",
+          "title": "Conexão social",
+          "description": "Tenha conversas significativas e dedique atenção às pessoas importantes da sua vida durante uma semana."
+        },
+        {
+          "order": 4,
+          "icon": "🎮",
+          "title": "Equilíbrio no lazer",
+          "description": "Mantenha uma rotina equilibrada de lazer durante um mês, sem abandonar suas responsabilidades."
+        },
+        {
+          "order": 5,
+          "icon": "🧭",
+          "title": "Novos caminhos",
+          "description": "Conheça dois lugares novos ou realize duas atividades diferentes da sua rotina."
+        },
+        {
+          "order": 6,
+          "icon": "🎨",
+          "title": "Explorador cultural",
+          "description": "Dedique pelo menos um mês ao contato frequente com livros, documentários, história ou arte."
+        },
+        {
+          "order": 7,
+          "icon": "🤝",
+          "title": "Expansão social",
+          "description": "Durante dois meses, tome a iniciativa de conhecer pessoas, criar amizades e fortalecer relações."
+        },
+        {
+          "order": 8,
+          "icon": "🕊️",
+          "title": "Fortalecimento espiritual",
+          "description": "Mantenha uma rotina espiritual consistente durante três meses."
+        },
+        {
+          "order": 9,
+          "icon": "✈️",
+          "title": "Colecionador de experiências",
+          "description": "Planeje e realize uma experiência marcante, como uma viagem, aventura ou projeto especial que exija planejamento e dedicação."
+        }
+      ]
+    },
+    "vitalidade": {
+      "name": "Vitalidade",
+      "color": "#F87171",
+      "point_costs": [
+        5,
+        7,
+        9,
+        12,
+        15,
+        18,
+        22,
+        27,
+        32
+      ],
+      "unlock_order": "sequential",
+      "visual_layout": "original branched 1-3-5 tree; no connecting chronological line",
+      "achievements": [
+        {
+          "order": 1,
+          "icon": "🧼",
+          "title": "Cuidado pessoal",
+          "description": "Mantenha sua higiene pessoal diária, incluindo banho e higiene bucal."
+        },
+        {
+          "order": 2,
+          "icon": "🏃",
+          "title": "Corpo em movimento",
+          "description": "Realize pelo menos 30 minutos de atividade física em três dias da semana, respeitando seus limites."
+        },
+        {
+          "order": 3,
+          "icon": "🩺",
+          "title": "Compromisso com a saúde",
+          "description": "Organize seus compromissos pessoais de saúde e cumpra pelo menos uma ação de autocuidado planejada."
+        },
+        {
+          "order": 4,
+          "icon": "🧴",
+          "title": "Rotina de higiene",
+          "description": "Mantenha uma rotina completa de higiene pessoal, incluindo cuidados com a pele e higiene bucal, durante 30 dias."
+        },
+        {
+          "order": 5,
+          "icon": "✨",
+          "title": "Boa apresentação",
+          "description": "Dedique um momento ao cuidado com cabelo, pele, roupas e apresentação pessoal."
+        },
+        {
+          "order": 6,
+          "icon": "⏰",
+          "title": "No horário",
+          "description": "Durante 30 dias, cumpra os horários planejados para treinos, consultas e compromissos relacionados à saúde."
+        },
+        {
+          "order": 7,
+          "icon": "💪",
+          "title": "Energia e constância",
+          "description": "Mantenha uma rotina consistente de atividades físicas e movimento durante dois meses, respeitando descanso e recuperação."
+        },
+        {
+          "order": 8,
+          "icon": "📅",
+          "title": "Responsabilidade pessoal",
+          "description": "Durante três meses, mantenha uma rotina de cuidados com a saúde, cumpra seus compromissos pessoais e acompanhe suas necessidades físicas."
+        },
+        {
+          "order": 9,
+          "icon": "💈",
+          "title": "Estilo e autocuidado",
+          "description": "Desenvolva e mantenha uma rotina de autocuidado e apresentação pessoal durante três meses."
+        }
+      ],
+      "attributes": [
+        "Higiene",
+        "Disposição",
+        "Responsabilidade",
+        "Vaidade",
+        "Pontualidade"
+      ]
+    }
+  },
+  "app_attribute_weights": {
+    "estudo": {
+      "Teoria": 30,
+      "Prática": 30,
+      "Retenção": 25,
+      "Velocidade": 5,
+      "Foco": 10
+    },
+    "nutricao": {
+      "Disciplina": 30,
+      "Hidratação": 15,
+      "Restrição": 10,
+      "Digestão": 15,
+      "Consistência": 30
+    },
+    "financas": {
+      "Controle": 25,
+      "Aporte": 20,
+      "Previsão": 20,
+      "Corte": 15,
+      "Visão": 20
+    },
+    "treino": {
+      "Força": 25,
+      "Resistência": 25,
+      "Mobilidade": 15,
+      "Explosão": 15,
+      "Recuperação": 20
+    }
+  },
+  "future_attribute_templates": {
+    "estudo": {
+      "label": "Estudo",
+      "keywords": [
+        "estudo"
+      ],
+      "attributes": [
+        "Organizar os estudos",
+        "Mostrar um planejamento semanal",
+        "Cumprir pelo menos 80% do que foi planejado"
+      ]
+    },
+    "nutricao": {
+      "label": "Nutrição",
+      "keywords": [
+        "nutrição",
+        "nutricao"
+      ],
+      "attributes": [
+        "Planejar e seguir as quatro refeições diárias durante sete dias"
+      ]
+    }
+  },
+  "future_behavior": {
+    "description": "Quando a pessoa digitar um dos termos-chave, identificar o modelo correspondente e sugerir ou inserir seus atributos na Árvore de Habilidades do próprio usuário.",
+    "automatic_insertion": "A implementar posteriormente",
+    "editable": true
+  }
+}
