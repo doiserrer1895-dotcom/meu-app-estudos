@@ -373,10 +373,13 @@ function vC(){const T=S.timer,es=S.entries.filter(e=>e.subj===T.subj),tot=agg(es
  ${T.mode==='p'&&!T.run&&!el()?`<div class="two3"><div><label>Foco (min)</label><input type="number" min="1" value="${S.pomo.f}" onchange="S.pomo.f=+this.value||25;save();render()"></div><div><label>Pausa</label><input type="number" min="1" value="${S.pomo.b}" onchange="S.pomo.b=+this.value||5;save();render()"></div><div><label>Longa</label><input type="number" min="1" value="${S.pomo.l}" onchange="S.pomo.l=+this.value||15;save();render()"></div></div>`:''}</div>
  <div class="card"><h2><i class="dot" style="background:${subjectColor(T.subj)}"></i>Tempo em ${esc(T.subj||'—')}</h2><div class="tiles"><div class="tile"><small>Hoje</small><b>${f1(hoje)}h</b></div><div class="tile"><small>Total</small><b>${f1(tot)}h</b></div></div>${breakdown(es)}</div>`}
 function saveE(){const v=i=>$('#'+i).value,n=i=>Math.max(0,parseFloat(v(i).replace(',','.'))||0),er=m=>$('#err').textContent=m;
- const h=n('h'),q=Math.floor(n('q')),a=Math.floor(n('a')),p=n('p');
+ const h=n('h'),q=Math.floor(n('q')),a=Math.floor(n('a')),p=n('p'),time=v('st');
  if(!S.edital.length)return er('Cadastre uma disciplina no Plano de Estudos.');if(!v('d'))return er('Escolha a data.');
  if(a>q)return er('Acertos não podem passar de questões feitas.');if(!h&&!q)return er('Informe horas ou questões.');
- S.entries.push({id:uid(),date:v('d'),subj:v('s'),top:v('tp'),h,p,q,a});mkRev(v('s'),v('tp'),v('d'));save();render()}
+ const entry={id:uid(),date:v('d'),subj:v('s'),top:v('tp'),h,p,q,a,source:'manual'};
+ // O horário só é gravado quando informado pelo usuário; não estimamos horários ausentes.
+ if(time){const start=new Date(v('d')+'T'+time);if(!Number.isFinite(start.getTime()))return er('Confira o horário informado.');entry.startedAt=start.toISOString()}
+ S.entries.push(entry);mkRev(v('s'),v('tp'),v('d'));save();render()}
 
 const sumP=(a,b)=>agg(S.entries.filter(e=>{const d=parse(e.date);return d>=a&&d<=b}));
 /* ---------- VISÃO GERAL ---------- */
@@ -449,6 +452,7 @@ function vG(){const t=today(),k=iso(t),w0=mon(t),w1=new Date(w0);w1.setDate(w0.g
  `<label>Novo lembrete</label><input id="rtx" placeholder="ex.: Inscrição aberta"><div class="two"><div><label>Tipo</label><select id="rtg">${opts(TG)}</select></div><div><label>Data</label><input type="date" id="rdt"></div></div><button class="btn" style="width:100%;margin-top:14px" onclick="addR()">Adicionar lembrete</button></div>`+
  `<div class="card"><h2>Registrar estudo</h2><label>Data</label><input type="date" id="d" value="${k}"><label>Matéria</label>${selS('s',"fillTop('s','tp')")}<label>Conteúdo</label><select id="tp"></select>
  <div class="two"><div><label>Horas estudadas</label><input id="h" type="number" step="0.25" min="0" inputmode="decimal"></div><div><label>Pausas (min)</label><input id="p" type="number" min="0" inputmode="numeric"></div></div>
+ <label>Horário de início (opcional)</label><input id="st" type="time" aria-describedby="study-time-help"><small id="study-time-help" style="display:block;color:var(--mu);font-size:12px;margin-top:5px">Se informar, este registro também entra na comparação por horário. Se deixar vazio, as horas contam normalmente, sem inventar um horário.</small>
  <div class="two"><div><label>Questões feitas</label><input id="q" type="number" min="0" inputmode="numeric"></div><div><label>Acertos</label><input id="a" type="number" min="0" inputmode="numeric"></div></div>
  <div id="err" style="color:var(--rd);font-size:13px;margin-top:10px"></div><button class="btn" style="width:100%;margin-top:14px" onclick="saveE()">Salvar</button></div>`}
 function delE(id){S.entries=S.entries.filter(x=>x.id!==id);save();render()}
