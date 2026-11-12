@@ -78,3 +78,14 @@ Ao criar uma nova função importante, comentar brevemente:
 2. quais dados lê;
 3. quais dados altera ou salva;
 4. se depende de internet, login ou armazenamento local.
+
+
+## 7. Registros manuais e comparação por horário
+
+Na tela principal, o formulário **Registrar estudo** aceita um horário de início opcional. As horas e questões contam mesmo quando o campo fica vazio. Somente registros com horário informado entram nas estatísticas de faixa horária. O sistema não cria horários estimados para registros antigos ou manuais sem horário.
+
+## 8. Migração da Constância
+
+A página `constancia.html` usa a sessão autenticada do Supabase e a tabela `constancia_data`. O estado é salvo localmente em uma chave vinculada ao ID da conta e sincronizado na nuvem. Na primeira entrada, se houver dados antigos sem vínculo de conta, a aplicação pede confirmação antes de mesclar/importar. A cópia antiga não é apagada.
+
+**Ativação:** executar [supabase-constancia.sql](../supabase-constancia.sql) uma vez no SQL Editor do Supabase. Sem essa migração, a tela mantém os dados locais, mas a sincronização na nuvem fica pendente.
