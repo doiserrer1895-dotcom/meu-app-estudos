@@ -306,6 +306,7 @@ svg text{font-family:"Space Grotesk",sans-serif}
   <button data-t="missoes"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></svg>Missões</button>
 </div></nav>
 
+<!-- COMUNIDADE: autentica o usuário, publica apenas métricas comunitárias permitidas e carrega ranking, amizades, notificações e comparativos. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 (function(){
@@ -882,6 +883,7 @@ function communityStudy(data){
  d=new Date(now);if(!daily[dateKey(d)])d.setDate(d.getDate()-1);while(daily[dateKey(d)]){streak++;d.setDate(d.getDate()-1);if(streak>730)break;}
  return{daily:daily,logs:logs,average:Math.round(sum/7),streak:streak};
 }
+/* DADOS DA CONSTÂNCIA: atualmente lê constancia-v1 do localStorage deste navegador. Esses dados não são enviados à nuvem por esta função; por isso, podem não acompanhar o usuário em outro aparelho. */
 function communityConstancia(){
  try{
   var c=JSON.parse(localStorage.getItem("constancia-v1")||"{}"),items=Array.isArray(c.items)?c.items:[],skills=Array.isArray(c.skills)?c.skills:[],profile=c.profile||{},total=0,byAttr={},i,it,done,multi,rec,n,attrs,k,values=[];
@@ -922,6 +924,7 @@ async function communityRefreshLists(){
  notes.filter(function(n){return n.kind==="cheer"}).forEach(function(n){var p=PROFILE_BY_ID[n.sender_id];if(p)toast(p.display_name+" enviou um incentivo!");db.from("community_notifications").update({read_at:new Date().toISOString()}).eq("id",n.id).eq("recipient_id",AUTH_USER.id)});
  FR.sel=FR.am.indexOf(FR.sel)>=0?FR.sel:(FR.am[0]||"");salvar();
 }
+/* INICIALIZAÇÃO: exige sessão autenticada, lê os estudos do próprio usuário e sincroniza perfil, totais diários e sessões no Supabase. */
 async function communityInit(){
  if(!window.supabase||!window.supabase.createClient)throw new Error("A conexão do Supabase não carregou.");
  db=window.supabase.createClient(COMMUNITY_URL,COMMUNITY_KEY);
