@@ -17,7 +17,8 @@ Aplicativo web pessoal para organizar estudos, acompanhar desempenho e acessar �
 | `comunidade.html` | Comunidade: perfil, ranking, amizades, notificações e comparativos. |
 | `service-worker.js` | Cache e funcionamento offline/PWA. |
 | `manifest.webmanifest` | Nome, ícone e configurações de instalação do aplicativo. |
-| `supabase-comunidade.sql` | Estrutura e permissões do banco usadas pela Comunidade. |
+| `supabase-comunidade.sql` | Estrutura e permissões do banco usadas pela Comunidade e Constância. |
+| `supabase-constancia.sql` | Migração pontual para sincronizar os dados da Constância por usuário. |
 | `corrigir-permissoes-comunidade.sql` | Correção pontual das políticas de leitura/gravação dos totais diários. |
 | `supabase-seguranca.sql` | Políticas e cópias de segurança privadas dos dados de estudo. |
 | `assets/` | Imagens e recursos visuais usados pelas telas. |
