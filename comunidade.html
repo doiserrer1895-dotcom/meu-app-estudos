@@ -941,9 +941,10 @@ async function communityInit(){
  LOG=(sessResult.data||[]).map(function(x){return{i:+new Date(x.started_at),m:+x.minutes}}).filter(function(x){return isFinite(x.i)&&x.m>0});
  HORAS=sm.daily;recalcSess();clock(true);$("user-name").textContent=ME.split(" ")[0];
  await communityRefreshLists();
+ D=montar();segBuild();initChart();view();renderAmigos();
  var platform=await db.rpc("community_platform_stats");if(platform.error)throw platform.error;
  atualizarPlataforma(platform.data||{});
- D=montar();segBuild();initChart();view();renderAmigos();evBuild();evFx();return true;
+ return true;
 }
 function communityFindProfile(name){return communityFindByName(name)||Object.keys(PROFILE_BY_ID).map(function(k){return PROFILE_BY_ID[k]}).find(function(p){return ck(p.invite_code)===ck(name)})||null}
 ON.buscar=async function(q){var p=null;if(/^EST-/i.test(q)){var r=await db.from("community_profiles").select("*").eq("invite_code",q.toUpperCase()).maybeSingle();if(r.error)throw r.error;p=r.data}else{var r2=await db.from("community_profiles").select("*").ilike("display_name","%"+q.replace(/[%_]/g,"")+"%").limit(10);if(r2.error)throw r2.error;p=(r2.data||[]).find(function(x){return x.user_id!==AUTH_USER.id})||null}return p?{nome:p.display_name}:null};
