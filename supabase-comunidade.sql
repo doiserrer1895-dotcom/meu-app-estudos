@@ -14,6 +14,37 @@ create table if not exists public.community_profiles (
   updated_at timestamptz not null default now()
 );
 
+-- Cria perfil comunitário para contas já existentes e para novos cadastros.
+insert into public.community_profiles(user_id,display_name,invite_code)
+select u.id,
+       coalesce(nullif(trim(u.raw_user_meta_data->>'name'),''), nullif(split_part(u.email,'@',1),''), 'Estudante'),
+       'EST-' || upper(substr(replace(u.id::text,'-',''),1,8))
+from auth.users u
+on conflict (user_id) do nothing;
+
+create or replace function public.community_create_profile_on_signup()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $
+begin
+  insert into public.community_profiles(user_id,display_name,invite_code)
+  values (
+    new.id,
+    coalesce(nullif(trim(new.raw_user_meta_data->>'name'),''), nullif(split_part(new.email,'@',1),''), 'Estudante'),
+    'EST-' || upper(substr(replace(new.id::text,'-',''),1,8))
+  )
+  on conflict (user_id) do nothing;
+  return new;
+end;
+$;
+revoke all on function public.community_create_profile_on_signup() from public, anon, authenticated;
+drop trigger if exists community_profile_after_signup on auth.users;
+create trigger community_profile_after_signup
+  after insert on auth.users
+  for each row execute function public.community_create_profile_on_signup();
+
 create table if not exists public.community_sessions (
   id bigint generated always as identity primary key,
   user_id uuid not null references auth.users(id) on delete cascade,
