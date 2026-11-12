@@ -199,13 +199,19 @@ as $$
     from public.community_daily_totals t
     cross join today
     where t.study_date between today.day - 6 and today.day
+      and t.user_id <> (select auth.uid())
     group by 1,2
+  ),
+  other_users as (
+    select count(*)::integer as total
+    from public.community_profiles
+    where user_id <> (select auth.uid())
   ),
   daily_avg as (
     select d.day,
-           case when (select count(*) from public.community_profiles) = 0 then 0
+           case when (select total from other_users) = 0 then 0
                 else round(coalesce(sum(t.minutes),0)::numeric /
-                     (select count(*) from public.community_profiles))::integer end as minutes
+                     (select total from other_users))::integer end as minutes
     from days d left join totals t using(day)
     group by d.day
   ),
@@ -219,6 +225,7 @@ as $$
     from public.community_sessions s
     cross join today
     where (s.started_at at time zone 'America/Sao_Paulo')::date between today.day - 6 and today.day
+      and s.user_id <> (select auth.uid())
     group by 1
   ),
   period_sum as (select coalesce(sum(minutes), 0) as total from periods)
