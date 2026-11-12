@@ -1,5 +1,5 @@
 // SERVICE WORKER: mantém arquivos essenciais disponíveis offline e atualiza o cache quando a versão muda.
-const CACHE_NAME = "meu-app-estudos-shell-v15";
+const CACHE_NAME = "meu-app-estudos-shell-v16";
 const BASE = "/meu-app-estudos/";
 const SHELL = [BASE, BASE + "index.html", BASE + "nutricao.html", BASE + "constancia.html", BASE + "comunidade.html", BASE + "manifest.webmanifest", BASE + "icons/icon.svg", BASE + "assets/nutricao-card-square.svg"];
 // Instala o pacote básico do aplicativo e ativa a nova versão do cache.
