@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "description": "Modelos iniciais para preencher automaticamente a Árvore de Habilidades. Estes dados ficam guardados para implementação futura; não ativam automações nesta versão.",
+  "models": {
+    "estudo": {
+      "label": "Estudo",
+      "keywords": ["estudo"],
+      "attributes": [
+        "Organizar os estudos",
+        "Mostrar um planejamento semanal",
+        "Cumprir pelo menos 80% do que foi planejado"
+      ]
+    },
+    "nutricao": {
+      "label": "Nutrição",
+      "keywords": ["nutrição", "nutricao"],
+      "attributes": [
+        "Planejar e seguir as quatro refeições diárias durante sete dias"
+      ]
+    }
+  },
+  "future_behavior": {
+    "description": "Quando a pessoa digitar um dos termos-chave, identificar o modelo correspondente e sugerir ou inserir seus atributos na Árvore de Habilidades do próprio usuário.",
+    "automatic_insertion": "A implementar posteriormente",
+    "editable": true
+  }
+}
