@@ -46,3 +46,8 @@ Aplicativo web pessoal para organizar estudos, acompanhar desempenho e acessar �
 ## Documentação complementar
 
 Consulte [docs/README-ESTRUTURA.md](docs/README-ESTRUTURA.md) para entender cada área e [docs/CHECKUP-2026-11-12.md](docs/CHECKUP-2026-11-12.md) para ver o estado, os riscos e os testes pendentes.
+
+
+## Sincronização da Constância — ação necessária no Supabase
+
+A aplicação agora lê e grava a Constância na tabela privada `constancia_data`, separada por usuário. **Antes de a sincronização na nuvem funcionar, execute uma vez o arquivo [supabase-constancia.sql](supabase-constancia.sql) no SQL Editor do Supabase.** Depois, abra a área Constância com a conta correta para migrar os dados antigos deste navegador. A migração pergunta antes de importar os dados locais e não apaga a cópia antiga.
