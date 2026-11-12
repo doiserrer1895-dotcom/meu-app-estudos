@@ -120,6 +120,18 @@ create policy community_profiles_update_own on public.community_profiles
   for update to authenticated using ((select auth.uid()) = user_id)
   with check ((select auth.uid()) = user_id);
 
+-- Permissões necessárias para a sincronização dos totais diários da Comunidade.
+drop policy if exists community_daily_totals_read_own on public.community_daily_totals;
+create policy community_daily_totals_read_own on public.community_daily_totals
+  for select to authenticated using ((select auth.uid()) = user_id);
+drop policy if exists community_daily_totals_insert_own on public.community_daily_totals;
+create policy community_daily_totals_insert_own on public.community_daily_totals
+  for insert to authenticated with check ((select auth.uid()) = user_id);
+drop policy if exists community_daily_totals_update_own on public.community_daily_totals;
+create policy community_daily_totals_update_own on public.community_daily_totals
+  for update to authenticated using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
+
 drop policy if exists community_sessions_read_own on public.community_sessions;
 create policy community_sessions_read_own on public.community_sessions
   for select to authenticated using ((select auth.uid()) = user_id);
