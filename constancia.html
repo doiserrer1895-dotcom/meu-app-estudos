@@ -412,7 +412,7 @@ async function initConstanciaCloud(){
  const legacyDecisionKey=K+':legacy-decision:'+user.id;
  let includeLegacy=false;
  if(!userCache&&legacy&&Array.isArray(legacy.items)&&legacy.items.length&&!localStorage.getItem(legacyDecisionKey)){
-  includeLegacy=confirm('Encontramos dados antigos da Constância salvos neste navegador. Eles pertencem a esta conta e devem ser migrados ou mesclados com os dados da nuvem?\\n\\nOK = preservar e mesclar os registros.\\nCancelar = manter somente os dados já vinculados a esta conta.');
+  includeLegacy=confirm('Encontramos dados antigos da Constância salvos neste navegador. Eles pertencem a esta conta e devem ser migrados ou mesclados com os dados da nuvem?\n\nOK = preservar e mesclar os registros.\nCancelar = manter somente os dados já vinculados a esta conta.');
   localStorage.setItem(legacyDecisionKey,includeLegacy?'accepted':'declined');
  }
  if(cloudResult.data&&cloudResult.data.data){
