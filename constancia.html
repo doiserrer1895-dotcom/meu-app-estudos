@@ -393,9 +393,15 @@ async function initConstanciaCloud(){
  try{const raw=localStorage.getItem(pendingKey);if(raw)pending=JSON.parse(raw)}catch(e){}
  const cloudResult=await CONSTANCIA_DB.from('constancia_data').select('data').eq('user_id',user.id).maybeSingle();
  if(cloudResult.error){
-  console.error('Tabela de Constância ainda não disponível:',cloudResult.error);
-  constanciaCloudStatus('Execute supabase-constancia.sql',true);
+  console.error('Não foi possível consultar a nuvem da Constância:',cloudResult.error);
+  const missingTable=cloudResult.error.code==='42P01'||cloudResult.error.code==='PGRST205';
+  constanciaCloudStatus(missingTable?'Execute supabase-constancia.sql':'Sem conexão · alterações ficam neste aparelho',true);
   if(pending)S=pending;else if(userCache)S=userCache;
+  // Mesmo sem conexão ou antes da migração, cada alteração fica guardada como pendente para recuperação posterior.
+  window.__constanciaCloudSave=function(){
+   try{localStorage.setItem(pendingKey,JSON.stringify(S))}catch(e){}
+   constanciaCloudStatus(missingTable?'Aguardando migração SQL':'Salvo neste aparelho · nuvem pendente',true);
+  };
   return;
  }
  if(cloudResult.data&&cloudResult.data.data){
