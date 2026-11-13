@@ -175,6 +175,15 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 #nav button.settings-tab{color:var(--mu)}
 #nav button.settings-tab.on{color:var(--tx);background:var(--card)}
 @media(max-width:420px){#settings-actions{grid-template-columns:1fr 1fr}.settings-card{padding:14px}}
+
+/* Modal elegante para editar o nome da central */
+.name-edit-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(8,12,24,.62);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.name-edit-dialog{width:min(100%,420px);padding:26px;border:1px solid var(--bd);border-radius:22px;background:var(--card);color:var(--tx);box-shadow:0 24px 80px #00000040;animation:nameEditIn .18s ease-out}
+.name-edit-dialog h2{margin:0 0 8px;font-size:22px;letter-spacing:-.03em}.name-edit-dialog p{margin:0 0 20px;color:var(--mu);font-size:14px;line-height:1.5}
+.name-edit-dialog label{display:block;margin-bottom:8px;font-size:12px;font-weight:750;color:var(--mu)}.name-edit-input{width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid var(--bd);border-radius:12px;background:var(--in);color:var(--tx);font:inherit;font-size:16px;outline:none;transition:border-color .15s,box-shadow .15s}.name-edit-input:focus{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 18%,transparent)}
+.name-edit-error{min-height:18px;margin-top:8px;color:var(--rd);font-size:12px}.name-edit-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.name-edit-actions button{padding:11px 16px;border-radius:11px;font:inherit;font-size:14px;font-weight:750;cursor:pointer}.name-edit-cancel{border:1px solid var(--bd);background:var(--in);color:var(--tx)}.name-edit-save{border:1px solid var(--ac);background:var(--ac);color:white}.name-edit-actions button:disabled{opacity:.55;cursor:wait}
+@keyframes nameEditIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:480px){.name-edit-dialog{padding:21px;border-radius:18px}.name-edit-actions button{flex:1}}
 </style>
 <link rel="manifest" href="/meu-app-estudos/manifest.webmanifest">
 <meta name="theme-color" content="#0a0a0a">
@@ -597,17 +606,17 @@ function friendlyError(e){
 }
 window.__editDisplayName=async function(){
  const current=String(window.__displayName||'Raphael');
- const entered=prompt('Como você gostaria de ser chamado?',current);
- if(entered===null)return;
- const name=entered.trim();
- if(!name||name.length>60){alert('Digite um nome entre 1 e 60 caracteres.');return;}
- try{
-  const {data,error}=await client.auth.updateUser({data:{full_name:name}});
-  if(error)throw error;
-  window.__displayName=name;
-  if(typeof render==='function')render();
-  message('Nome atualizado com sucesso.','ok');
- }catch(e){alert('Não foi possível atualizar seu nome: '+friendlyError(e));}
+ if(document.getElementById('name-edit-overlay'))return;
+ const overlay=document.createElement('div');overlay.id='name-edit-overlay';overlay.className='name-edit-overlay';
+ overlay.innerHTML=`<section class="name-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="name-edit-title"><h2 id="name-edit-title">Editar seu nome</h2><p>Personalize como você aparece na central de aplicativos.</p><form id="name-edit-form"><label for="name-edit-input">Como quer ser chamado?</label><input id="name-edit-input" class="name-edit-input" type="text" maxlength="60" autocomplete="nickname" placeholder="Digite seu nome" value="${esc(current)}" required><div id="name-edit-error" class="name-edit-error" role="status"></div><div class="name-edit-actions"><button type="button" class="name-edit-cancel">Cancelar</button><button type="submit" class="name-edit-save">Salvar nome</button></div></form></section>`;
+ document.body.appendChild(overlay);
+ const input=overlay.querySelector('#name-edit-input'),form=overlay.querySelector('#name-edit-form'),cancel=overlay.querySelector('.name-edit-cancel'),save=overlay.querySelector('.name-edit-save'),errorBox=overlay.querySelector('#name-edit-error');
+ const close=()=>overlay.remove();cancel.addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close()});input.focus();input.select();
+ form.addEventListener('submit',async e=>{e.preventDefault();const name=input.value.trim();if(!name){errorBox.textContent='Digite um nome para continuar.';input.focus();return;}save.disabled=true;cancel.disabled=true;save.textContent='Salvando...';errorBox.textContent='';
+ try{const {error}=await client.auth.updateUser({data:{full_name:name}});if(error)throw error;window.__displayName=name;close();if(typeof render==='function')render();message('Nome atualizado com sucesso.','ok');}
+ catch(e){errorBox.textContent='Não foi possível salvar: '+friendlyError(e);save.disabled=false;cancel.disabled=false;save.textContent='Salvar nome';input.focus();}
+ });
+ const onKey=e=>{if(e.key==='Escape'&&document.getElementById('name-edit-overlay')){close();document.removeEventListener('keydown',onKey)}};document.addEventListener('keydown',onKey);
 };
 async function activate(user){
  if(!user||!user.id)return;
