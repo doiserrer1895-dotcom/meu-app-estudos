@@ -595,9 +595,23 @@ function friendlyError(e){
  if(/row-level security|permission denied|violates row-level security/i.test(m))return 'O Supabase bloqueou o acesso. Precisamos conferir as políticas de segurança da tabela estudos.';
  return m;
 }
-window.__editDisplayName=async function(){\n const current=String(window.__displayName||'Estudante');\n const entered=prompt('Como você gostaria de ser chamado?',current);\n if(entered===null)return;\n const name=entered.trim();\n if(!name||name.length>60){alert('Digite um nome entre 1 e 60 caracteres.');return;}\n try{\n  const {data,error}=await client.auth.updateUser({data:{full_name:name}});\n  if(error)throw error;\n  window.__displayName=name;\n  if(typeof render==='function')render();\n  message('Nome atualizado com sucesso.','ok');\n }catch(e){alert('Não foi possível atualizar seu nome: '+friendlyError(e));}\n};\nasync function activate(user){
+window.__editDisplayName=async function(){
+ const current=String(window.__displayName||'Raphael');
+ const entered=prompt('Como você gostaria de ser chamado?',current);
+ if(entered===null)return;
+ const name=entered.trim();
+ if(!name||name.length>60){alert('Digite um nome entre 1 e 60 caracteres.');return;}
+ try{
+  const {data,error}=await client.auth.updateUser({data:{full_name:name}});
+  if(error)throw error;
+  window.__displayName=name;
+  if(typeof render==='function')render();
+  message('Nome atualizado com sucesso.','ok');
+ }catch(e){alert('Não foi possível atualizar seu nome: '+friendlyError(e));}
+};
+async function activate(user){
  if(!user||!user.id)return;
- window.__displayName=(user.user_metadata&&String(user.user_metadata.full_name||user.user_metadata.name||'').trim())||((user.email||'').split('@')[0])||'Estudante';
+ window.__displayName=(user.user_metadata&&String(user.user_metadata.full_name||user.user_metadata.name||user.user_metadata.display_name||user.user_metadata.nickname||'').trim())||'Raphael';
  if(activeUid===user.id&&ready){showApp(user.email);return}
  clearTimeout(saveTimer);queuedState=null;
  activeUid=user.id;window.__activeUserId=null;ready=false;submit.disabled=true;message('Carregando seus estudos...');
