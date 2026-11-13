@@ -530,7 +530,7 @@ function enterConstancia(){window.location.href='constancia.html'}
 function enterCommunity(){window.location.href='comunidade.html'}
 function enterCentralSettings(){inStudies=true;view='settings';render();scrollTo(0,0)}
 function backHome(){inStudies=false;render();scrollTo(0,0)}
-function homeScreen(){return `<section class="home-head"><div><div class="home-eyebrow">Central de Aplicativos</div><h1 class="home-greeting">${homeGreeting()}, Raphael!</h1><div class="home-welcome">Bem-vindo de volta. O que vamos fazer hoje?</div></div><div class="home-clock"><small>HORÁRIO</small><strong id="home-time">${homeClock()}</strong></div></section><div class="home-prompt">Escolha uma área</div><article class="home-area constancy" aria-label="Constância Pessoal"><div class="home-art"><span class="home-symbol">◷</span></div><div class="home-info"><h2>Constância Pessoal</h2><p>Missões, hábitos, evolução e acompanhamento da sua constância.</p><button class="home-access" onclick="enterConstancia()">Acessar área <span>→</span></button></div></article><article class="home-area study"><div class="home-art"><span class="home-symbol">✦</span></div><div class="home-info"><h2>Estudos</h2><p>Questões, disciplinas, desempenho e organização em um só lugar.</p><button class="home-access" onclick="enterStudies()">Acessar área <span>→</span></button></div></article><article class="home-area nutrition"><div class="home-art"><span class="home-symbol">❧</span></div><div class="home-info"><h2>Nutrição</h2><p>Alimentos, refeições e acompanhamento nutricional.</p><button class="home-access" onclick="enterNutrition()">Acessar área <span>→</span></button></div></article><article class="home-area community" aria-label="Comunidade"><div class="home-art"><span class="home-symbol">♧</span></div><div class="home-info"><h2>Comunidade</h2><p>Um espaço para conectar estudantes e compartilhar experiências.</p><button class="home-access" onclick="enterCommunity()">Acessar área <span>→</span></button></div></article><article class="home-area config"><div class="home-art"><span class="home-symbol">⚙</span></div><div class="home-info"><h2>Configurações</h2><p>Conta, sincronização e gerenciamento das cópias dos seus dados.</p><button class="home-access" onclick="enterCentralSettings()">Acessar área <span>→</span></button></div></article><div class="home-footer">Seu espaço, suas áreas, sua rotina.</div>`}
+function homeScreen(){return `<section class="home-head"><div><div class="home-eyebrow">Central de Aplicativos</div><h1 class="home-greeting">${homeGreeting()}, ${esc(window.__displayName||"Estudante")}!</h1><div class="home-welcome">Bem-vindo de volta. O que vamos fazer hoje?</div></div><div class="home-clock"><small>HORÁRIO</small><strong id="home-time">${homeClock()}</strong></div></section><div class="home-prompt">Escolha uma área</div><article class="home-area constancy" aria-label="Constância Pessoal"><div class="home-art"><span class="home-symbol">◷</span></div><div class="home-info"><h2>Constância Pessoal</h2><p>Missões, hábitos, evolução e acompanhamento da sua constância.</p><button class="home-access" onclick="enterConstancia()">Acessar área <span>→</span></button></div></article><article class="home-area study"><div class="home-art"><span class="home-symbol">✦</span></div><div class="home-info"><h2>Estudos</h2><p>Questões, disciplinas, desempenho e organização em um só lugar.</p><button class="home-access" onclick="enterStudies()">Acessar área <span>→</span></button></div></article><article class="home-area nutrition"><div class="home-art"><span class="home-symbol">❧</span></div><div class="home-info"><h2>Nutrição</h2><p>Alimentos, refeições e acompanhamento nutricional.</p><button class="home-access" onclick="enterNutrition()">Acessar área <span>→</span></button></div></article><article class="home-area community" aria-label="Comunidade"><div class="home-art"><span class="home-symbol">♧</span></div><div class="home-info"><h2>Comunidade</h2><p>Um espaço para conectar estudantes e compartilhar experiências.</p><button class="home-access" onclick="enterCommunity()">Acessar área <span>→</span></button></div></article><article class="home-area config"><div class="home-art"><span class="home-symbol">⚙</span></div><div class="home-info"><h2>Configurações</h2><p>Conta, sincronização e gerenciamento das cópias dos seus dados.</p><button class="home-access" onclick="enterCentralSettings()">Acessar área <span>→</span></button></div></article><div class="home-footer">Seu espaço, suas áreas, sua rotina.</div>`}
 function render(){if(view!=='settings')parkCloudControls();if(!inStudies){$('#app').classList.add('home-shell');$('#app').innerHTML=homeScreen();$('#nav').style.display='none';return;}$('#app').classList.remove('home-shell');$('#nav').style.display='';if(view==='settings'){parkCloudControls();$('#app').classList.add('settings-shell');$('#nav').style.display='none';$('#app').innerHTML=settingsPanel();const acts=$('#settings-actions');['cloud-backup','cloud-save-snapshot','cloud-cloud-backup','cloud-restore','cloud-import-button','cloud-retry','cloud-logout','cloud-import-file'].forEach(id=>{const el=document.getElementById(id);if(el)acts.appendChild(el)});$('#settings-email-slot').appendChild($('#cloud-email'));$('#settings-status-slot').appendChild($('#cloud-status'));return;}$('#app').classList.remove('settings-shell');$('#nav').style.display='';if(ensureSubjectColors())save();if(!S.edital.find(x=>x.name===S.timer.subj))S.timer.subj=S.edital[0]?S.edital[0].name:'';
  $('#app').innerHTML={d:vG,p:vP,s:vS,c:vC,f:vF}[view]();const top=$('#app .top');if(top){top.style.display='flex';top.style.alignItems='center';top.style.justifyContent='space-between';top.innerHTML=esc(({d:'Visão Geral',p:'LDI',s:'Agenda',c:'Foco',f:'Desempenho'})[view]||'Estudos')+'<button class="home-back" onclick="backHome()">⌂ Central</button>';}
  $('#nav div').innerHTML=[['d','Visão Geral'],['p','LDI'],['s','Agenda'],['c','Foco'],['f','Desempenho']].map(x=>`<button class="${view===x[0]?'on':''}" onclick="go('${x[0]}')"><span>${ICON[x[0]]}</span>${x[1]}</button>`).join('');
@@ -547,7 +547,7 @@ const SUPABASE_URL='https://nwwwydwevgftbpjuasgz.supabase.co';
 const SUPABASE_KEY='sb_publishable_7-zqJxrp67zBzWZcwUmlQw_wLpb-Gqc';
 const layer=document.createElement('div');
 layer.id='cloud-auth';
-layer.innerHTML='<div class="panel"><h1>Meu App Estudos</h1><p id="auth-intro">Entre na sua conta para acessar seus estudos em qualquer dispositivo.</p><form id="auth-form"><label for="auth-email">E-mail</label><input id="auth-email" type="email" autocomplete="email" required placeholder="seuemail@exemplo.com"><label for="auth-password">Senha</label><input id="auth-password" type="password" autocomplete="current-password" minlength="6" required placeholder="Mínimo de 6 caracteres"><button class="primary" id="auth-submit" type="submit">Entrar</button></form><button class="switch" id="auth-switch" type="button">Criar uma conta</button><div class="message" id="auth-message" role="status"></div></div>';
+layer.innerHTML='<div class="panel"><h1>Meu App Estudos</h1><p id="auth-intro">Entre na sua conta para acessar seus estudos em qualquer dispositivo.</p><form id="auth-form"><label for="auth-name" id="auth-name-label" style="display:none">Seu nome</label><input id="auth-name" type="text" autocomplete="name" maxlength="60" placeholder="Como devemos te chamar?" style="display:none"><label for="auth-email">E-mail</label><input id="auth-email" type="email" autocomplete="email" required placeholder="seuemail@exemplo.com"><label for="auth-password">Senha</label><input id="auth-password" type="password" autocomplete="current-password" minlength="6" required placeholder="Mínimo de 6 caracteres"><button class="primary" id="auth-submit" type="submit">Entrar</button></form><button class="switch" id="auth-switch" type="button">Criar uma conta</button><div class="message" id="auth-message" role="status"></div></div>';
 document.body.appendChild(layer);
 document.getElementById('app').style.visibility='hidden';
 document.getElementById('nav').style.visibility='hidden';
@@ -596,6 +596,7 @@ function friendlyError(e){
 }
 async function activate(user){
  if(!user||!user.id)return;
+ window.__displayName=(user.user_metadata&&String(user.user_metadata.full_name||user.user_metadata.name||'').trim())||((user.email||'').split('@')[0])||'Estudante';
  if(activeUid===user.id&&ready){showApp(user.email);return}
  clearTimeout(saveTimer);queuedState=null;
  activeUid=user.id;window.__activeUserId=null;ready=false;submit.disabled=true;message('Carregando seus estudos...');
@@ -657,23 +658,27 @@ async function init(){
 }
 switchBtn.addEventListener('click',()=>{
  creating=!creating;
+ const nameLabel=document.getElementById('auth-name-label'),nameInput=document.getElementById('auth-name');
+ nameLabel.style.display=creating?'block':'none';nameInput.style.display=creating?'block':'none';nameInput.required=creating;
  document.getElementById('auth-password').autocomplete=creating?'new-password':'current-password';
  submit.textContent=creating?'Criar conta':'Entrar';
  switchBtn.textContent=creating?'Já tenho uma conta':'Criar uma conta';
- intro.textContent=creating?'Crie sua conta para guardar seus estudos na nuvem.':'Entre na sua conta para acessar seus estudos em qualquer dispositivo.';
+ intro.textContent=creating?'Informe seu nome, e-mail e senha para criar sua conta.':'Entre na sua conta para acessar seus estudos em qualquer dispositivo.';
  message('');
 });
 form.addEventListener('submit',async ev=>{
  ev.preventDefault();if(!client)return;
+ const name=document.getElementById('auth-name').value.trim();
  const email=document.getElementById('auth-email').value.trim();
  const password=pass.value;
+ if(creating&&(!name||name.length>60)){message('Digite seu nome (até 60 caracteres).','error');submit.disabled=false;switchBtn.disabled=false;return;}
  submit.disabled=true;switchBtn.disabled=true;message(creating?'Criando sua conta...':'Entrando...');
  try{
   if(creating){
-   const {data,error}=await client.auth.signUp({email,password});
+   const {data,error}=await client.auth.signUp({email,password,options:{data:{full_name:name}}});
    if(error)throw error;
    if(data.session&&data.user)await activate(data.user);
-   else message('Cadastro criado! Confira sua caixa de entrada e confirme o e-mail para depois entrar.','ok');
+   else message('Cadastro criado! Seu nome foi salvo. Confira sua caixa de entrada e confirme o e-mail para depois entrar.','ok');
   }else{
    const {data,error}=await client.auth.signInWithPassword({email,password});
    if(error)throw error;
