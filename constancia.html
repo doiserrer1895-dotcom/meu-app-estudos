@@ -689,11 +689,29 @@ function evoHTML(areas){
 }
 /* ===== missões: anel de progresso geral + cartões por habilidade ===== */
 function tally(it){
- const un=multi(it)?it.slots.length:1;let d=0,t=0;
- if(rec(it)){const e=dt(td());let x=dt(it.start),n=0;while(x<=e&&n++<3660){if(it.days.includes(x.getDay())){const k=iso(x);t+=un;d+=multi(it)?arr(it,k).filter(Boolean).length:(it.done[k]?1:0)}x.setDate(x.getDate()+1)}}
- else if(multi(it)){t=un;d=arr(it,it.start).filter(Boolean).length}
- else{t=1;d=it.doneDate?1:0}
- return[d,t]}
+ // Recebidas = ocorrências previstas até hoje, somadas dia a dia.
+ // Normaliza dias antigos vindos do armazenamento como texto ou número.
+ const un=multi(it)?Math.max(1,(it.slots||[]).length):1;
+ const today=td(),start=it.start;
+ let d=0,t=0;
+ if(!start||start>today)return[0,0];
+ const days=Array.isArray(it.days)?it.days.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=6):[];
+ if(days.length){
+  let x=dt(start),end=dt(today),guard=0;
+  while(x<=end&&guard++<3660){
+   if(days.includes(x.getDay())){
+    const key=iso(x);t+=un;
+    d+=multi(it)?arr(it,key).filter(Boolean).length:(it.done&&it.done[key]?1:0);
+   }
+   x.setDate(x.getDate()+1);
+  }
+ }else{
+  // Missão sem repetição gera uma ocorrência, somente a partir da data inicial.
+  t=un;
+  d+=multi(it)?arr(it,start).filter(Boolean).length:(it.doneDate?1:0);
+ }
+ return[d,t]
+}
 function progHTML(areas){
  let D=0,T=0;const per={};
  const H=td();S.items.forEach(it=>{if(!vis(it,H))return;const t=multi(it)?it.slots.length:1,d=multi(it)?arr(it,H).filter(Boolean).length:(isDone(it,H)?1:0);D+=d;T+=t;if(it.skill){const q=per[it.skill]||(per[it.skill]=[0,0]);q[0]+=d;q[1]+=t}});
