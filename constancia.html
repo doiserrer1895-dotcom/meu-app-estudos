@@ -837,7 +837,7 @@ function stats(){
  const m={},cnt={};let total=0;
  S.items.forEach(it=>{const n=doneCount(it);total+=n;if(!n)return;const k=it.skill;m[k]=(m[k]||0)+n;(it.attrs||[]).forEach(a=>{cnt[k+'|'+a]=(cnt[k+'|'+a]||0)+n/it.attrs.length})});
  const areas=S.skills.filter(k=>k.on!==false).map(k=>({k,v:lvl(m[k.id]||0,treeBonus(k.id)),at:(k.attrs||[]).map(a=>[a,lvl(cnt[k.id+'|'+a]||0)])}));
- const created=S.items.reduce((n,it)=>n+(multi(it)?it.slots.length:1),0);
+ const created=S.items.reduce((n,it)=>n+tally(it)[1],0);
  return{m,created,areas,total,ov:areas.length?Math.round(areas.reduce((n,a)=>n+a.v,0)/areas.length*10)/10:0};
 }
 function pSet(k,v){S.profile[k]=v;save()}
