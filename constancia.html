@@ -823,7 +823,8 @@ const DEFATTR={estudo:['Teoria','Prática','Retenção','Velocidade','Foco'],nut
 S.skills.forEach(k=>{if(!Array.isArray(k.attrs)||!k.attrs.length)k.attrs=DEFATTR[k.id]||[]});
 S.items.forEach(it=>{it.attrs=Array.isArray(it.attrs)?it.attrs:(it.attr?[it.attr]:[]);delete it.attr});save();
 function doneCount(it){
- if(multi(it))return Object.keys(it.done).filter(d=>{const a=it.done[d]||[];return it.slots.length>0&&it.slots.every((_,i)=>!!a[i])}).length;
+ // Cada sub-missão marcada vale uma realização, sem exigir que todas do dia estejam concluídas.
+ if(multi(it))return Object.values(it.done||{}).reduce((n,a)=>n+(it.slots||[]).reduce((k,_,i)=>k+(a&&a[i]?1:0),0),0);
  if(rec(it))return Object.values(it.done).filter(Boolean).length;
  return it.doneDate?1:0;
 }
@@ -836,7 +837,8 @@ function stats(){
  const m={},cnt={};let total=0;
  S.items.forEach(it=>{const n=doneCount(it);total+=n;if(!n)return;const k=it.skill;m[k]=(m[k]||0)+n;(it.attrs||[]).forEach(a=>{cnt[k+'|'+a]=(cnt[k+'|'+a]||0)+n/it.attrs.length})});
  const areas=S.skills.filter(k=>k.on!==false).map(k=>({k,v:lvl(m[k.id]||0,treeBonus(k.id)),at:(k.attrs||[]).map(a=>[a,lvl(cnt[k.id+'|'+a]||0)])}));
- return{m,created:S.items.length,areas,total,ov:areas.length?Math.round(areas.reduce((n,a)=>n+a.v,0)/areas.length*10)/10:0};
+ const created=S.items.reduce((n,it)=>n+(multi(it)?it.slots.length:1),0);
+ return{m,created,areas,total,ov:areas.length?Math.round(areas.reduce((n,a)=>n+a.v,0)/areas.length*10)/10:0};
 }
 function pSet(k,v){S.profile[k]=v;save()}
 function setPhoto(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas'),m=Math.min(im.width,im.height),z=300;c.width=c.height=z;c.getContext('2d').drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,z,z);S.profile.photo=c.toDataURL('image/jpeg',.85);save();render()};im.src=r.result};r.readAsDataURL(f)}
