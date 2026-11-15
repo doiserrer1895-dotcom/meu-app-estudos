@@ -811,6 +811,13 @@ async function activate(user){
   else setCloudStatus('Sincronizado');
   if(typeof render==='function')render();
   showApp(user.email);
+  // Prepara o Banco de Questões em segundo plano depois que a conta já foi carregada.
+  // Assim, ao abrir Estudos > Questões, o conteúdo normalmente já estará pronto.
+  if(inStudies){
+   const warmQuestionBank=()=>{try{ensureQuestionBankFrame()}catch(error){console.warn('Pré-carregamento do Banco de Questões adiado:',error)}};
+   if(typeof window.requestIdleCallback==='function')window.requestIdleCallback(warmQuestionBank,{timeout:2500});
+   else window.setTimeout(warmQuestionBank,1200);
+  }
  }catch(e){
   activeUid=null;window.__activeUserId=null;ready=false;queuedState=null;submit.disabled=false;
   message('Erro ao carregar seus estudos: '+friendlyError(e),'error');
