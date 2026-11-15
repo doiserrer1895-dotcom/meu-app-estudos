@@ -1556,9 +1556,9 @@ function cuAnim(){
 /* Integração dos indicadores de Estudo com a fonte real estudos-v1 (estudos-area.html). */
 function syncStudyMetrics(){
   /* Fonte de verdade: estudos-v1 da conta autenticada; chave legada só como fallback. */
-  let S=null;
+  let S=DASH_STUDY_STATE&&Array.isArray(DASH_STUDY_STATE.entries)&&Array.isArray(DASH_STUDY_STATE.edital)?DASH_STUDY_STATE:null;
   const keys=DASH_USER_ID?['estudos-v1:'+DASH_USER_ID,'estudos-v1']:['estudos-v1'];
-  for(const key of keys){try{const candidate=JSON.parse(localStorage.getItem(key)||'null');if(candidate&&Array.isArray(candidate.entries)&&Array.isArray(candidate.edital)){S=candidate;break}}catch(e){}}
+  if(!S)for(const key of keys){try{const candidate=JSON.parse(localStorage.getItem(key)||'null');if(candidate&&Array.isArray(candidate.entries)&&Array.isArray(candidate.edital)){S=candidate;break}}catch(e){}}
   if(!S)return;
   const parseDate=v=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(String(v||'')))return null;const [y,m,d]=v.split('-').map(Number);return new Date(y,m-1,d)};
   const dayKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -1608,7 +1608,7 @@ function syncNutritionMetrics(){
   GD.dieta.serie=series;GD.dieta.peso=weights.length?fmt(series[series.length-1])+' kg':'— kg';
   GD.dieta.pesoPeriodo=period;GD.dieta.var=delta===0?'estável':(delta<0?'− ':'+ ')+fmt(Math.abs(delta))+' kg';
 }
-let DASH_USER_ID=null,DASH_CONSTANCIA_STATE=null,DASH_SUPABASE=null,DASH_COMMUNITY_ROWS=[],DASH_REFRESHING=false;
+let DASH_USER_ID=null,DASH_STUDY_STATE=null,DASH_CONSTANCIA_STATE=null,DASH_SUPABASE=null,DASH_COMMUNITY_ROWS=[],DASH_REFRESHING=false;
 function readConstanciaLocal(){
   let C=null,keys=[];
   if(DASH_USER_ID)keys.push('constancia-v1:'+DASH_USER_ID);
@@ -1664,9 +1664,15 @@ async function refreshDashboardCommunity(){
     DASH_USER_ID=user.id;
     const results=await Promise.all([
       DASH_SUPABASE.from('constancia_data').select('data').eq('user_id',user.id).maybeSingle(),
-      DASH_SUPABASE.from('community_profiles').select('*')
+      DASH_SUPABASE.from('community_profiles').select('*'),
+      DASH_SUPABASE.from('estudos').select('dados').eq('id',user.id).maybeSingle()
     ]);
-    const cResult=results[0],pResult=results[1];
+    const cResult=results[0],pResult=results[1],studyResult=results[2];
+    /* Lê primeiro o cache da mesma conta que a aba Estudos usa; nuvem é fallback. */
+    let localStudy=null;
+    try{const raw=localStorage.getItem('estudos-v1:'+user.id);if(raw){const parsed=JSON.parse(raw);if(parsed&&Array.isArray(parsed.entries)&&Array.isArray(parsed.edital))localStudy=parsed}}catch(e){}
+    const cloudStudy=!studyResult.error&&studyResult.data&&studyResult.data.dados&&Array.isArray(studyResult.data.dados.entries)&&Array.isArray(studyResult.data.dados.edital)?studyResult.data.dados:null;
+    DASH_STUDY_STATE=localStudy||cloudStudy;
     if(!cResult.error&&cResult.data&&cResult.data.data)DASH_CONSTANCIA_STATE=cResult.data.data;
     else DASH_CONSTANCIA_STATE=readConstanciaLocal();
     if(pResult.error)throw pResult.error;
@@ -1826,7 +1832,7 @@ applyName();drawGeral();
 refreshDashboardCommunity();
 window.addEventListener('focus',refreshDashboardCommunity);
 setInterval(refreshDashboardCommunity,60000);
-window.addEventListener('storage',e=>{if(e.key==='estudos-v1'||e.key==='nutri-v1'||e.key===null)drawGeral();if(e.key==='constancia-v1:'+DASH_USER_ID&&e.newValue){try{DASH_CONSTANCIA_STATE=JSON.parse(e.newValue)}catch(x){}drawGeral()}if(e.key==='constancia-v1'&&!DASH_USER_ID&&e.newValue){try{DASH_CONSTANCIA_STATE=JSON.parse(e.newValue)}catch(x){}drawGeral()}});
+window.addEventListener('storage',e=>{if(e.key==='estudos-v1'||(e.key&&e.key.startsWith('estudos-v1:'))||e.key==='nutri-v1'||e.key===null){if(e.key&&e.key.startsWith('estudos-v1:')){try{const parsed=JSON.parse(e.newValue||'null');DASH_STUDY_STATE=parsed&&Array.isArray(parsed.entries)&&Array.isArray(parsed.edital)?parsed:null}catch(x){DASH_STUDY_STATE=null}}drawGeral()}if(e.key==='constancia-v1:'+DASH_USER_ID&&e.newValue){try{DASH_CONSTANCIA_STATE=JSON.parse(e.newValue)}catch(x){}drawGeral()}if(e.key==='constancia-v1'&&!DASH_USER_ID&&e.newValue){try{DASH_CONSTANCIA_STATE=JSON.parse(e.newValue)}catch(x){}drawGeral()}});
 /* ---------- Constância: Campo (stats) + Perfil ---------- */
 function renderCampoStats(){
   const bx=document.getElementById('cfStats');if(!bx)return;
