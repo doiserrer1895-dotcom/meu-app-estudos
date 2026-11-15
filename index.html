@@ -82,6 +82,47 @@
 :root[data-theme="dark"] .dashboardSectionHead{border-bottom-color:#303030}
 :root[data-theme="dark"] .dashboardSectionHead h2{color:#fff}
 @media(max-width:800px){.dashboardHome{padding:10px 8px 22px;gap:10px}.dashboardSection{border-radius:11px;width:100%}.dashboardSectionHead{padding:9px 12px}.dashboardFrame{height:240px;min-height:0}}
+
+/* Painel visual da aba Início — isolado das demais áreas */
+.dashboardHome.visible{padding:clamp(12px,2vw,24px);gap:14px;background:var(--bg)}
+.dashboardVisual{display:flex;flex-direction:column;gap:14px;width:100%;max-width:1250px;margin:0 auto;color:var(--ink)}
+.dv-hero{background:linear-gradient(135deg,#17191b,#090a0b);border:1px solid #303235;border-radius:18px;padding:18px 20px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.dv-date{font-size:10px;letter-spacing:.13em;font-weight:800;color:#aaa}
+.dv-hero h2{margin:8px 0 4px;font-size:clamp(20px,2.5vw,28px);letter-spacing:-.04em;color:#fff}
+.dv-hero p{margin:0;font-size:12px;color:#bcbec2}
+.dv-clock{font-size:clamp(24px,4vw,38px);font-weight:850;letter-spacing:-.06em;color:#fff;font-variant-numeric:tabular-nums}
+.dv-section{display:flex;align-items:center;gap:9px;margin:2px 0 0;font-size:12px;font-weight:850;letter-spacing:.02em}
+.dv-section:before{content:"";height:17px;width:3px;border-radius:3px;background:var(--dv-ac,#fff)}
+.dv-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px}
+.dv-card{min-width:0;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:13px;box-shadow:0 3px 12px #0000000a}
+.dv-card.s3{grid-column:span 3}.dv-card.s4{grid-column:span 4}.dv-card.s6{grid-column:span 6}.dv-card.s12{grid-column:span 12}
+.dv-card>span,.dv-card .dv-label{display:block;font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:var(--muted)}
+.dv-card>b{display:block;font-size:22px;letter-spacing:-.045em;margin:7px 0 2px}
+.dv-card small{font-size:10px;color:var(--muted)}
+.dv-sleep{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:8px;margin-top:10px}
+.dv-sleep div{border:1px solid var(--line);border-radius:10px;padding:9px;background:var(--soft)}
+.dv-sleep small{display:block;font-size:9px;color:var(--muted)}
+.dv-sleep b{font-size:15px;display:block;margin-top:3px}
+.dv-bar{height:5px;background:var(--soft);border-radius:99px;overflow:hidden;margin-top:9px}
+.dv-bar i{display:block;height:100%;border-radius:99px;background:var(--dv-ac,#fff)}
+.dv-minirow{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-top:9px}
+.dv-chip{border-radius:20px;padding:4px 7px;font-size:9px;font-weight:800;background:var(--soft);color:var(--ink)}
+.dv-color-blue{--dv-ac:#5b8def}.dv-color-green{--dv-ac:#4cd07d}.dv-color-red{--dv-ac:#f0626a}.dv-color-orange{--dv-ac:#f6b04a}.dv-color-purple{--dv-ac:#a78bfa}
+.dv-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:9px}
+.dv-kpi{border:1px solid var(--line);border-radius:10px;padding:9px;background:var(--soft);min-width:0}
+.dv-kpi small{display:block;font-size:9px;color:var(--muted)}.dv-kpi b{display:block;font-size:18px;margin:3px 0;letter-spacing:-.04em}
+.dv-ringrow{display:flex;align-items:center;gap:11px;margin-top:10px}
+.dv-ring{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;flex:none;background:conic-gradient(var(--dv-ac) var(--dv-p,70%),var(--soft) 0);position:relative}
+.dv-ring:after{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--paper)}
+.dv-ring b{position:relative;z-index:1;font-size:10px}
+.dv-rank{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--line)}.dv-rank:last-child{border-bottom:0}
+.dv-rank .num{width:23px;font-weight:850;color:var(--muted);font-size:11px}.dv-avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--soft);font-size:10px;font-weight:850}
+.dv-rank .who{flex:1;min-width:0}.dv-rank .who b{display:block;font-size:11px}.dv-rank .who small{font-size:9px;color:var(--muted)}.dv-rank>strong{font-size:11px}
+:root[data-theme="dark"] .dv-card{background:#111;border-color:#303030;box-shadow:none}
+:root[data-theme="dark"] .dv-sleep div,:root[data-theme="dark"] .dv-kpi,:root[data-theme="dark"] .dv-chip,:root[data-theme="dark"] .dv-avatar{background:#1b1b1b;border-color:#303030;color:#fff}
+:root[data-theme="dark"] .dv-bar{background:#292929}
+@media(max-width:900px){.dv-card.s3{grid-column:span 6}.dv-card.s4{grid-column:span 6}}
+@media(max-width:560px){.dashboardHome.visible{padding:9px 8px 20px}.dv-grid{gap:8px}.dv-card{padding:10px}.dv-card.s3,.dv-card.s4{grid-column:span 6}.dv-card.s6{grid-column:span 12}.dv-hero{padding:14px}.dv-sleep{grid-template-columns:1fr 1fr}.dv-sleep div:first-child{grid-column:span 2}}
 </style></head>
 <body><div class="shade" id="shade" onclick="drawer(false)"></div>
 <div class="layout"><aside class="sidebar" id="sidebar">
@@ -106,7 +147,43 @@
 <div class="group" id="g-const"><button class="navitem" onclick="toggleGroup('g-const')"><span class="ico">◷</span> Constância pessoal <span style="margin-left:auto">⌄</span></button><div class="subitems"><button class="subitem" data-page="constancy" onclick="route('constancy',this)"><span class="tool-ico">⌂</span>Visão geral</button><button class="subitem" data-page="constancy-field" onclick="route('constancy-field',this)"><span class="tool-ico">✦</span>Campo</button><button class="subitem" data-page="constancy-profile" onclick="route('constancy-profile',this)"><span class="tool-ico">♙</span>Perfil</button></div></div>
 <div class="group" id="g-community"><button class="navitem" onclick="toggleGroup('g-community')"><span class="ico">◎</span> Comunidade <span style="margin-left:auto">⌄</span></button><div class="subitems"><button class="subitem" data-page="community" onclick="route('community',this)"><span class="tool-ico">♧</span>Ranking</button><button class="subitem" data-page="community-friends" onclick="route('community-friends',this)"><span class="tool-ico">♙</span>Amigos</button></div></div>
 <div class="navlabel">SUA CONTA</div><button class="navitem" data-page="settings" onclick="route('settings',this)"><span class="ico">⚙</span> Configurações</button>
-</aside><main class="main"><header class="topbar"><div class="lefttop"><button class="hamb" onclick="drawer(true)" aria-label="Abrir menu">☰</button><div class="crumb" id="crumb"><b>Início / Painel geral</b></div></div><div class="top-actions"><button class="themeToggle" id="themeToggle" onclick="toggleTheme()" title="Alternar tema">☾</button></div></header><div class="content"><section class="dashboardHome visible" id="dashboardHome" aria-label="Início"><div class="dashboardPlaceholder">O conteúdo será posto em breve.</div>
+</aside><main class="main"><header class="topbar"><div class="lefttop"><button class="hamb" onclick="drawer(true)" aria-label="Abrir menu">☰</button><div class="crumb" id="crumb"><b>Início / Painel geral</b></div></div><div class="top-actions"><button class="themeToggle" id="themeToggle" onclick="toggleTheme()" title="Alternar tema">☾</button></div></header><div class="content"><section class="dashboardHome visible" id="dashboardHome" aria-label="Início · Painel geral">
+<div class="dashboardVisual">
+ <div class="dv-hero"><div><div class="dv-date" id="dvDate">PAINEL GERAL · HOJE</div><h2 class="dvGreeting">Olá, Rafael</h2><p>Seu panorama diário de sono, estudo, nutrição, constância e evolução.</p></div><div class="dv-clock" id="dvClock">--:--</div></div>
+ <div class="dv-section" style="--dv-ac:#8b8cff">Sono</div>
+ <div class="dv-grid">
+  <div class="dv-card s6"><span>Média de sono · 7 dias</span><b>7h30min</b><small class="dv-chip">▲ 30 min da meta</small><div class="dv-bar"><i style="width:88%;--dv-ac:#8b8cff"></i></div><div class="dv-sleep"><div><small>Eficiência média</small><b>91,4%</b></div><div><small>Melhor noite</small><b>8h10min</b></div><div><small>Mais curta</small><b>6h20min</b></div></div></div>
+  <div class="dv-card s6"><span>Registro · hoje</span><div class="dv-sleep"><div><small>Deitar</small><b>23:00</b></div><div><small>Início do sono</small><b>23:20</b></div><div><small>Despertar</small><b>07:00</b></div></div><div class="dv-minirow"><small>Tempo dormido</small><b>7h40min</b></div><div class="dv-bar"><i style="width:92%;--dv-ac:#5bb5ff"></i></div></div>
+ </div>
+ <div class="dv-section dv-color-blue">Estudo</div>
+ <div class="dv-grid">
+  <div class="dv-card s3 dv-color-blue"><span>Desempenho</span><b>78%</b><small>acertos</small><div class="dv-bar"><i style="width:78%"></i></div></div>
+  <div class="dv-card s3 dv-color-purple"><span>Progresso</span><b>64%</b><small>do conteúdo</small><div class="dv-bar"><i style="width:64%"></i></div></div>
+  <div class="dv-card s3 dv-color-green"><span>Constância</span><b>86%</b><small>dos dias</small><div class="dv-bar"><i style="width:86%"></i></div></div>
+  <div class="dv-card s3 dv-color-blue"><span>Horas estudadas</span><b>2h40</b><small>de 3h meta diária</small><div class="dv-bar"><i style="width:89%"></i></div></div>
+ </div>
+ <div class="dv-section dv-color-green">Nutrição hoje</div>
+ <div class="dv-grid">
+  <div class="dv-card s3 dv-color-green"><span>Hidratação</span><b>2,4 L</b><small>meta de 3 L</small><div class="dv-bar"><i style="width:80%"></i></div><div class="dv-minirow"><span class="dv-chip">8 / 12 copos</span></div></div>
+  <div class="dv-card s3 dv-color-orange"><span>Peso</span><b>72,0 kg</b><small>meta atual</small><div class="dv-minirow"><span class="dv-chip">Estável</span><span class="dv-chip">72 kg alvo</span></div></div>
+  <div class="dv-card s3 dv-color-green"><span>Refeições</span><b>3 / 4</b><small>registradas hoje</small><div class="dv-minirow"><span class="dv-chip">Café</span><span class="dv-chip">Almoço</span><span class="dv-chip">Lanche</span></div></div>
+  <div class="dv-card s3 dv-color-orange"><span>Calorias</span><b>1.840</b><small>de 2.200 kcal</small><div class="dv-bar"><i style="width:84%"></i></div><div class="dv-minirow"><small>360 kcal restantes</small></div></div>
+ </div>
+ <div class="dv-section dv-color-red">Constância pessoal</div>
+ <div class="dv-grid">
+  <div class="dv-card s3 dv-color-red"><span>Ofensiva</span><b>🔥 41 dias</b><small>dias seguidos</small></div>
+  <div class="dv-card s3 dv-color-orange"><span>Patente</span><b>Veterano</b><small>patente atual</small></div>
+  <div class="dv-card s3 dv-color-green"><span>Missões</span><b>6 / 8</b><small>cumpridas hoje</small><div class="dv-bar"><i style="width:75%"></i></div></div>
+  <div class="dv-card s3 dv-color-purple"><span>Conclusão diária</span><div class="dv-ringrow"><div class="dv-ring" style="--dv-p:75%;--dv-ac:#a78bfa"><b>75%</b></div><small>progresso das metas</small></div></div>
+ </div>
+ <div class="dv-section dv-color-orange">Comunidade · meu ranking</div>
+ <div class="dv-grid">
+  <div class="dv-card s3 dv-color-red"><span>Ranking · Ofensiva</span><b>#04</b><small>líder: 52 dias · você: 41</small></div>
+  <div class="dv-card s3 dv-color-orange"><span>Ranking · Patente</span><b>#12</b><small>posição atual</small></div>
+  <div class="dv-card s3 dv-color-blue"><span>Ranking · Estudo</span><b>#08</b><small>entre participantes</small></div>
+  <div class="dv-card s3 dv-color-purple"><span>Ranking · Evolução</span><b>#06</b><small>posição atual</small></div>
+ </div>
+</div>
 <iframe class="appframe" id="appframe" title="Área do aplicativo" src="nutricao.html" style="display:none"></iframe><iframe class="appframe" id="studyframe" title="Área de Estudos" src="estudos-area.html?embedded=1&amp;page=d" loading="eager" style="display:none"></iframe></div></main></div>
 <script>
 const names={'home':'Início / Painel geral','study-d':'Estudos / Visão geral','study-p':'Estudos / Agenda / LDI','study-s':'Estudos / Banco de questões','study-c':'Estudos / Foco','study-f':'Estudos / Desempenho','nutrition':'Nutrição / Início','nutrition-diet':'Nutrição / Dieta','nutrition-market':'Nutrição / Mercado','nutrition-body':'Nutrição / Físico','constancy':'Constância pessoal / Visão geral','constancy-field':'Constância pessoal / Campo','constancy-profile':'Constância pessoal / Perfil','community':'Comunidade / Ranking','community-friends':'Comunidade / Amigos','settings':'Configurações'};
