@@ -585,6 +585,68 @@ h1{font-size:clamp(20px,2vw,24px)!important;margin:clamp(10px,1.2vw,16px) 0 12px
  #app .dr .ic{width:34px!important;height:34px!important}
 }
 
+
+/* Ajuste v70: dimensionamento pelo espaço real do iframe/contêiner. */
+#app{container-type:inline-size;container-name:constancia-layout}
+@container constancia-layout (max-width:760px){
+ #app{padding:8px 10px 20px!important}
+ #app h1{font-size:clamp(18px,4cqw,23px)!important;margin:10px 0 12px!important}
+ #app .hd{gap:8px!important}
+ #app .av{width:42px!important;height:42px!important}
+ #app .nm h2{font-size:clamp(15px,3.2cqw,18px)!important}
+ #app .pl span{font-size:11px!important;padding:5px 7px!important}
+ #app .dn{margin:4px 0 12px!important}
+ #app .dn>button{width:38px!important;height:38px!important}
+ #app .dn b{font-size:clamp(20px,4.5cqw,25px)!important}
+ #app .wkb{gap:2px!important}
+ #app .wkb button{font-size:clamp(9px,2.2cqw,11px)!important;padding:5px 0!important}
+ #app .wkb button i{width:clamp(30px,8cqw,40px)!important;height:clamp(30px,8cqw,40px)!important;font-size:17px!important}
+ #app .cs{padding:9px 11px!important;font-size:12px!important;border-radius:14px!important}
+ #app .days{gap:4px!important}
+ #app .days button{width:auto!important;min-width:0!important;flex:1 1 0!important;padding:7px 1px!important;font-size:10px!important}
+ #app .days button b{font-size:clamp(17px,4cqw,21px)!important}
+ #app .seg{margin:14px 0 9px!important}
+ #app .seg button{font-size:12px!important;padding:8px 2px!important}
+ #app .ch{gap:5px!important}
+ #app .ch button{font-size:11px!important;padding:7px 9px!important}
+ #app .mc{margin-bottom:8px!important;border-radius:15px!important}
+ #app .mn{padding:10px!important}
+ #app .ttl{font-size:13px!important}
+ #app .ttl b{font-size:15px!important}
+ #app .mt{font-size:11px!important;gap:4px 7px!important}
+ #app .ar{width:36px!important;padding-top:12px!important}
+ #app .tm{font-size:11px!important;padding:4px 6px!important}
+ #app .mb{font-size:12px!important;padding:8px!important}
+ #app .mb i{width:32px!important;height:32px!important}
+ #app .sb{padding:8px 9px 8px 12px!important}
+ #app .sb .sx{font-size:13px!important}
+ #app .gg{padding:11px 9px!important}
+ #app .sp{font-size:11px!important;padding:7px 9px!important}
+ #app .ph{gap:8px!important}
+ #app .pf{width:64px!important;height:64px!important}
+ #app .pfl{min-width:0!important}
+ #app .pfl input{min-width:0!important;width:100%!important;font-size:12px!important}
+ #app .at2{padding:11px 9px!important}
+ #app .at2 h4{font-size:16px!important}
+ #app .ag{gap:12px 8px!important}
+ #app .cn{gap:6px!important}
+ #app .cn div{min-width:0!important;padding:8px!important}
+ #app .cn b{font-size:19px!important}
+ #app .ds{padding:10px!important}
+ #app .dr{gap:7px!important;padding:6px 0!important}
+ #app .dr .ic{width:32px!important;height:32px!important}
+ #app .dr .t1 b{font-size:13px!important}
+}
+@container constancia-layout (max-width:420px){
+ #app .pl{gap:3px!important}
+ #app .pl span{font-size:9px!important;padding:4px 5px!important}
+ #app .days button{letter-spacing:0!important}
+ #app .ag{grid-template-columns:1fr!important}
+ #app .cn{grid-template-columns:1fr 1fr!important}
+ #app .ph{align-items:flex-start!important}
+ #app .pfl .r2{grid-template-columns:minmax(55px,.7fr) minmax(0,1.3fr)!important}
+}
+
 </style>
 <script>
 (function(){function apply(){var t='dark';try{t=localStorage.getItem('app-theme-evolucao')||'dark'}catch(e){}document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark')}apply();window.addEventListener('storage',function(e){if(e.key==='app-theme-evolucao')apply()})})();
