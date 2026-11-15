@@ -658,8 +658,8 @@ function fQ(es,T,B,P){
  return chips+big+tiles+chart+tabs}
 function fH(es,T,B,P){const t=today(),w0=mon(t),w1=new Date(w0);w1.setDate(w0.getDate()+6);const wk=sumP(w0,w1).h;
  const periodo=B.reduce((total,dia)=>total+dia.h,0);
- return\`<div class="tiles"><div class="tile"><small>Horas líquidas</small><b style="color:var(--gr)">${f1(periodo)}h</b><small>no período · igual ao último ponto acumulado</small></div><div class="tile"><small>Horas na semana</small><b>${f1(wk)}h</b><small>total semanal real</small></div></div>
- <div class="card"><h2>Horas por período</h2>${hbars(B,P)}</div><div class="card"><h2>Horas líquidas acumuladas</h2>${line(B,P)}</div>\`}function cmv(k){cm.setDate(1);cm.setMonth(cm.getMonth()+k);cs=null;render()}
+ return`<div class="tiles"><div class="tile"><small>Horas líquidas</small><b style="color:var(--gr)">${f1(periodo)}h</b><small>no período · igual ao último ponto acumulado</small></div><div class="tile"><small>Horas na semana</small><b>${f1(wk)}h</b><small>total semanal real</small></div></div>
+ <div class="card"><h2>Horas por período</h2>${hbars(B,P)}</div><div class="card"><h2>Horas líquidas acumuladas</h2>${line(B,P)}</div>`}function cmv(k){cm.setDate(1);cm.setMonth(cm.getMonth()+k);cs=null;render()}
 function fC(){const y=cm.getFullYear(),m=cm.getMonth(),n=new Date(y,m+1,0).getDate(),off=new Date(y,m,1).getDay(),tk=iso(today()),daily={},bySubject={};
  S.entries.forEach(e=>{if(!e.date.startsWith(y+'-'+pad(m+1)))return;const h=net(e);if(h<=0&&!e.q)return;(daily[e.date]||(daily[e.date]=[])).push(e);bySubject[e.subj]=(bySubject[e.subj]||0)+h});
  S.sim.forEach(e=>{if(e.date.startsWith(y+'-'+pad(m+1)))(daily[e.date]||(daily[e.date]=[])).push({...e,subj:e.subj||'Simulado'})});
