@@ -323,7 +323,7 @@ h1{text-align:center;font-size:28px;margin:22px 0 18px;letter-spacing:-.03em}
 #cfm .cr button{flex:1;border:0;border-radius:14px;padding:14px;font-weight:800;font-size:16px}
 #cfm .cr .cn{display:block;grid-template-columns:none;margin:0;background:var(--in);color:var(--tx);border:1px solid var(--bd)}
 #cfm .cr .cy{background:var(--rd);color:#111}
-.central-return{display:block;margin:12px 0 14px;border:1px solid var(--bd);background:var(--cd);color:var(--mu);border-radius:10px;padding:8px 12px;font:600 12px system-ui;cursor:pointer}.central-return:hover{color:var(--tx);border-color:var(--gold)}
+
 
 /* Tema Evolução: acabamento visual somente; mantém medalhas, símbolos e cores de estado. */
 
@@ -551,7 +551,7 @@ function ask(msg,yes){const o=document.createElement('div');o.id='cfm';o.innerHT
 function del(id){ask('Excluir este item? Isso não pode ser desfeito.',()=>{S.items=S.items.filter(x=>x.id!==id);save();render()})}
 function setDay(d){day=d;render()}function setSub(s){sub=s;render()}function go(v){view=v;scrollTo(0,0);render()}
 
-function returnCentral(){window.location.href='index.html'}
+
 const RANKS=['Recruta','Escudeiro','Guerreiro','Capitão','Comandante','Lenda'];
 function rel(d){return DW[wdOf(d)]}
 
