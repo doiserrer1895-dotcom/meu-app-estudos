@@ -984,11 +984,22 @@ init();
 </script>
 
 <script>
-// Registra o modo instalável (PWA) sem alterar dados salvos do aplicativo.
+// Registra o PWA e força a verificação de atualização para que o visual novo apareça
+// também em instalações já abertas. A troca de controller recarrega a página uma vez.
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/meu-app-estudos/service-worker.js", { scope: "/meu-app-estudos/" })
-      .catch((erro) => console.error("Falha ao registrar o modo offline:", erro));
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    window.location.reload();
+  }, { once: true });
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register(
+        "/meu-app-estudos/service-worker.js",
+        { scope: "/meu-app-estudos/", updateViaCache: "none" }
+      );
+      await registration.update();
+    } catch (erro) {
+      console.error("Falha ao atualizar o modo offline:", erro);
+    }
   });
 }
 </script>
