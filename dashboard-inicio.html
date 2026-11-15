@@ -1597,9 +1597,11 @@ function syncStudyMetrics(){
   const net=e=>Math.max(0,(Number(e&&e.h)||0)-(Number(e&&e.p)||0)/60);
   const entries=S.entries.filter(e=>e&&parseDate(e.date)),hourEntries=[...entries,...(Array.isArray(S.sim)?S.sim:[])].filter(e=>e&&parseDate(e.date));
   const totalQ=entries.reduce((a,e)=>a+(Number(e.q)||0),0),totalA=entries.reduce((a,e)=>a+(Number(e.a)||0),0);
-  const totalH=hourEntries.reduce((a,e)=>a+net(e),0);
-  const todayH=hourEntries.filter(e=>e.date===todayKey).reduce((a,e)=>a+net(e),0);
-  const weekH=hourEntries.filter(e=>{const dt=parseDate(e.date);dt.setHours(0,0,0,0);return dt>=monday&&dt<=sunday}).reduce((a,e)=>a+net(e),0);
+  /* Agrupa por dia como a série base dos gráficos; os valores de Hoje e Semana saem desses mesmos pontos. */
+  const dailyHours={};hourEntries.forEach(e=>{dailyHours[e.date]=(dailyHours[e.date]||0)+net(e)});
+  const totalH=Object.values(dailyHours).reduce((a,h)=>a+h,0);
+  const todayH=dailyHours[todayKey]||0;
+  const weekH=Object.entries(dailyHours).filter(([date])=>{const dt=parseDate(date);dt.setHours(0,0,0,0);return dt>=monday&&dt<=sunday}).reduce((a,[,h])=>a+h,0);
   const topics=S.edital.reduce((a,m)=>a+(Array.isArray(m&&m.topics)?m.topics.length:0),0);
   const done=S.edital.reduce((a,m)=>a+(Array.isArray(m&&m.doneTopics)?m.doneTopics.filter(t=>(m.topics||[]).includes(t)).length:0),0);
   const fmt=m=>Math.floor(m/60)+'h'+String(Math.round(m)%60).padStart(2,'0');
