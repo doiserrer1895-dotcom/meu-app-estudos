@@ -43,6 +43,7 @@
 .weatherNow span,.weatherDetails{font-size:9px;line-height:1.4;color:#555}
 .weatherButton{width:100%;margin-top:8px;border:1px solid #ddd;border-radius:8px;background:#f5f5f5;color:#222;padding:7px;font-size:10px;cursor:pointer}
 :root[data-theme="dark"] .welcomePanel{background:#111;color:#fff;border-color:#303030;box-shadow:none}
+:root[data-theme="dark"] .welcomeEdit{background:#222!important;color:#fff!important;border:1px solid #444!important}
 :root[data-theme="dark"] .welcomeGreeting{background:#050505;border:1px solid #303030}
 :root[data-theme="dark"] .welcomeGreeting h2,
 :root[data-theme="dark"] .welcomeClock strong,
@@ -77,7 +78,7 @@
 <div class="navlabel">PRINCIPAL</div>
 <button class="navitem active" data-page="home" onclick="route('home',this)"><span class="ico">⌂</span>Início</button>
 <div class="navlabel">ÁREAS DO APP</div>
-<div class="group expanded" id="g-study"><button class="navitem open" onclick="toggleGroup('g-study')"> <span class="ico">▤</span> Estudos <span style="margin-left:auto">⌄</span></button><div class="subitems">
+<div class="group" id="g-study"><button class="navitem" onclick="toggleGroup('g-study')"> <span class="ico">▤</span> Estudos <span style="margin-left:auto">⌄</span></button><div class="subitems">
 <button class="subitem" data-page="study-d" onclick="route('study-d',this)"><span class="tool-ico" data-icon="d">▦</span>Visão geral</button>
 <button class="subitem" data-page="study-p" onclick="route('study-p',this)"><span class="tool-ico" data-icon="p">◈</span>Agenda / LDI</button>
 <button class="subitem" data-page="study-s" onclick="route('study-s',this)"><span class="tool-ico" data-icon="s">▣</span>Banco de questões</button>
@@ -87,7 +88,7 @@
 <div class="group" id="g-const"><button class="navitem" onclick="toggleGroup('g-const')"><span class="ico">◷</span> Constância pessoal <span style="margin-left:auto">⌄</span></button><div class="subitems"><button class="subitem" data-page="constancy" onclick="route('constancy',this)"><span class="tool-ico">⌂</span>Visão geral</button><button class="subitem" data-page="constancy-field" onclick="route('constancy-field',this)"><span class="tool-ico">✦</span>Campo</button><button class="subitem" data-page="constancy-profile" onclick="route('constancy-profile',this)"><span class="tool-ico">♙</span>Perfil</button></div></div>
 <div class="group" id="g-community"><button class="navitem" onclick="toggleGroup('g-community')"><span class="ico">◎</span> Comunidade <span style="margin-left:auto">⌄</span></button><div class="subitems"><button class="subitem" data-page="community" onclick="route('community',this)"><span class="tool-ico">♧</span>Ranking</button><button class="subitem" data-page="community-friends" onclick="route('community-friends',this)"><span class="tool-ico">♙</span>Amigos</button></div></div>
 <div class="navlabel">SUA CONTA</div><button class="navitem" data-page="settings" onclick="route('settings',this)"><span class="ico">⚙</span> Configurações</button>
-</aside><main class="main"><header class="topbar"><div class="lefttop"><button class="hamb" onclick="drawer(true)" aria-label="Abrir menu">☰</button><div class="crumb" id="crumb"><b>Estudos / Visão geral</b></div></div><div class="top-actions"><button class="themeToggle" id="themeToggle" onclick="toggleTheme()" title="Alternar tema">☾</button></div></header><div class="content"><iframe class="appframe" id="appframe" title="Área do aplicativo" src="estudos-area.html"></iframe></div></main></div>
+</aside><main class="main"><header class="topbar"><div class="lefttop"><button class="hamb" onclick="drawer(true)" aria-label="Abrir menu">☰</button><div class="crumb" id="crumb"><b>Início / Painel geral</b></div></div><div class="top-actions"><button class="themeToggle" id="themeToggle" onclick="toggleTheme()" title="Alternar tema">☾</button></div></header><div class="content"><iframe class="appframe" id="appframe" title="Área do aplicativo" src="estudos-area.html"></iframe></div></main></div>
 <script>
 const names={'home':'Início / Painel geral','study-d':'Estudos / Visão geral','study-p':'Estudos / Agenda / LDI','study-s':'Estudos / Banco de questões','study-c':'Estudos / Foco','study-f':'Estudos / Desempenho','nutrition':'Nutrição / Início','nutrition-diet':'Nutrição / Dieta','nutrition-market':'Nutrição / Mercado','nutrition-body':'Nutrição / Físico','constancy':'Constância pessoal / Visão geral','constancy-field':'Constância pessoal / Campo','constancy-profile':'Constância pessoal / Perfil','community':'Comunidade / Ranking','community-friends':'Comunidade / Amigos','settings':'Configurações'};
 
