@@ -312,10 +312,11 @@ function breakdown(es){const m={};es.forEach(e=>{const k=e.top||'Geral';m[k]=(m[
 (function(){
  const acceptedSources=new Set(['banco','prova','simulado']);
  window.addEventListener('message',function(event){
-  const frame=document.getElementById('question-bank-frame');
-  if(!frame||event.source!==frame.contentWindow)return;
+  const frame=document.getElementById('question-bank-frame'),hidden=document.getElementById('question-bank-taxonomy-frame');
   const msg=event.data;
-  if(!msg||msg.type!=='eear-question-attempt')return;
+  if(!msg)return;
+  if(msg.type==='eear-question-taxonomy'&&hidden&&event.source===hidden.contentWindow){bankTaxonomy=msg.taxonomy&&typeof msg.taxonomy==='object'?msg.taxonomy:{};if(view==='p')render();return;}
+  if(!frame||event.source!==frame.contentWindow||msg.type!=='eear-question-attempt')return;
   const d=(msg.attempt&&typeof msg.attempt==='object')?msg.attempt:msg;
   const source=String(d.source||d.origin||d.kind||'banco').toLowerCase();
   if(!acceptedSources.has(source))return;
@@ -334,9 +335,12 @@ function breakdown(es){const m={};es.forEach(e=>{const k=e.top||'Geral';m[k]=(m[
   const eventId=String(d.eventId||d.questionEventId||d.attemptId||'');
   if(eventId&&S.entries.some(e=>e.questionEventId===eventId))return;
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(d.date||''))?String(d.date):iso(new Date());
+  const topic=String(d.topic||d.top||d.content||d.assunto||'Geral').trim()||'Geral';
+  const T=S.timer;
+  if(T.sessionStartedAt&&T.subj.toLowerCase()===subject.toLowerCase()&&String(T.top||'').toLowerCase()===topic.toLowerCase()){T.sessionQuestions=(T.sessionQuestions||0)+1;if(correct)T.sessionCorrect=(T.sessionCorrect||0)+1;save();}
   const entry={
    id:uid(),date,subj:subject,
-   top:String(d.topic||d.top||d.content||d.assunto||'Geral').trim()||'Geral',
+   top:topic,
    h:0,p:0,q:1,a:correct?1:0,
    source:'questoes-'+source,
    questionEventId:eventId||undefined,
@@ -354,6 +358,8 @@ function addEntry(h,q,a){const T=S.timer;const date=iso(new Date()),entry={id:ui
 function topicDone(m,t){return (m.doneTopics||[]).includes(t)}
 function subjectDone(m){return m.topics.length>0&&m.topics.every(t=>topicDone(m,t))}
 function toggleTopic(id,encoded){const t=decodeURIComponent(encoded),m=S.edital.find(x=>x.id===id);if(!m)return;m.doneTopics=m.doneTopics||[];const i=m.doneTopics.indexOf(t);if(i>=0)m.doneTopics.splice(i,1);else m.doneTopics.push(t);save();render()}
+let bankTaxonomy={};
+function bankTopics(name){const key=Object.keys(bankTaxonomy).find(x=>x.toLowerCase()===String(name||'').toLowerCase());return key?(bankTaxonomy[key]||[]):[]}
 let ldi={q:'',st:'all',df:'all'};
 const DIFFS=['Fácil','Média','Difícil'],ST_TX={done:'Pronta',prog:'Em andamento',new:'Não iniciada'};
 function mStat(m){const n=m.topics.length,d=(m.doneTopics||[]).filter(t=>m.topics.includes(t)).length;return{n,d,pc:n?Math.round(d/n*100):0,st:n&&d===n?'done':d>0?'prog':'new'}}
@@ -366,7 +372,7 @@ function ldiCard(m){const s=mStat(m),o=open[m.id],dy=m.days||[],es=S.entries.fil
  <label>Meta semanal (horas)</label><input type="number" min="0" step="0.5" value="${m.goal||''}" placeholder="Defina sua meta" onchange="setGoal('${m.id}',this.value)">
  <label>Conteúdos — marque quando concluir</label>`+
  (m.topics.length?m.topics.map((t,i)=>{const A=agg(es.filter(e=>e.top===t)),ok=topicDone(m,t);return `<div class="row"><button class="ck" style="${ok?'background:var(--gr);border-color:var(--gr);color:#04121a':''}" onclick="toggleTopic('${m.id}','${encodeURIComponent(t).replace(/'/g,'%27')}')">${ok?'✓':''}</button><div class="g"><b class="${ok?'done':''}">${esc(t)}</b>${A.h>0?`<small>${f1(A.h)}h estudadas</small>`:''}</div><button class="x" onclick="delT('${m.id}',${i})">×</button></div>`}).join(''):'<div class="empty" style="padding:12px 0">Nenhum conteúdo ainda</div>')+
- `<div class="add" style="margin-top:10px"><input id="t_${m.id}" placeholder="Novo conteúdo (use ; para vários)" onkeydown="if(event.key==='Enter')addT('${m.id}')"><button class="btn" onclick="addT('${m.id}')">Add</button></div>
+ `<div class="add" style="margin-top:10px"><select id="t_${m.id}"><option value="">Escolha um tópico do banco de questões</option>${opts(bankTopics(m.name),'')}</select><button class="btn" onclick="addT('${m.id}')">Adicionar tópico</button></div>
  <div style="margin-top:14px;text-align:right">${pend[m.id]? `<button class="btn" style="background:var(--rd);color:#fff;padding:8px 12px" onclick="delM('${m.id}')">Confirmar exclusão</button> <button class="x" onclick="pend={};render()">Cancelar</button>`:`<button class="x" style="font-size:14px" onclick="pend={'${m.id}':1};render()">Apagar disciplina</button>`}</div></div>`;
  return `<div class="ldc ${s.st}">${head}${body}</div>`}
 function ldiList(){const L=ldiFiltered();return L.length?L.map(ldiCard).join(''):`<div class="empty">${S.edital.length?'Nenhuma disciplina encontrada':'Adicione sua primeira disciplina abaixo'}</div>`}
@@ -381,9 +387,9 @@ function vP(){const C={all:S.edital.length,prog:0,done:0,new:0};S.edital.forEach
  <div class="fr">${[['all','Todas'],['prog','Em andamento'],['done','Prontas'],['new','Não iniciadas']].map(([k,n])=>`<button class="fc ${ldi.st===k?'on':''}" onclick="ldi.st='${k}';render()">${n}<i>${C[k]}</i></button>`).join('')}</div>
  <div class="fr"><select class="fs" onchange="ldi.df=this.value;render()"><option value="all">Toda dificuldade</option>${DIFFS.map(d=>`<option value="${d}"${ldi.df===d?' selected':''}>${d}</option>`).join('')}</select><button class="fc fb" onclick="ldiAll()">${a?'Recolher tudo':'Expandir tudo'}</button></div>
  <div id="ldiList" style="margin-top:14px">${ldiList()}</div>
- <div class="card"><h2>Nova disciplina</h2><div class="add"><input id="nm" placeholder="Digite uma disciplina" onkeydown="if(event.key==='Enter')addM()"><button class="btn" onclick="addM()">Add</button></div></div>`+vS()}
+ <div class="card"><h2>Adicionar disciplina do banco de questões</h2><div class="add"><select id="nm"><option value="">Escolha uma disciplina</option>${opts(Object.keys(bankTaxonomy).sort((a,b)=>a.localeCompare(b,'pt-BR')),'')}</select><button class="btn" onclick="addM()">Adicionar</button></div><small class="sub">As disciplinas e os tópicos são carregados do banco de questões.</small></div>`+vS()}
 function addM(){const v=$('#nm').value.trim();if(v&&!S.edital.some(m=>m.name.toLowerCase()===v.toLowerCase())){const id=uid();S.edital.push({id,name:v,topics:[],days:[]});open[id]=true;save();render()}}
-function addT(id){const m=S.edital.find(x=>x.id===id),input=$('#t_'+id);if(!m||!input)return;const L=input.value.split(/[;\n]/).map(x=>x.trim()).filter(Boolean);let c=0;L.forEach(v=>{if(!m.topics.includes(v)){m.topics.push(v);c++}});if(c){save();render()}}
+function addT(id){const m=S.edital.find(x=>x.id===id),input=$('#t_'+id),v=input&&input.value.trim();if(!m||!v)return;if(!m.topics.includes(v)){m.topics.push(v);save();render()}}
 function delM(id){S.edital=S.edital.filter(x=>x.id!==id);S.sched=S.sched.filter(x=>S.edital.some(m=>m.name===x.subj));pend={};save();render()}
 function delT(id,i){const m=S.edital.find(x=>x.id===id);if(!m)return;const t=m.topics.splice(i,1)[0];m.doneTopics=(m.doneTopics||[]).filter(x=>x!==t);save();render()}
 function tgD(id,i){const m=S.edital.find(x=>x.id===id);if(!m)return;const d=m.days||(m.days=[]),k=d.indexOf(i);k<0?d.push(i):d.splice(k,1);d.sort();save();render()}
@@ -420,17 +426,17 @@ const clk=ms=>{ms=Math.max(0,Math.floor(ms));const h=Math.floor(ms/3600000),m=Ma
 const shown=()=>S.timer.mode==='p'?clk(Math.max(0,plen()-el())):clk(el());
 function tick(){const T=S.timer,c=$('#clk'),ht=$('#home-time');if(ht)ht.textContent=homeClock();if(T.run&&T.mode==='p'&&el()>=plen()){endPhase();return}if(c)c.textContent=shown()}
 function endPhase(){const T=S.timer;if(T.ph==='f'){addEntry(plen()/36e5);T.n++;T.ph=T.n%4===0?'l':'b'}else T.ph='f';T.acc=0;T.run=0;save();try{navigator.vibrate&&navigator.vibrate([300,150,300])}catch(e){}render()}
-function tgT(){const T=S.timer;if(T.run){T.acc+=Date.now()-T.st;T.run=0}else{T.st=Date.now();T.run=1;if(!T.sessionStartedAt)T.sessionStartedAt=new Date().toISOString()}save();render()}
+function tgT(){const T=S.timer;if(T.run){T.acc+=Date.now()-T.st;T.run=0}else{T.st=Date.now();T.run=1;if(!T.sessionStartedAt){T.sessionStartedAt=new Date().toISOString();T.sessionQuestions=0;T.sessionCorrect=0}}save();render()}
 function tmode(m){const T=S.timer;if(T.run)return;T.mode=m;T.acc=0;T.ph='f';T.sessionStartedAt=null;save();render()}
 function resetT(){const T=S.timer;T.acc=0;T.run=0;T.sessionStartedAt=null;fin=null;save();render()}
 function finish(){const T=S.timer;if(T.run){T.acc+=Date.now()-T.st;T.run=0}save();if(T.mode==='p'&&T.ph!=='f'||T.acc<6e4)return resetT();fin=T.acc;render()}
-function saveFin(){const q=Math.max(0,Math.floor(+$('#fq').value||0)),a=Math.min(q,Math.max(0,Math.floor(+$('#fa').value||0)));addEntry(fin/36e5,q,a);resetT()}
+function saveFin(){addEntry(fin/36e5,0,0);resetT()}
 function vC(){const T=S.timer,es=S.entries.filter(e=>e.subj===T.subj),tot=agg(es).h,hoje=agg(es.filter(e=>e.date===iso(new Date()))).h;
  return`<div class="top">Foco</div><div class="seg"><button class="${T.mode==='c'?'on':''}" onclick="tmode('c')">Cronômetro</button><button class="${T.mode==='p'?'on':''}" onclick="tmode('p')">Pomodoro</button></div>
- <div class="card" style="text-align:center"><div class="two" style="text-align:left"><div><label>Matéria</label>${selS('ts',"S.timer.subj=this.value;S.timer.top='';save();fillTop('ts','tt2')",T.subj).replace('<select','<select '+(T.run?'disabled':''))}</div><div><label>Conteúdo</label><select id="tt2" ${T.run?'disabled':''} onchange="S.timer.top=this.value;save()"></select></div></div>
+ <div class="card" style="text-align:center"><div class="two" style="text-align:left"><div><label>Disciplina</label>${selS('ts',"S.timer.subj=this.value;S.timer.top='';save();fillTop('ts','tt2')",T.subj).replace('<select','<select '+(T.run?'disabled':''))}</div><div><label>Tópico / conteúdo</label><select id="tt2" ${T.run?'disabled':''} onchange="S.timer.top=this.value;save()"></select></div></div>
  ${T.mode==='p'?`<div style="margin-top:16px"><span class="tag ${T.ph==='f'?'now':''}">${PH[T.ph]} · ciclo ${T.n%4+1}/4</span></div>`:''}
  <div class="clock" id="clk">${shown()}</div>
- ${fin!==null?`<div style="text-align:left"><b>Sessão: ${f1(fin/36e5)}h</b><div class="two"><div><label>Questões feitas</label><input id="fq" type="number" min="0" inputmode="numeric"></div><div><label>Acertos</label><input id="fa" type="number" min="0" inputmode="numeric"></div></div><div class="two" style="margin-top:14px"><button class="cs2" onclick="resetT()">Descartar</button><button class="btn" onclick="saveFin()">Salvar sessão</button></div></div>`:
+ ${fin!==null?`<div style="text-align:left"><b>Sessão: ${f1(fin/36e5)}h</b>${(T.sessionQuestions||0)>0?`<div class="sub" style="margin:8px 0">Questões respondidas durante o foco: ${T.sessionQuestions} · Acertos: ${T.sessionCorrect||0}</div>`:'<div class="sub" style="margin:8px 0">O tempo será salvo automaticamente; questões serão registradas ao responder no banco.</div>'}<div class="two" style="margin-top:14px"><button class="cs2" onclick="resetT()">Descartar</button><button class="btn" onclick="saveFin()">Salvar sessão</button></div></div>`:
  `<div class="two"><button class="btn" onclick="tgT()">${T.run?'Pausar':el()?'Continuar':'Iniciar'}</button><button class="cs2" onclick="${T.mode==='p'&&!el()?'S.timer.ph=\'f\';save();render()':'finish()'}">${el()||T.run?'Finalizar':'Reiniciar'}</button></div>`}
  ${T.mode==='p'&&!T.run&&!el()?`<div class="two3"><div><label>Foco (min)</label><input type="number" min="1" value="${S.pomo.f}" onchange="S.pomo.f=+this.value||25;save();render()"></div><div><label>Pausa</label><input type="number" min="1" value="${S.pomo.b}" onchange="S.pomo.b=+this.value||5;save();render()"></div><div><label>Longa</label><input type="number" min="1" value="${S.pomo.l}" onchange="S.pomo.l=+this.value||15;save();render()"></div></div>`:''}</div>
  <div class="card"><h2><i class="dot" style="background:${subjectColor(T.subj)}"></i>Tempo em ${esc(T.subj||'—')}</h2><div class="tiles"><div class="tile"><small>Hoje</small><b>${f1(hoje)}h</b></div><div class="tile"><small>Total</small><b>${f1(tot)}h</b></div></div>${breakdown(es)}</div>`}
