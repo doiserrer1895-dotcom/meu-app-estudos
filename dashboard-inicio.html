@@ -391,6 +391,7 @@ button:focus-visible,input:focus-visible,[data-go]:focus-visible{outline:2px sol
 .d-day span{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);font-weight:800}
 .nmrow{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--mu);font-weight:700}
 .nmrow input{flex:1;min-width:0;padding:10px 12px;border-radius:12px;border:1px solid var(--line2);background:rgba(255,255,255,.06);color:#fff;font-weight:700;font-size:14px}
+#gx .wx-overview{margin:0 0 12px;padding:14px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
 /* ---------- Visão geral ---------- */
 .gx-exam{display:flex;align-items:center;gap:16px;padding:18px;margin-bottom:12px;border-radius:24px;background:linear-gradient(155deg,#fff,#e9e6df);color:#0a0a0a}
 .gx-exam .n{font-size:58px;font-weight:900;letter-spacing:-.05em;line-height:1;min-width:84px;text-align:center}
@@ -930,7 +931,6 @@ html,body{width:100%!important;min-width:0!important;height:auto!important;min-h
       <div class="hb"><button class="dx" id="dmore" aria-label="Editar nome" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button><button class="dx" id="dclose" aria-label="Fechar menu"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <p class="dq" id="dMsg"></p>
     </div>
-    <div class="d-info"><div class="dw"><span class="wi">⛅</span><div><b>23°</b><small>Parcialmente nublado · Rio de Janeiro</small><small>↑28° ↓21° · chuva 30%</small></div></div></div>
     <div class="d-info" id="dinfo" hidden>
       <label class="nmrow"><span>Nome</span><input id="nameIn" maxlength="18" placeholder="Seu nome" aria-label="Seu nome"></label>
     </div>
@@ -1787,6 +1787,8 @@ function drawGeral(){
   })();
   $('#gx').innerHTML=`
   
+  <div class="sec"><h3>Previsão do tempo</h3></div>
+  <div class="d-info wx-overview"><div class="dw"><span class="wi">⛅</span><div><b>23°</b><small>Parcialmente nublado · Rio de Janeiro</small><small>↑28° ↓21° · chuva 30%</small></div></div></div>
   ${sono}
   <div class="sec"><h3 class="c-b">Estudo</h3></div>
   <div class="gx-grid">${stHero(e)}${gg('Desempenho',e.desemp,'acertos','#5b8def')}${gg('Progresso',e.prog,'do conteúdo','#a78bfa')}${gg('Constância',e.cons,'dos dias','#4cd07d')}</div>
