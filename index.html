@@ -122,18 +122,43 @@ function updateWelcome(){
  if(p)p.textContent=part;if(n)n.textContent=name;if(clock)clock.textContent=now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});if(date)date.textContent=now.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
 }
 function editNameFromApp(){for(const id of ['studyframe','appframe']){try{const fn=document.getElementById(id).contentWindow.__editDisplayName;if(typeof fn==='function'){fn();return}}catch(e){}}route('settings')}
-function weatherDescription(code){if(code===0)return 'Céu limpo';if([1,2,3].includes(code))return 'Parcialmente nublado';if([45,48].includes(code))return 'Neblina';if([51,53,55,56,57].includes(code))return 'Garoa';if([61,63,65,66,67,80,81,82].includes(code))return 'Chuva';if([71,73,75,77,85,86].includes(code))return 'Neve';if([95,96,99].includes(code))return 'Trovoadas';return 'Condição variável'}
-function weatherSymbol(code){if(code===0)return '☀️';if([1,2,3,45,48].includes(code))return '☁️';if([95,96,99].includes(code))return '⛈️';if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code))return '🌧️';return '🌤️'}
+function weatherDescription(code){
+ const labels={0:'Céu limpo',1:'Predominantemente limpo',2:'Parcialmente nublado',3:'Céu encoberto',45:'Neblina',48:'Neblina com geada',
+  51:'Chuvisco leve',53:'Chuvisco moderado',55:'Chuvisco intenso',56:'Chuvisco congelante leve',57:'Chuvisco congelante intenso',
+  61:'Chuva leve',63:'Chuva moderada',65:'Chuva forte',66:'Chuva congelante leve',67:'Chuva congelante forte',
+  71:'Neve leve',73:'Neve moderada',75:'Neve forte',77:'Grãos de neve',
+  80:'Pancadas de chuva leves',81:'Pancadas de chuva moderadas',82:'Pancadas de chuva violentas',
+  85:'Pancadas de neve leves',86:'Pancadas de neve fortes',95:'Trovoada',96:'Trovoada com granizo leve',99:'Trovoada com granizo forte'};
+ return labels[code]||'Condição do tempo variável';
+}
+function weatherSymbol(code){
+ if(code===0)return '☀️';if(code===1)return '🌤️';if(code===2)return '⛅';if(code===3)return '☁️';
+ if([45,48].includes(code))return '🌫️';if([51,53,55,56,57].includes(code))return '🌦️';
+ if([61,63,65,66,67].includes(code))return '🌧️';if([71,73,75,77,85,86].includes(code))return '🌨️';
+ if([80,81,82].includes(code))return '🌦️';if([95,96,99].includes(code))return '⛈️';return '🌤️';
+}
+let weatherRequestRunning=false;
 async function loadSidebarWeather(){
  const desc=document.getElementById('weatherDesc'),details=document.getElementById('weatherDetails'),temp=document.getElementById('weatherTemp'),icon=document.getElementById('weatherIcon');
+ if(weatherRequestRunning)return;weatherRequestRunning=true;
  if(desc)desc.textContent='Atualizando previsão...';
  try{
-  const url='https://api.open-meteo.com/v1/forecast?latitude=-22.8039&longitude=-43.3722&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=1';
-  const response=await fetch(url);if(!response.ok)throw new Error('forecast');const data=await response.json(),c=data.current,d=data.daily,code=d.weather_code[0],rain=d.precipitation_probability_max[0];
-  if(temp)temp.textContent=Math.round(c.temperature_2m)+'°C';if(icon)icon.textContent=weatherSymbol(code);
+  const url='https://api.open-meteo.com/v1/forecast?latitude=-22.8039&longitude=-43.3722&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FSao_Paulo&forecast_days=1';
+  const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw new Error('forecast HTTP '+response.status);
+  const data=await response.json(),c=data.current,d=data.daily;
+  if(!c||!d||!Array.isArray(d.temperature_2m_min)||!Array.isArray(d.temperature_2m_max)||!Array.isArray(d.precipitation_probability_max)||![c.temperature_2m,c.apparent_temperature,c.weather_code,c.relative_humidity_2m,c.wind_speed_10m,d.temperature_2m_min[0],d.temperature_2m_max[0]].every(Number.isFinite))throw new Error('forecast data incomplete');
+  const rain=d.precipitation_probability_max[0],code=c.weather_code,updated=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Sao_Paulo'});
+  if(temp)temp.textContent=Math.round(c.temperature_2m)+'°C';
+  if(icon)icon.textContent=weatherSymbol(code);
   if(desc)desc.textContent=weatherDescription(code)+' · mín. '+Math.round(d.temperature_2m_min[0])+'° / máx. '+Math.round(d.temperature_2m_max[0])+'°';
-  if(details)details.textContent='Sensação '+Math.round(c.apparent_temperature)+'°C · chance de chuva '+(rain==null?'indisponível':rain+'%')+' · umidade '+c.relative_humidity_2m+'%';
- }catch(e){if(desc)desc.textContent='Previsão indisponível no momento.';if(details)details.textContent='Tente atualizar novamente mais tarde.'}
+  if(details)details.textContent='Sensação '+Math.round(c.apparent_temperature)+'°C · chuva '+(rain==null?'indisponível':rain+'%')+' · umidade '+Math.round(c.relative_humidity_2m)+'% · vento '+Math.round(c.wind_speed_10m)+' km/h · atualizado às '+updated;
+ }catch(e){if(desc)desc.textContent='Previsão indisponível no momento.';if(details)details.textContent='Não foi possível confirmar os dados agora. Tente atualizar novamente mais tarde.'}
+ finally{weatherRequestRunning=false;}
+}
+function scheduleSidebarWeather(){
+ loadSidebarWeather();
+ setInterval(()=>{if(!document.hidden)loadSidebarWeather()},30*60*1000);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadSidebarWeather()});
 }
 
 function drawer(open){document.getElementById('sidebar').classList.toggle('show',open);document.getElementById('shade').classList.toggle('show',open)}
