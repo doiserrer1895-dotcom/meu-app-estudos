@@ -191,11 +191,32 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 @media(max-width:600px){.question-bank-shell{height:calc(100dvh - 135px);min-height:500px;border-radius:10px}}
 </style>
 <link rel="manifest" href="/meu-app-estudos/manifest.webmanifest">
-<meta name="theme-color" content="#0a0a0a">
+<meta name="theme-color" content="#050505">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="/meu-app-estudos/icons/icon.svg">
+
+<style id="tema-evolucao-visual-only">
+/* Tema Evolução: somente aparência. Mantém ícones, cores semânticas, conteúdo e comportamento. */
+:root{--bg:#050505;--card:#111;--bd:rgba(255,255,255,.10);--tx:#fafafa;--mu:#8e8e95;--ac:#fff;--actx:#080808;--in:rgba(255,255,255,.055)}
+body{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) fixed;color:var(--tx);font-family:Inter,-apple-system,"SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+#app{background:transparent}
+.card,.tile,.settings-card,.home-clock,.home-area,.sheet{border-color:var(--bd);box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 14px 36px rgba(0,0,0,.28)}
+.card,.settings-card,.sheet{background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.02));border-radius:22px}
+.tile{background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.02));border-radius:20px}
+.home-clock{background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.025));border-radius:18px}
+.seg{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.025));border-color:var(--bd);border-radius:16px}
+.seg button.on{background:#fff;color:#080808;box-shadow:0 8px 24px rgba(255,255,255,.12)}
+input,select{background:rgba(255,255,255,.055);border-color:var(--bd);border-radius:14px}
+.btn,.cs2,.chip,.fc,.addb,.home-back{border-radius:13px;transition:background .25s,border-color .25s,transform .25s}
+.btn{background:#fff;color:#080808}
+#nav{background:rgba(5,5,5,.92);border-color:var(--bd);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+#nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.035));border:1px solid var(--bd);color:#fff}
+.question-bank-shell{background:#050505;border-color:var(--bd);border-radius:18px}
+#cloud-user,#cloud-auth .panel,.name-edit-dialog{background:linear-gradient(180deg,#151515,#0b0b0b);border-color:var(--bd);box-shadow:0 24px 80px rgba(0,0,0,.4)}
+#cloud-auth{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202)}
+</style>
 </head><body><div id="app"></div><div id="nav"><div></div></div>
 <!-- SCRIPT PRINCIPAL: controla a tela inicial, disciplinas, cronograma, registros, desempenho e salvamento local temporário. A sincronização da conta com a nuvem fica no bloco de autenticação mais abaixo. -->
 <script>
