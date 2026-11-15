@@ -34,6 +34,48 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
   const progress=document.getElementById("progress");
   const retry=document.getElementById("retry");
   const bank=document.getElementById("bank");
+  let activeTheme=(function(){try{return localStorage.getItem("app-theme-evolucao")==="light"?"light":"dark"}catch(e){return "dark"}})();
+  function hideInnerThemeControls(doc){
+    if(!doc)return;
+    const iconOnly=/^(☾|☽|🌙|☀|☀️|🌞)$/;
+    doc.querySelectorAll("button,[role='button']").forEach(function(el){
+      const label=[el.textContent,el.getAttribute("aria-label"),el.getAttribute("title"),el.getAttribute("data-theme")].filter(Boolean).join(" ").trim();
+      if(/^(tema claro|tema escuro|alternar tema|mudar tema|modo claro|modo escuro|theme|dark mode|light mode)$/i.test(label)||iconOnly.test(label)){
+        el.style.setProperty("display","none","important");el.setAttribute("aria-hidden","true");
+      }
+    });
+  }
+  function applyQuestionTheme(theme){
+    activeTheme=theme==="light"?"light":"dark";
+    document.documentElement.setAttribute("data-theme",activeTheme);
+    let outer=document.getElementById("eear-outer-theme");
+    if(!outer){outer=document.createElement("style");outer.id="eear-outer-theme";document.head.appendChild(outer);}
+    outer.textContent=activeTheme==="light"
+      ? "html,body,#status{background:#f5f5f5!important;color:#111!important}#status small{color:#555!important}#retry{background:#fff!important;color:#111!important;border-color:#ccc!important}#bar{background:#ddd!important}"
+      : "html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) fixed!important;color:#fafafa!important}#status small{color:#aaa!important}#retry{background:rgba(255,255,255,.07)!important;color:#fff!important;border-color:rgba(255,255,255,.14)!important}#bar{background:rgba(255,255,255,.10)!important}";
+    try{
+      const doc=bank.contentDocument;if(!doc||!doc.head)return;
+      let style=doc.getElementById("eear-bank-theme");
+      if(!style){style=doc.createElement("style");style.id="eear-bank-theme";doc.head.appendChild(style);}
+      style.textContent=activeTheme==="light" ? `
+        :root{color-scheme:light!important}
+        html,body{background:#f5f5f5!important;color:#111!important}
+        .card[data-id]{background:#fff!important;color:#111!important;border-color:#d5d5d5!important;box-shadow:0 5px 18px rgba(0,0,0,.07)!important}
+        .card[data-id] p,.card[data-id] .question-text,.card[data-id] .enunciado{color:#111!important}
+        .card[data-id] .alt[data-a]{background:#f1f1f1!important;color:#111!important;border-color:#d0d0d0!important}
+        .card[data-id] img,.card[data-id] svg,.card[data-id] canvas{filter:none!important}
+      ` : `
+        :root{color-scheme:dark!important}
+        html,body{background:#080808!important;color:#f5f5f5!important}
+        .card[data-id]{background:#141414!important;color:#f5f5f5!important;border-color:#383838!important;box-shadow:0 8px 24px rgba(0,0,0,.22)!important}
+        .card[data-id] p,.card[data-id] .question-text,.card[data-id] .enunciado{color:#f5f5f5!important}
+        .card[data-id] .alt[data-a]{background:#202020!important;color:#f5f5f5!important;border-color:#484848!important}
+        .card[data-id] img,.card[data-id] svg,.card[data-id] canvas{filter:none!important}
+      `;
+      hideInnerThemeControls(doc);
+    }catch(e){}
+  }
+  window.addEventListener("message",function(event){if(event.data&&event.data.type==="app-theme-change")applyQuestionTheme(event.data.theme);});
   window.addEventListener("message",function(event){
     if(event.source===bank.contentWindow&&event.data&&event.data.type&&
        (event.data.type==="eear-question-attempt"||event.data.type==="eear-question-taxonomy")){
@@ -232,6 +274,8 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             }
           `;
           targetDoc.head.appendChild(bankVisualStyle);
+          applyQuestionTheme(activeTheme);
+          try{new MutationObserver(function(){hideInnerThemeControls(targetDoc)}).observe(targetDoc.body,{childList:true,subtree:true})}catch(e){}
         }catch(bridgeError){
           console.error("Não foi possível ativar a integração de desempenho do banco EEAR:",bridgeError);
         }
