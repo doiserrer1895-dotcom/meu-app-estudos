@@ -558,10 +558,9 @@ function fQ(es,T,B,P){
  Object.entries(o.t).sort((a,b)=>b[1].q-a[1].q).map(([k,z])=>`<div class="tq"><span>${esc(k==='Geral'?'Sem conteúdo específico':k)}</span><span>${nf(z.q)}</span><span>${Math.round(z.q/o.q*100)}%</span><span>${Math.round(z.a/z.q*100)}%</span></div>`).join('')+
  `<div class="tq tt"><span>Total</span><span>${nf(o.q)}</span><span>100%</span><span>${Math.round(o.a/o.q*100)}%</span></div></div>`).join('')||'<div class="card"><div class="empty">Nenhuma questão no período para as disciplinas selecionadas</div></div>';
  return chips+big+tiles+chart+tabs}
-function fH(es,T,B,P){const t=today(),w0=mon(t),w1=new Date(w0);w1.setDate(w0.getDate()+6);const wk=sumP(w0,w1).h,L=byS(es),mx=L.length?L[0][1]:1;
- return`<div class="tiles"><div class="tile"><small>Horas líquidas</small><b style="color:var(--gr)">${f1(T.h)}h</b><small>no período</small></div><div class="tile"><small>Horas na semana</small><b>${f1(wk)}h</b><small>meta ${f1(S.goal)}h</small></div></div>
- <div class="card"><h2>Horas por período</h2>${hbars(B,P)}</div><div class="card"><h2>Horas líquidas acumuladas</h2>${line(B,P)}</div><div class="card"><h2>Meta da semana</h2>${ring(wk,S.goal)}</div>
- <div class="card"><h2>Horas por disciplina</h2>`+(L.map(([n,h],i)=>`<div class="row"><div class="g"><b><i class="dot" style="background:${subjectColor(n)}"></i>${esc(n)}</b><small>${f1(h)}h · ${Math.round(h/T.h*100)}% do total</small><div class="bar"><i style="width:${h/mx*100}%;background:${subjectColor(n)}"></i></div></div></div>`).join('')||'<div class="empty">Nenhum estudo no período</div>')+`</div>`}
+function fH(es,T,B,P){const t=today(),w0=mon(t),w1=new Date(w0);w1.setDate(w0.getDate()+6);const wk=sumP(w0,w1).h;
+ return`<div class="tiles"><div class="tile"><small>Horas líquidas</small><b style="color:var(--gr)">${f1(T.h)}h</b><small>no período</small></div><div class="tile"><small>Horas na semana</small><b>${f1(wk)}h</b><small>total semanal</small></div></div>
+ <div class="card"><h2>Horas por período</h2>${hbars(B,P)}</div><div class="card"><h2>Horas líquidas acumuladas</h2>${line(B,P)}</div>`}
 function cmv(k){cm.setDate(1);cm.setMonth(cm.getMonth()+k);cs=null;render()}
 function fC(){const y=cm.getFullYear(),m=cm.getMonth(),n=new Date(y,m+1,0).getDate(),off=new Date(y,m,1).getDay(),tk=iso(today()),daily={},bySubject={};
  S.entries.forEach(e=>{if(!e.date.startsWith(y+'-'+pad(m+1)))return;const h=net(e);if(h<=0&&!e.q)return;(daily[e.date]||(daily[e.date]=[])).push(e);bySubject[e.subj]=(bySubject[e.subj]||0)+h});
