@@ -547,7 +547,7 @@ function saveE(){const v=i=>$('#'+i).value,n=i=>Math.max(0,parseFloat(v(i).repla
  if(time){const start=new Date(v('d')+'T'+time);if(!Number.isFinite(start.getTime()))return er('Confira o horário informado.');entry.startedAt=start.toISOString()}
  S.entries.push(entry);mkRev(v('s'),v('tp'),v('d'));save();render()}
 
-const sumP=(a,b)=>agg(S.entries.filter(e=>{const d=parse(e.date);return d>=a&&d<=b}));
+const sumP=(a,b)=>agg([...S.entries,...S.sim].filter(e=>{const d=parse(e.date);return d>=a&&d<=b}));
 /* ---------- VISÃO GERAL ---------- */
 let editEx=0;
 const fHM=h=>{const m=Math.round(h*60);return Math.floor(m/60)+'h'+pad(m%60)+'min'};
@@ -632,10 +632,10 @@ let dt='q',ex={},cm=new Date(),cs=null,qs=[];
 const nf=n=>Number(n||0).toLocaleString('pt-BR');
 function pHead(){const P=period();return`<div class="top"><button onclick="shift(-1)">‹</button>${P.title}<button onclick="shift(1)">›</button></div><div class="seg">${[['w','Semana'],['m','Mês'],['y','Ano']].map(x=>`<button class="${mode===x[0]?'on':''}" onclick="setMode('${x[0]}')">${x[1]}</button>`).join('')}</div>`}
 function hbars(B,P){const W=340,H=170,L=30,Bt=24,T=10,mx=Math.max(1,...B.map(b=>b.h)),cw=(W-L)/P.n,bw=Math.min(22,cw*.6),ch=H-Bt-T;let s=grid(W,H,L,T,Bt,mx,f1);
- B.forEach((b,i)=>{const cx=L+cw*i+cw/2,h=ch*b.h/mx;s+=`<rect x="${cx-bw/2}" y="${H-Bt-h}" width="${bw}" height="${h}" rx="4" fill="var(--ac)"/><text x="${cx}" y="${H-7}" text-anchor="middle" fill="var(--mu)" font-size="10">${P.names[i]}</text>`});return`<svg viewBox="0 0 ${W} ${H}">${s}</svg>`}
-function vF(){const P=period(),es=S.entries.filter(e=>{const d=parse(e.date);return d>=P.a&&d<=P.b}),T=agg(es);
- const B=Array.from({length:P.n},()=>({h:0,q:0,a:0}));es.forEach(e=>{const b=B[P.idx(parse(e.date))];b.h+=net(e);b.q+=e.q;b.a+=e.a});
- const body=dt==='q'?fQ(es,T,B,P):dt==='h'?fH(es,T,B,P):dt==='c'?fC():fG(es);
+ B.forEach((b,i)=>{const cx=L+cw*i+cw/2,h=ch*b.h/mx,m=Math.round(b.h*60),label=Math.floor(m/60)+'h'+String(m%60).padStart(2,'0'),ly=Math.max(T+10,H-Bt-h-7);s+=`<rect x="${cx-bw/2}" y="${H-Bt-h}" width="${bw}" height="${h}" rx="4" fill="var(--ac)"/><text x="${cx}" y="${ly}" text-anchor="middle" fill="var(--tx)" font-size="9" font-weight="700">${label}</text><text x="${cx}" y="${H-7}" text-anchor="middle" fill="var(--mu)" font-size="10">${P.names[i]}</text>`});return`<svg viewBox="0 0 ${W} ${H}">${s}</svg>`}
+function vF(){const P=period(),es=S.entries.filter(e=>{const d=parse(e.date);return d>=P.a&&d<=P.b}),T=agg(es),hes=[...S.entries,...S.sim].filter(e=>{const d=parse(e.date);return d>=P.a&&d<=P.b}),HT=dt==='h'?agg(hes):T,data=dt==='h'?hes:es;
+ const B=Array.from({length:P.n},()=>({h:0,q:0,a:0}));data.forEach(e=>{const i=P.idx(parse(e.date)),b=B[i];if(!b)return;b.h+=net(e);b.q+=Number(e.q)||0;b.a+=Number(e.a)||0});
+ const body=dt==='q'?fQ(es,T,B,P):dt==='h'?fH(hes,HT,B,P):dt==='c'?fC():fG(es);
  return`<div class="top" style="margin-bottom:8px">Desempenho</div><div class="seg s4">${[['q','Acertos/Erros'],['h','Horas'],['c','Constância'],['g','Disciplinas']].map(x=>`<button class="${dt===x[0]?'on':''}" onclick="dt='${x[0]}';render()">${x[1]}</button>`).join('')}</div>`+(dt==='c'?'':pHead())+body}
 function fQ(es,T,B,P){
  const subs=[...new Set([...S.edital.map(m=>m.name),...S.entries.map(e=>e.subj)])].filter(Boolean);
