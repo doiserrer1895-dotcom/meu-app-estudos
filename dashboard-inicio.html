@@ -1159,6 +1159,7 @@ html,body{width:100%!important;min-width:0!important;height:auto!important;min-h
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 /* ÍNDICE: 1 Navegação/Drawer · 2 Rotina · 3 Missões · 4 LDI · 5 Agenda · 6 Foco · 7 Desempenho · 8 Água · 9 Mercado · 10 Feed · 11 Init */
 const NAV={
@@ -1503,9 +1504,9 @@ tickClock();setInterval(tickClock,15000);
 const GD={
   estudo:{hoje:'2h40',semana:'14h20',desemp:72,prog:38,cons:86},
   disc:[['Matemática 1',120,84],['Matemática 2',60,38],['Matemática 3',40,22],['Física 1',90,57],['Física 2',50,28],['Física 3',30,15],['Física 4',20,9],['Português',150,111],['Inglês',80,58]],
-  dieta:{kcal:1420,meta:2100,feitas:3,total:4,peso:'72,4 kg',var:'−0,8 kg',serie:[73.6,73.4,73.1,72.9,72.6,72.4]},
-  ofensiva:41,patente:'Recruta',
-  rank:{of:{p:3,n:24,d:2},pa:{p:7,n:24,d:-1},es:{p:2,n:24,d:1,s:[2.1,3,1.5,4.3,2.8,3.4,2.7]},ev:{p:5,n:24,d:3,s:[40,44,43,49,52,58,63]}},
+  dieta:{kcal:0,meta:2000,feitas:0,total:4,peso:'— kg',var:'',serie:[],agua:0,aguaMeta:3,mealsDone:{}},
+  ofensiva:0,patente:'—',
+  rank:{of:{p:0,n:0,d:null},pa:{p:0,n:0,d:null},es:{p:0,n:0,d:null,s:[0,0,0,0,0,0,0]},ev:{p:0,n:0,d:null,s:[0,0,0,0,0,0,0]}},
   melhor:['4h20','08 nov'],
   top3:[['Marina S.','31h'],['Você','28h',1],['Bruno C.','26h']],
   sono:{media:'7h36min',delta:'+12 min',efic:95.8,deitar:'23:00',inicio:'23:20',despertar:'07:00',lat:'20 min',cama:'8h0min',
@@ -1578,20 +1579,137 @@ function syncStudyMetrics(){
   GD.estudo.prog=topics?Math.round(done/topics*100):0;
   GD.estudo.cons=Math.round(activeDays/21*100);
 }
+
+function syncNutritionMetrics(){
+  let N=null;try{N=JSON.parse(localStorage.getItem('nutri-v1')||'null')}catch(e){}
+  const now=new Date(),todayKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  const num=v=>{const n=parseFloat(String(v==null?'':v).replace(',','.'));return Number.isFinite(n)?n:0};
+  const diary=Array.isArray(N&&N.diary)?N.diary:[];
+  const kcal=diary.filter(e=>e&&e.date===todayKey).reduce((a,e)=>a+num(e.k),0);
+  const waterMl=num(N&&N.water&&N.water[todayKey]);
+  const waterGoalMl=num(N&&N.goal&&N.goal.w);
+  const plan=N&&N.dt&&N.dt.plan&&N.dt.plan[now.getDay()]||{};
+  const done=N&&N.dt&&N.dt.done&&N.dt.done[todayKey]||{};
+  const mealKeys=['cafe','almoco','tarde','janta'],mealsDone={};
+  mealKeys.forEach(k=>{const items=Array.isArray(plan[k])?plan[k]:[];mealsDone[k]=items.length>0&&items.every(i=>!!done[i.id])});
+  const mealCount=mealKeys.filter(k=>mealsDone[k]).length;
+  const body=Array.isArray(N&&N.body)?N.body:[];
+  const weights=body.filter(r=>r&&r.date&&num(r.pe)>0).sort((a,b)=>String(a.date).localeCompare(String(b.date))).slice(-6);
+  const series=weights.map(r=>num(r.pe));
+  if(series.length===1)while(series.length<6)series.push(series[0]);
+  const fmt=n=>n.toFixed(1).replace('.',',');
+  let period=0,delta=0;
+  if(weights.length>1){const first=new Date(weights[0].date+'T00:00:00'),last=new Date(weights[weights.length-1].date+'T00:00:00');period=Math.max(0,Math.round((last-first)/86400000));delta=series[series.length-1]-series[0]}
+  GD.dieta.meta=2000;
+  GD.dieta.kcal=Math.round(kcal);
+  GD.dieta.feitas=mealCount;GD.dieta.total=4;GD.dieta.mealsDone=mealsDone;
+  GD.dieta.agua=waterMl/1000;GD.dieta.aguaMeta=waterGoalMl>0?waterGoalMl/1000:3;
+  GD.dieta.serie=series;GD.dieta.peso=weights.length?fmt(series[series.length-1])+' kg':'— kg';
+  GD.dieta.pesoPeriodo=period;GD.dieta.var=delta===0?'estável':(delta<0?'− ':'+ ')+fmt(Math.abs(delta))+' kg';
+}
+let DASH_USER_ID=null,DASH_CONSTANCIA_STATE=null,DASH_SUPABASE=null,DASH_COMMUNITY_ROWS=[],DASH_REFRESHING=false;
+function readConstanciaLocal(){
+  let C=null,keys=[];
+  if(DASH_USER_ID)keys.push('constancia-v1:'+DASH_USER_ID);
+  keys.push('constancia-v1');
+  for(const key of keys){try{const v=JSON.parse(localStorage.getItem(key)||'null');if(v&&Array.isArray(v.items)){C=v;break}}catch(e){}}
+  return C;
+}
+function syncConstancyMetrics(){
+  const C=DASH_CONSTANCIA_STATE&&Array.isArray(DASH_CONSTANCIA_STATE.items)?DASH_CONSTANCIA_STATE:readConstanciaLocal();
+  const items=Array.isArray(C&&C.items)?C.items:[],today=new Date(),dayKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),todayKey=dayKey(today);
+  const multi=it=>it.type==='principal'||it.type==='batalha',rec=it=>Array.isArray(it.days)&&it.days.length>0;
+  const dateOf=s=>new Date(s+'T00:00:00');
+  function stat(d){
+    const weekday=dateOf(d).getDay();let total=0,completed=0,all=[];
+    items.forEach(it=>{
+      if(!it||!it.start||d<it.start)return;
+      const isM=multi(it),isR=rec(it);
+      let visible=false;
+      if(isR)visible=it.days.includes(weekday);
+      else if(isM)visible=d===it.start;
+      else if(it.doneDate)visible=it.doneDate===d;
+      else visible=d<=(it.deadline||it.start)||d===todayKey;
+      if(!visible)return;
+      all.push(it);
+      if(isM){const slots=Array.isArray(it.slots)?it.slots:[],a=it.done&&it.done[d]||[];total+=slots.length;completed+=slots.filter((_,i)=>!!a[i]).length}
+      else{total++;if(isR?!!(it.done&&it.done[d]):!!it.doneDate)completed++}
+    });
+    return{d:completed,t:total,ok:total>0&&completed===total};
+  }
+  const todayStat=stat(todayKey);let streak=0,cursor=new Date(todayKey+'T00:00:00');
+  if(!todayStat.ok)cursor.setDate(cursor.getDate()-1);
+  for(let i=0;i<730;i++){const k=dayKey(cursor);if(!stat(k).ok)break;streak++;cursor.setDate(cursor.getDate()-1)}
+  let totalDone=0;
+  items.forEach(it=>{
+    if(!it)return;
+    if(multi(it)){const slots=Array.isArray(it.slots)?it.slots:[],done=it.done||{};Object.values(done).forEach(a=>slots.forEach((_,i)=>{if(a&&a[i])totalDone++}))}
+    else if(rec(it)){Object.values(it.done||{}).forEach(v=>{if(v)totalDone++})}
+    else if(it.doneDate)totalDone++;
+  });
+  const ranks=[['Recruta',0],['Soldado',50],['Cabo',150],['Sargento',300],['Segundo Sargento',500],['Primeiro Sargento',700],['Subtenente',900],['Aspirante a Oficial',1200],['Segundo Tenente',1600],['Primeiro Tenente',2000],['Capitão',2500],['Major',3100],['Tenente-Coronel',3800],['Coronel',4600],['General de Brigada',5500],['General de Exército',6500],['Marechal',8000]];
+  let patent=ranks[0][0],patentLevel=1;ranks.forEach((r,i)=>{if(totalDone>=r[1]){patent=r[0];patentLevel=i+1}});
+  GD.constancia={cf:{d:todayStat.d,t:todayStat.t},pct:todayStat.t?Math.round(todayStat.d/todayStat.t*100):0,totalDone:totalDone,patentLevel:patentLevel};
+  GD.ofensiva=streak;GD.patente=patent;
+}
+async function refreshDashboardCommunity(){
+  if(DASH_REFRESHING||!window.supabase||!window.supabase.createClient)return;
+  DASH_REFRESHING=true;
+  try{
+    if(!DASH_SUPABASE)DASH_SUPABASE=window.supabase.createClient('https://nwwwydwevgftbpjuasgz.supabase.co','sb_publishable_7-zqJxrp67zBzWZcwUmlQw_wLpb-Gqc');
+    const session=await DASH_SUPABASE.auth.getSession(),user=session&&session.data&&session.data.session&&session.data.session.user;
+    if(!user)return;
+    DASH_USER_ID=user.id;
+    const results=await Promise.all([
+      DASH_SUPABASE.from('constancia_data').select('data').eq('user_id',user.id).maybeSingle(),
+      DASH_SUPABASE.from('community_profiles').select('*')
+    ]);
+    const cResult=results[0],pResult=results[1];
+    if(!cResult.error&&cResult.data&&cResult.data.data)DASH_CONSTANCIA_STATE=cResult.data.data;
+    else DASH_CONSTANCIA_STATE=readConstanciaLocal();
+    if(pResult.error)throw pResult.error;
+    DASH_COMMUNITY_ROWS=Array.isArray(pResult.data)?pResult.data:[];
+    let daily=[];
+    const today=new Date(),dayKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),end=dayKey(today),start=new Date(today);start.setDate(start.getDate()-6);
+    try{const q=await DASH_SUPABASE.from('community_daily_totals').select('study_date,minutes').eq('user_id',user.id).gte('study_date',dayKey(start)).lte('study_date',end);if(!q.error&&Array.isArray(q.data))daily=q.data}catch(e){}
+    const own=DASH_COMMUNITY_ROWS.find(p=>p.user_id===user.id)||null;
+    const patentFallback=GD.constancia&&GD.constancia.patentLevel||1;
+    const metrics={
+      streak_days:own&&Number.isFinite(Number(own.streak_days))?Number(own.streak_days):0,
+      patent_level:own&&Number.isFinite(Number(own.patent_level))?Number(own.patent_level):patentFallback,
+      average_daily_minutes:own&&Number.isFinite(Number(own.average_daily_minutes))?Number(own.average_daily_minutes):0,
+      evolution_score:own&&Number.isFinite(Number(own.evolution_score))?Number(own.evolution_score):10
+    };
+    let rows=DASH_COMMUNITY_ROWS.slice();
+    if(!own)rows.push({user_id:user.id,display_name:'Você',streak_days:metrics.streak_days,patent_level:metrics.patent_level,average_daily_minutes:metrics.average_daily_minutes,evolution_score:metrics.evolution_score});
+    const position=key=>1+rows.filter(p=>Number(p[key]||0)>metrics[key]).length,n=rows.length;
+    const studySeries=[];for(let i=6;i>=0;i--){const dt=new Date(today);dt.setDate(today.getDate()-i);const key=dayKey(dt),r=daily.find(x=>x.study_date===key);studySeries.push(r?Number(r.minutes)||0:0)}
+    GD.rank={
+      of:{p:position('streak_days'),n:n,d:null},
+      pa:{p:position('patent_level'),n:n,d:null},
+      es:{p:position('average_daily_minutes'),n:n,d:null,s:studySeries},
+      ev:{p:position('evolution_score'),n:n,d:null,s:Array(7).fill(metrics.evolution_score)}
+    };
+    drawGeral();
+  }catch(e){console.warn('Não foi possível sincronizar os dados da Comunidade no painel geral:',e)}
+  finally{DASH_REFRESHING=false}
+}
 function drawGeral(){
   syncStudyMetrics();
+  syncNutritionMetrics();
+  syncConstancyMetrics();
   const sq=(l,v,s,c='')=>`<div class="sq ${c}"><span>${l}</span><b>${v}</b><small>${s}</small></div>`;
   let ex=null;try{ex=localStorage.getItem('evo-exam')}catch(e){}
   const mt=ex&&/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(ex);
   const d=mt?Math.ceil((new Date(+mt[3],mt[2]-1,+mt[1])-new Date(new Date().toDateString()))/864e5):null;
-  const e=GD.estudo,w=(($('#wL')||{}).textContent||'0'),cf=window.CF||{d:0,t:0},rc=(($('#routineCount')||{}).textContent||'0 / 8').replace(/\s/g,'');
+  const e=GD.estudo,w=String(GD.dieta.agua||0),cf=GD.constancia.cf||window.CF||{d:0,t:0},rc=(($('#routineCount')||{}).textContent||'0 / 8').replace(/\s/g,'');
   const pct=cf.t?Math.round(cf.d/cf.t*100):0;
   $('#gDate').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}).toUpperCase();
   const bar=p=>`<i class="pb"><u style="width:${p}%"></u></i>`;
-  const wp=Math.min(100,Math.round(parseFloat(String(w).replace(',','.'))/3*100)||0),kp=Math.min(100,Math.round(GD.dieta.kcal/GD.dieta.meta*100));
+  const wp=Math.min(100,Math.round((parseFloat(String(w).replace(',','.'))/(GD.dieta.aguaMeta||3))*100)||0),kp=Math.min(100,Math.round(GD.dieta.kcal/GD.dieta.meta*100));
   const spark=(a,w=140,h=40)=>{const mx=Math.max(...a),mn=Math.min(...a),r=mx-mn||1,P=a.map((v,i)=>[i*w/(a.length-1),h-4-(v-mn)/r*(h-10)]),d=P.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(''),l=P[P.length-1];return `<svg class="sp" viewBox="0 0 ${w} ${h}"><path class="ar" d="${d}L${w} ${h}L0 ${h}Z"/><path class="ln" d="${d}"/><circle cx="${l[0]}" cy="${l[1]}" r="2.8"/></svg>`};
-  const bars=a=>`<i class="bs">${a.map((v,i)=>`<u class="${i===a.length-1?'on':''}" style="height:${Math.round(v/Math.max(...a)*100)}%"></u>`).join('')}</i>`;
-  const rk=(l,r,ex)=>`<div class="sq rk s3"><span>${l}</span><div class="rkn"><em>#</em>${odo(String(r.p).padStart(2,'0'))}</div><div class="rkm"><i class="dl ${r.d>=0?'u':'d'}">${r.d>=0?'▲':'▼'} ${Math.abs(r.d)}</i>${r.p<=3?'<i class="top">TOP 3</i>':'<small>de '+r.n+'</small>'}</div></div>`;
+  const bars=a=>`<i class="bs">${a.map((v,i)=>`<u class="${i===a.length-1?'on':''}" style="height:${Math.round(v/Math.max(1,...a)*100)}%"></u>`).join('')}</i>`;
+  const rk=(l,r,ex)=>`<div class="sq rk s3"><span>${l}</span><div class="rkn"><em>#</em>${r.n?odo(String(r.p).padStart(2,'0')):odo('—')}</div><div class="rkm">${r.d===null||r.d===undefined?'<small>posição atual</small>':`<i class="dl ${r.d>=0?'u':'d'}">${r.d>=0?'▲':'▼'} ${Math.abs(r.d)}</i>`}${r.n?(r.p<=3?'<i class="top">TOP 3</i>':'<small>de '+r.n+'</small>'):'<small>sem dados</small>'}</div></div>`;
   const lad=['REC','SD','CB','SGT','SO'].map((x,i)=>`<u class="${i===0?'on':''}">${x}</u>`).join('');
   const dts=`<i class="dts">${Array.from({length:GD.dieta.total},(_,i)=>`<u class="${i<GD.dieta.feitas?'on':''}"></u>`).join('')}</i>`;
   const ICO={moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',bed:'<path d="M3 19V6M3 13h18v6M21 13v-3a2 2 0 0 0-2-2h-7v5"/>',zzz:'<path d="M5 6h5l-5 6h5M13 13h4l-4 5h4"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/>',timer:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',star:'<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',bars:'<path d="M5 20v-8M12 20V5M19 20v-11"/>'};
@@ -1635,15 +1753,17 @@ function drawGeral(){
     <div class="stw"><em>Total da semana</em><strong>${fd(w)}</strong></div></div>`};
 
   const hy=(()=>{
-    const L=Math.max(0,Math.min(3,parseFloat(String(w).replace(',','.'))||0)),p=Math.round(L/3*100),bot=104,H=96;
-    const y=bot-H*Math.max(p,4)/100,depth=bot-y,cups=Math.min(12,Math.round(L/.25)),left=Math.max(0,3-L);
+    const target=Math.max(.1,GD.dieta.aguaMeta||3),L=Math.max(0,Math.min(target,parseFloat(String(w).replace(',','.'))||0)),p=Math.round(L/target*100),bot=104,H=96;
+    const y=bot-H*Math.max(p,4)/100,depth=bot-y,cups=Math.min(12,Math.round(L/target*12)),left=Math.max(0,target-L);
     const fL=n=>n.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2});
     const gp='M12 6H68L62 98Q61.5 104 55 104H25Q18.5 104 18 98Z',wv='M0 5Q10 0 20 5T40 5T60 5T80 5T100 5T120 5T140 5T160 5V130H0Z';
     const bub=depth>22?[[30,0,3],[44,1.1,2.2],[54,2.2,2.6],[38,3,1.8]].map(b=>`<circle class="hb" cx="${b[0]}" cy="${(depth-8).toFixed(1)}" r="${b[2]}" style="--rise:${Math.round(depth-16)}px;animation-delay:${b[1]}s"/>`).join(''):'';
-    return `<div class="sq hy s6"><span>Hidratação</span><div class="hyw"><svg class="hyg" viewBox="0 0 80 110" aria-hidden="true"><defs><clipPath id="hyc"><path d="${gp}"/></clipPath><linearGradient id="hyw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9dcff" stop-opacity=".95"/><stop offset="1" stop-color="#3b82d6" stop-opacity=".9"/></linearGradient></defs><path d="${gp}" fill="rgba(255,255,255,.04)"/><g clip-path="url(#hyc)"><g class="hyl" style="transform:translateY(${y.toFixed(1)}px)"><path class="hw2" d="${wv}" fill="rgba(120,190,255,.45)"/><path class="hw1" d="${wv}" fill="url(#hyw)"/>${bub}</g></g><path d="${gp}" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2.2" stroke-linejoin="round"/><path d="M22 14L25 88" stroke="rgba(255,255,255,.35)" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg><div class="hyr"><div class="hn">${odo(fL(L))}<i>L</i></div><small>de 3,0 L · meta do dia</small><i class="dl ${left?'d':'u'}">${left?'faltam '+fL(left)+' L':'meta batida!'}</i></div></div><div class="hp">${Array.from({length:12},(_,i)=>`<u class="${i<cups?'on':''}" style="--i:${i}"></u>`).join('')}</div></div>`;
+    return `<div class="sq hy s6"><span>Hidratação</span><div class="hyw"><svg class="hyg" viewBox="0 0 80 110" aria-hidden="true"><defs><clipPath id="hyc"><path d="${gp}"/></clipPath><linearGradient id="hyw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9dcff" stop-opacity=".95"/><stop offset="1" stop-color="#3b82d6" stop-opacity=".9"/></linearGradient></defs><path d="${gp}" fill="rgba(255,255,255,.04)"/><g clip-path="url(#hyc)"><g class="hyl" style="transform:translateY(${y.toFixed(1)}px)"><path class="hw2" d="${wv}" fill="rgba(120,190,255,.45)"/><path class="hw1" d="${wv}" fill="url(#hyw)"/>${bub}</g></g><path d="${gp}" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2.2" stroke-linejoin="round"/><path d="M22 14L25 88" stroke="rgba(255,255,255,.35)" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg><div class="hyr"><div class="hn">${odo(fL(L))}<i>L</i></div><small>de ${fL(target)} L · meta do dia</small><i class="dl ${left?'d':'u'}">${left?'faltam '+fL(left)+' L':'meta batida!'}</i></div></div><div class="hp">${Array.from({length:12},(_,i)=>`<u class="${i<cups?'on':''}" style="--i:${i}"></u>`).join('')}</div></div>`;
   })();
   const wt=(()=>{
-    const S=GD.dieta.serie,G=72,cu=S[S.length-1],pw=a=>a.toFixed(1).replace('.',','),cx=60,cy=60;
+    const S=GD.dieta.serie,G=72,pw=a=>a.toFixed(1).replace('.',','),cx=60,cy=60;
+    if(!Array.isArray(S)||!S.length)return `<div class="sq wt s6"><span>Peso</span><small style="color:var(--mu);display:block;margin-top:12px">Sem avaliação corporal registrada na aba Nutrição.</small></div>`;
+    const cu=S[S.length-1];
     const lo=Math.floor(Math.min(...S,G))-1,hi=Math.ceil(Math.max(...S,G))+1,ang=v=>-135+(Math.min(hi,Math.max(lo,v))-lo)/(hi-lo)*270;
     const pt=(r,a)=>[cx+r*Math.sin(a*Math.PI/180),cy-r*Math.cos(a*Math.PI/180)],f=n=>n.toFixed(1);
     const arc=(r,a1,a2)=>{const A=pt(r,a1),B=pt(r,a2);return `M${f(A[0])} ${f(A[1])}A${r} ${r} 0 ${a2-a1>180?1:0} 1 ${f(B[0])} ${f(B[1])}`};
@@ -1653,7 +1773,7 @@ function drawGeral(){
       tk+=`<line class="wtk ${mj?'mj':''}" x1="${f(A[0])}" y1="${f(A[1])}" x2="${f(B[0])}" y2="${f(B[1])}" style="--i:${k++}"/>`;
       if(mj){const L=pt(31,a);tk+=`<text class="wtl" x="${f(L[0])}" y="${f(L[1]+2.5)}" text-anchor="middle">${Math.round(v)}</text>`}}
     const g=pt(50.5,ang(G)),dv=cu-S[0],dl=Math.abs(dv)<.05?'estável':(dv<0?'▼ ':'▲ ')+pw(Math.abs(dv))+' kg',ok=(G<=S[0]&&cu<=G)||(G>S[0]&&cu>=G);
-    return `<div class="sq wt s6"><span>Peso</span><div class="hyw"><svg class="wdl" viewBox="0 0 120 120" aria-hidden="true"><defs><radialGradient id="wfc" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#26262c"/><stop offset="1" stop-color="#0b0b0d"/></radialGradient></defs><circle cx="60" cy="60" r="57" fill="url(#wfc)" stroke="rgba(255,255,255,.16)" stroke-width="1.5"/><path d="${arc(52,-135,135)}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3" stroke-linecap="round"/><path class="wla" pathLength="100" d="${arc(52,Math.min(ang(cu),ang(S[0])),Math.max(ang(cu),ang(S[0])))}" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>${tk}<circle class="wgd" cx="${f(g[0])}" cy="${f(g[1])}" r="3"/><g class="wnd" style="--a:${f(ang(cu))}deg"><g class="wnw"><line x1="60" y1="66" x2="60" y2="17" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><line x1="60" y1="66" x2="60" y2="72" stroke="rgba(255,255,255,.5)" stroke-width="3" stroke-linecap="round"/></g></g><circle cx="60" cy="60" r="5" fill="#fff"/><circle cx="60" cy="60" r="1.8" fill="#0b0b0d"/></svg><div class="hyr"><div class="hn">${odo(pw(cu))}<i>kg</i></div><small>de ${pw(S[0])} kg há ${S.length} dias</small><i class="dl u">${dl}</i> <i class="dl d">${ok?'meta batida!':'faltam '+pw(Math.abs(cu-G))+' kg'}</i></div></div></div>`;
+    return `<div class="sq wt s6"><span>Peso</span><div class="hyw"><svg class="wdl" viewBox="0 0 120 120" aria-hidden="true"><defs><radialGradient id="wfc" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#26262c"/><stop offset="1" stop-color="#0b0b0d"/></radialGradient></defs><circle cx="60" cy="60" r="57" fill="url(#wfc)" stroke="rgba(255,255,255,.16)" stroke-width="1.5"/><path d="${arc(52,-135,135)}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3" stroke-linecap="round"/><path class="wla" pathLength="100" d="${arc(52,Math.min(ang(cu),ang(S[0])),Math.max(ang(cu),ang(S[0])))}" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>${tk}<circle class="wgd" cx="${f(g[0])}" cy="${f(g[1])}" r="3"/><g class="wnd" style="--a:${f(ang(cu))}deg"><g class="wnw"><line x1="60" y1="66" x2="60" y2="17" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><line x1="60" y1="66" x2="60" y2="72" stroke="rgba(255,255,255,.5)" stroke-width="3" stroke-linecap="round"/></g></g><circle cx="60" cy="60" r="5" fill="#fff"/><circle cx="60" cy="60" r="1.8" fill="#0b0b0d"/></svg><div class="hyr"><div class="hn">${odo(pw(cu))}<i>kg</i></div><small>${S.length>1?'de '+pw(S[0])+' kg em '+GD.dieta.pesoPeriodo+' dias':'último registro corporal'}</small><i class="dl u">${dl}</i> <i class="dl d">${ok?'meta batida!':'faltam '+pw(Math.abs(cu-G))+' kg'}</i></div></div></div>`;
   })();
   $('#gx').innerHTML=`
   
@@ -1661,7 +1781,7 @@ function drawGeral(){
   <div class="sec"><h3 class="c-b">Estudo</h3></div>
   <div class="gx-grid">${stHero(e)}${gg('Desempenho',e.desemp,'acertos','#5b8def')}${gg('Progresso',e.prog,'do conteúdo','#a78bfa')}${gg('Constância',e.cons,'dos dias','#4cd07d')}</div>
   <div class="sec"><h3 class="c-g">Nutrição hoje</h3></div>
-  <div class="gx-grid">${hy}${wt}<div class="sq s3"><span>Refeições</span><b>${GD.dieta.feitas}/${GD.dieta.total}</b><div class="mls">${['Café','Almoço','Lanche','Jantar'].map((x,i)=>`<i class="${i<GD.dieta.feitas?'on':''}"><u></u>${x}</i>`).join('')}</div></div><div class="sq s3"><span>Calorias</span><div class="cal"><div class="rgw"><svg class="rg" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18"/><circle class="v" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="${kp} 100" transform="rotate(-90 22 22)"/></svg><em>${kp}%</em></div><div><b>${GD.dieta.kcal.toLocaleString('pt-BR')}</b><small>de ${GD.dieta.meta.toLocaleString('pt-BR')} kcal</small></div></div><small class="rest">${(GD.dieta.meta-GD.dieta.kcal).toLocaleString('pt-BR')} kcal restantes</small></div></div>
+  <div class="gx-grid">${hy}${wt}<div class="sq s3"><span>Refeições</span><b>${GD.dieta.feitas}/${GD.dieta.total}</b><div class="mls">${['Café','Almoço','Lanche','Jantar'].map((x,i)=>`<i class="${GD.dieta.mealsDone&&GD.dieta.mealsDone[['cafe','almoco','tarde','janta'][i]]?'on':''}"><u></u>${x}</i>`).join('')}</div></div><div class="sq s3"><span>Calorias</span><div class="cal"><div class="rgw"><svg class="rg" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18"/><circle class="v" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="${kp} 100" transform="rotate(-90 22 22)"/></svg><em>${kp}%</em></div><div><b>${GD.dieta.kcal.toLocaleString('pt-BR')}</b><small>de ${GD.dieta.meta.toLocaleString('pt-BR')} kcal</small></div></div><small class="rest">${GD.dieta.kcal<=GD.dieta.meta?(GD.dieta.meta-GD.dieta.kcal).toLocaleString('pt-BR')+' kcal restantes':(GD.dieta.kcal-GD.dieta.meta).toLocaleString('pt-BR')+' kcal acima da meta'}</small></div></div>
   <div class="sec"><h3 class="c-r">Constância pessoal</h3></div>
   <div class="gx-grid">${sq('Ofensiva','<i class="fl">🔥</i> <span data-cu="'+GD.ofensiva+'">0</span>','dias seguidos','hot')}${sq('Patente','<svg class="sh" viewBox="0 0 24 24"><path d="m6 14 6-6 6 6"/><path d="m6 20 6-6 6 6"/></svg>'+GD.patente,'atual')}${mis(cf.d,cf.t)}${cmp(pct,cf.d,cf.t)}</div>
   <div class="sec"><h3 class="c-o">Comunidade · meu ranking</h3></div>
@@ -1700,7 +1820,10 @@ $('#nameIn').value=NAME;
 $('#nameIn').addEventListener('input',e=>{NAME=e.target.value.trim()||'Rafael';try{localStorage.setItem('evo-name',NAME)}catch(x){}applyName()});
 $('#nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('#dinfo').hidden=true});
 applyName();drawGeral();
-window.addEventListener('storage',e=>{if(e.key==='estudos-v1'||e.key===null)drawGeral()});
+refreshDashboardCommunity();
+window.addEventListener('focus',refreshDashboardCommunity);
+setInterval(refreshDashboardCommunity,60000);
+window.addEventListener('storage',e=>{if(e.key==='estudos-v1'||e.key==='nutri-v1'||e.key===null)drawGeral();if(e.key==='constancia-v1:'+DASH_USER_ID&&e.newValue){try{DASH_CONSTANCIA_STATE=JSON.parse(e.newValue)}catch(x){}drawGeral()}if(e.key==='constancia-v1'&&!DASH_USER_ID&&e.newValue){try{DASH_CONSTANCIA_STATE=JSON.parse(e.newValue)}catch(x){}drawGeral()}});
 /* ---------- Constância: Campo (stats) + Perfil ---------- */
 function renderCampoStats(){
   const bx=document.getElementById('cfStats');if(!bx)return;
