@@ -106,24 +106,8 @@
 <div class="group" id="g-const"><button class="navitem" onclick="toggleGroup('g-const')"><span class="ico">◷</span> Constância pessoal <span style="margin-left:auto">⌄</span></button><div class="subitems"><button class="subitem" data-page="constancy" onclick="route('constancy',this)"><span class="tool-ico">⌂</span>Visão geral</button><button class="subitem" data-page="constancy-field" onclick="route('constancy-field',this)"><span class="tool-ico">✦</span>Campo</button><button class="subitem" data-page="constancy-profile" onclick="route('constancy-profile',this)"><span class="tool-ico">♙</span>Perfil</button></div></div>
 <div class="group" id="g-community"><button class="navitem" onclick="toggleGroup('g-community')"><span class="ico">◎</span> Comunidade <span style="margin-left:auto">⌄</span></button><div class="subitems"><button class="subitem" data-page="community" onclick="route('community',this)"><span class="tool-ico">♧</span>Ranking</button><button class="subitem" data-page="community-friends" onclick="route('community-friends',this)"><span class="tool-ico">♙</span>Amigos</button></div></div>
 <div class="navlabel">SUA CONTA</div><button class="navitem" data-page="settings" onclick="route('settings',this)"><span class="ico">⚙</span> Configurações</button>
-</aside><main class="main"><header class="topbar"><div class="lefttop"><button class="hamb" onclick="drawer(true)" aria-label="Abrir menu">☰</button><div class="crumb" id="crumb"><b>Início / Painel geral</b></div></div><div class="top-actions"><button class="themeToggle" id="themeToggle" onclick="toggleTheme()" title="Alternar tema">☾</button></div></header><div class="content"><section class="dashboardHome visible" id="dashboardHome" aria-label="Início · Painel geral">
-  <section class="dashboardSection study" aria-label="Painel de Estudos">
-    <div class="dashboardSectionHead"><h2>Estudos</h2><span>Visão geral</span></div>
-    <iframe class="dashboardFrame" id="dashStudies" title="Painel geral de Estudos" src="estudos-area.html?embedded=1&amp;page=d" loading="eager"></iframe>
-  </section>
-  <section class="dashboardSection nutrition" aria-label="Painel de Nutrição">
-    <div class="dashboardSectionHead"><h2>Nutrição</h2><span>Resumo diário</span></div>
-    <iframe class="dashboardFrame" id="dashNutrition" title="Painel geral de Nutrição" src="nutricao.html" loading="lazy"></iframe>
-  </section>
-  <section class="dashboardSection constancy" aria-label="Painel de Constância pessoal">
-    <div class="dashboardSectionHead"><h2>Constância pessoal</h2><span>Missões e evolução</span></div>
-    <iframe class="dashboardFrame" id="dashConstancy" title="Painel geral de Constância pessoal" src="constancia.html" loading="lazy"></iframe>
-  </section>
-  <section class="dashboardSection community" aria-label="Painel de Comunidade">
-    <div class="dashboardSectionHead"><h2>Comunidade</h2><span>Ranking</span></div>
-    <iframe class="dashboardFrame" id="dashCommunity" title="Painel geral de Comunidade" src="comunidade.html" loading="lazy"></iframe>
-  </section>
-</section><iframe class="appframe" id="appframe" title="Área do aplicativo" src="nutricao.html" style="display:none"></iframe><iframe class="appframe" id="studyframe" title="Área de Estudos" src="estudos-area.html?embedded=1&amp;page=d" loading="eager" style="display:none"></iframe></div></main></div>
+</aside><main class="main"><header class="topbar"><div class="lefttop"><button class="hamb" onclick="drawer(true)" aria-label="Abrir menu">☰</button><div class="crumb" id="crumb"><b>Início / Painel geral</b></div></div><div class="top-actions"><button class="themeToggle" id="themeToggle" onclick="toggleTheme()" title="Alternar tema">☾</button></div></header><div class="content"><section class="dashboardHome visible" id="dashboardHome" aria-label="Início"><div class="dashboardPlaceholder">O conteúdo será posto em breve.</div>
+<iframe class="appframe" id="appframe" title="Área do aplicativo" src="nutricao.html" style="display:none"></iframe><iframe class="appframe" id="studyframe" title="Área de Estudos" src="estudos-area.html?embedded=1&amp;page=d" loading="eager" style="display:none"></iframe></div></main></div>
 <script>
 const names={'home':'Início / Painel geral','study-d':'Estudos / Visão geral','study-p':'Estudos / Agenda / LDI','study-s':'Estudos / Banco de questões','study-c':'Estudos / Foco','study-f':'Estudos / Desempenho','nutrition':'Nutrição / Início','nutrition-diet':'Nutrição / Dieta','nutrition-market':'Nutrição / Mercado','nutrition-body':'Nutrição / Físico','constancy':'Constância pessoal / Visão geral','constancy-field':'Constância pessoal / Campo','constancy-profile':'Constância pessoal / Perfil','community':'Comunidade / Ranking','community-friends':'Comunidade / Amigos','settings':'Configurações'};
 
