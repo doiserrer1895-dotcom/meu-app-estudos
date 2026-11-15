@@ -1566,11 +1566,11 @@ function syncStudyMetrics(){
   const monday=new Date(today);monday.setDate(today.getDate()-(today.getDay()+6)%7);monday.setHours(0,0,0,0);
   const sunday=new Date(monday);sunday.setDate(monday.getDate()+6);sunday.setHours(23,59,59,999);
   const net=e=>Math.max(0,(Number(e&&e.h)||0)-(Number(e&&e.p)||0)/60);
-  const entries=S.entries.filter(e=>e&&parseDate(e.date));
+  const entries=S.entries.filter(e=>e&&parseDate(e.date)),hourEntries=[...entries,...(Array.isArray(S.sim)?S.sim:[])].filter(e=>e&&parseDate(e.date));
   const totalQ=entries.reduce((a,e)=>a+(Number(e.q)||0),0),totalA=entries.reduce((a,e)=>a+(Number(e.a)||0),0);
-  const totalH=entries.reduce((a,e)=>a+net(e),0);
-  const todayH=entries.filter(e=>e.date===todayKey).reduce((a,e)=>a+net(e),0);
-  const weekH=entries.filter(e=>{const dt=parseDate(e.date);dt.setHours(0,0,0,0);return dt>=monday&&dt<=sunday}).reduce((a,e)=>a+net(e),0);
+  const totalH=hourEntries.reduce((a,e)=>a+net(e),0);
+  const todayH=hourEntries.filter(e=>e.date===todayKey).reduce((a,e)=>a+net(e),0);
+  const weekH=hourEntries.filter(e=>{const dt=parseDate(e.date);dt.setHours(0,0,0,0);return dt>=monday&&dt<=sunday}).reduce((a,e)=>a+net(e),0);
   const topics=S.edital.reduce((a,m)=>a+(Array.isArray(m&&m.topics)?m.topics.length:0),0);
   const done=S.edital.reduce((a,m)=>a+(Array.isArray(m&&m.doneTopics)?m.doneTopics.filter(t=>(m.topics||[]).includes(t)).length:0),0);
   const fmt=m=>Math.floor(m/60)+'h'+String(Math.round(m)%60).padStart(2,'0');
@@ -1745,7 +1745,7 @@ function drawGeral(){
   <div class="sn3">${tin('bed','Deitar',1)}${tin('zzz','Dormir',2)}${tin('sun','Acordar',3)}</div>
   <div class="tl" title="Tempo até dormir e tempo dormindo"><u class="a" style="flex:${Math.max(s.lat,1)}"></u><u class="b" style="flex:${Math.max(s.dor,1)}"></u></div><div class="tll"><span>até dormir</span><span>dormindo</span></div>
   <div class="sn2">${it('m-lat','#f6b04a',MI.lat,'Latência do sono',s.lat+' min')}${it('m-bed','#8b8cff',MI.bed,'Tempo na cama',fd(s.cama))}${it('m-dor','#5bb5ff',MI.moon,'Tempo dormido',fd(s.dor))}${it('m-ef','#4cd07d',ef(s.ef),'Eficiência da noite',c1(s.ef)+'%')}</div></div>
-  <div class="card sn-week"><div class="snh"><span>${ic('bars')}Evolução da semana</span><em class="snt">toque num dia</em></div><div class="swk">${SLP.d.map((x,i)=>`<button data-day="${i}" class="${i===SLP.sel?'sel':''}" aria-label="${DN[x[0]]}"><small>${c1(S[i].dor/60)}h</small><u class="${i===SLP.sel?'on':''}" style="height:${Math.round(Math.min(80,Math.max(10,14+(S[i].dor/60-5)/4*66)))}px"></u><em>${x[0]}</em></button>`).join('')}</div><p class="swk-note">Melhor noite: <b>${SLP.d[hi][0]}</b> · ${fd(S[hi].dor)} &nbsp;|&nbsp; Mais curta: <b>${SLP.d[lo][0]}</b> · ${fd(S[lo].dor)}</p></div>
+
   <div class="gx-grid">${sq('Qualidade do sono',ic('star','ci sm')+q[0],q[1],'s3')}<div class="sq s3"><span>Despertares</span><div class="stp"><button data-dp="-1" aria-label="Menos">−</button><b>${r[4]}</b><button data-dp="1" aria-label="Mais">+</button></div><small>durante a noite</small></div></div>`};
   window.drawSono=()=>{const bx=$('#sonoBox');if(!bx)return;bx.classList.add('again');bx.innerHTML=sonoHTML()};
   const sono=`<div id="sonoBox">${sonoHTML()}</div>`;
