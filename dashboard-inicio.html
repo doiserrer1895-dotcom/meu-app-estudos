@@ -1552,6 +1552,32 @@ function cuAnim(){
     (function f(t){const p=Math.min(1,(t-t0)/900),k=1-Math.pow(1-p,3);el.textContent=Math.round(to*k)+suf;if(p<1)requestAnimationFrame(f)})(t0);
   });
 }
+/* Integração dos indicadores de Estudo com a fonte real estudos-v1 (estudos-area.html). */
+function syncStudyMetrics(){
+  let S=null;
+  try{S=JSON.parse(localStorage.getItem('estudos-v1')||'null')}catch(e){}
+  if(!S||!Array.isArray(S.entries)||!Array.isArray(S.edital))return;
+  const parseDate=v=>{if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v||'')))return null;const [y,m,d]=v.split('-').map(Number);return new Date(y,m-1,d)};
+  const dayKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const today=new Date();today.setHours(0,0,0,0);const todayKey=dayKey(today);
+  const monday=new Date(today);monday.setDate(today.getDate()-(today.getDay()+6)%7);
+  const net=e=>Math.max(0,(Number(e.h)||0)-(Number(e.p)||0)/60);
+  const entries=S.entries;
+  const totalQ=entries.reduce((a,e)=>a+(Number(e.q)||0),0),totalA=entries.reduce((a,e)=>a+(Number(e.a)||0),0);
+  const todayH=entries.filter(e=>e.date===todayKey).reduce((a,e)=>a+net(e),0);
+  const weekH=entries.filter(e=>{const dt=parseDate(e.date);if(!dt)return false;dt.setHours(0,0,0,0);const end=new Date(monday);end.setDate(end.getDate()+6);return dt>=monday&&dt<=end}).reduce((a,e)=>a+net(e),0);
+  const topics=S.edital.reduce((a,m)=>a+(Array.isArray(m.topics)?m.topics.length:0),0);
+  const done=S.edital.reduce((a,m)=>a+(Array.isArray(m.doneTopics)?m.doneTopics.filter(t=>(m.topics||[]).includes(t)).length:0),0);
+  const studied=new Set();
+  entries.forEach(e=>{if(net(e)>0||(Number(e.q)||0)>0)studied.add(e.date)});
+  (Array.isArray(S.sim)?S.sim:[]).forEach(e=>{if(net(e)>0||(Number(e.q)||0)>0)studied.add(e.date)});
+  let activeDays=0;for(let i=0;i<21;i++){const dt=new Date(today);dt.setDate(today.getDate()-i);if(studied.has(dayKey(dt)))activeDays++}
+  GD.estudo.hoje=Math.floor(todayH)+'h'+String(Math.round(todayH*60)%60).padStart(2,'0');
+  GD.estudo.semana=Math.floor(weekH)+'h'+String(Math.round(weekH*60)%60).padStart(2,'0');
+  GD.estudo.desemp=totalQ?Math.round(totalA/totalQ*100):0;
+  GD.estudo.prog=topics?Math.round(done/topics*100):0;
+  GD.estudo.cons=Math.round(activeDays/21*100);
+}
 function drawGeral(){
   const sq=(l,v,s,c='')=>`<div class="sq ${c}"><span>${l}</span><b>${v}</b><small>${s}</small></div>`;
   let ex=null;try{ex=localStorage.getItem('evo-exam')}catch(e){}
