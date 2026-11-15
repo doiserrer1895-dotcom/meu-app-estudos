@@ -216,6 +216,33 @@ input,select{background:rgba(255,255,255,.055);border-color:var(--bd);border-rad
 .question-bank-shell{background:#050505;border-color:var(--bd);border-radius:18px}
 #cloud-user,#cloud-auth .panel,.name-edit-dialog{background:linear-gradient(180deg,#151515,#0b0b0b);border-color:var(--bd);box-shadow:0 24px 80px rgba(0,0,0,.4)}
 #cloud-auth{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202)}
+/* Acabamento Evolução da saudação da Central — apenas visual */
+.home-head{
+  padding:18px;
+  border:1px solid var(--bd);
+  border-radius:22px;
+  background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.02));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 14px 36px rgba(0,0,0,.28);
+}
+.home-eyebrow{color:var(--mu);letter-spacing:.18em}
+.home-greeting{color:var(--tx);font-weight:900;letter-spacing:-.055em}
+.home-welcome{color:var(--mu)}
+.home-name-edit{
+  background:rgba(255,255,255,.07);
+  border-color:var(--bd);
+  color:var(--tx);
+  border-radius:12px;
+  transition:transform .2s,border-color .2s,background .2s;
+}
+.home-name-edit:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22)}
+.home-name-edit:active{transform:scale(.96)}
+.home-clock{border-color:var(--bd);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 12px 30px rgba(0,0,0,.22)}
+@media(max-width:520px){
+  .home-head{padding:14px;border-radius:18px;gap:12px}
+  .home-greeting{font-size:clamp(23px,5.4vw,31px)}
+  .home-clock{border-radius:15px}
+}
+
 </style>
 </head><body><div id="app"></div><div id="nav"><div></div></div>
 <!-- SCRIPT PRINCIPAL: controla a tela inicial, disciplinas, cronograma, registros, desempenho e salvamento local temporário. A sincronização da conta com a nuvem fica no bloco de autenticação mais abaixo. -->
