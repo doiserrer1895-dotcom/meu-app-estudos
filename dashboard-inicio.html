@@ -1601,7 +1601,9 @@ function syncStudyMetrics(){
   const dailyHours={};hourEntries.forEach(e=>{dailyHours[e.date]=(dailyHours[e.date]||0)+net(e)});
   const totalH=Object.values(dailyHours).reduce((a,h)=>a+h,0);
   const todayH=dailyHours[todayKey]||0;
-  const weekH=Object.entries(dailyHours).filter(([date])=>{const dt=parseDate(date);dt.setHours(0,0,0,0);return dt>=monday&&dt<=sunday}).reduce((a,[,h])=>a+h,0);
+  /* O total semanal segue o painel da aba Estudos: registros de estudo (S.entries), sem simulados. */
+   const mondayKey=dayKey(monday),sundayKey=dayKey(sunday);
+   const weekH=entries.filter(e=>e.date>=mondayKey&&e.date<=sundayKey).reduce((a,e)=>a+net(e),0);
   const topics=S.edital.reduce((a,m)=>a+(Array.isArray(m&&m.topics)?m.topics.length:0),0);
   const done=S.edital.reduce((a,m)=>a+(Array.isArray(m&&m.doneTopics)?m.doneTopics.filter(t=>(m.topics||[]).includes(t)).length:0),0);
   const fmt=m=>Math.floor(m/60)+'h'+String(Math.round(m)%60).padStart(2,'0');
@@ -1618,8 +1620,10 @@ function syncNutritionMetrics(){
   const num=v=>{const n=parseFloat(String(v==null?'':v).replace(',','.'));return Number.isFinite(n)?n:0};
   const diary=Array.isArray(N&&N.diary)?N.diary:[];
   const kcal=diary.filter(e=>e&&e.date===todayKey).reduce((a,e)=>a+num(e.k),0);
-  const waterMl=num(N&&N.water&&N.water[todayKey]);
-  const waterGoalMl=num(N&&N.goal&&N.goal.w);
+  /* Nutrição pode persistir água/meta em litros (2) ou mililitros (2000); normaliza os dois formatos. */
+   const liters=v=>{const n=num(v);return n>20?n/1000:n;};
+   const waterL=liters(N&&N.water&&N.water[todayKey]);
+  const waterGoalL=liters(N&&N.goal&&N.goal.w);
   const plan=N&&N.dt&&N.dt.plan&&N.dt.plan[now.getDay()]||{};
   const done=N&&N.dt&&N.dt.done&&N.dt.done[todayKey]||{};
   const mealKeys=['cafe','almoco','tarde','janta'],mealsDone={};
@@ -1635,7 +1639,7 @@ function syncNutritionMetrics(){
   GD.dieta.meta=2000;
   GD.dieta.kcal=Math.round(kcal);
   GD.dieta.feitas=mealCount;GD.dieta.total=4;GD.dieta.mealsDone=mealsDone;
-  GD.dieta.agua=waterMl/1000;GD.dieta.aguaMeta=waterGoalMl>0?waterGoalMl/1000:3;
+  GD.dieta.agua=waterL;GD.dieta.aguaMeta=waterGoalL>0?waterGoalL:3;
   GD.dieta.serie=series;GD.dieta.peso=weights.length?fmt(series[series.length-1])+' kg':'— kg';
   GD.dieta.pesoPeriodo=period;GD.dieta.var=delta===0?'estável':(delta<0?'− ':'+ ')+fmt(Math.abs(delta))+' kg';
 }
