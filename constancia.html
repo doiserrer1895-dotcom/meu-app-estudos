@@ -1011,7 +1011,7 @@ c:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 5-2 8 2 5-2v14l-5 2
 function render(){
  const N=[['i','Início',I.chart],['c','Campo',I.sword],['j','Perfil',I.pad]];
  $('#app').innerHTML=view==='c'?vC():view==='j'?vP():view==='i'?vI():vSoon(N.find(x=>x[0]===view)[1],N.find(x=>x[0]===view)[2]);
- $('#app').insertAdjacentHTML('afterbegin','<button class="central-return" onclick="returnCentral()" type="button">← Central de Aplicativos</button>');
+
  $('#nav div').innerHTML=N.map(x=>`<button class="${view===x[0]?'on':''}" onclick="go('${x[0]}')">${NI[x[0]]}<span>${x[1]}</span></button>`).join('');
  $('.fab').style.display=view==='c'?'flex':'none';
  lay();
