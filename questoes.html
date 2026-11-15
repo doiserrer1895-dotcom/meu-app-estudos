@@ -55,6 +55,63 @@
       await writer.close();
       const blob=await blobPromise;
       if(blob.size<1000000)throw new Error("O banco descompactado parece incompleto.");
+        try{
+          const targetDoc=bank.contentDocument;
+          const bridgeScript=targetDoc.createElement("script");
+          bridgeScript.textContent="("+function(){
+            "use strict";
+            function emit(source,id,subject,topic,picked,correct){
+              if(!id||!subject||!picked||typeof correct!=="boolean")return;
+              const now=new Date();
+              const date=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+              const eventId=source+":"+id+":"+Date.now()+":"+Math.random().toString(36).slice(2);
+              window.parent.postMessage({type:"eear-question-attempt",attempt:{
+                source:source,questionId:String(id),eventId:eventId,subject:String(subject),
+                topic:String(topic||"Geral"),picked:String(picked),correct:correct,date:date
+              }},"*");
+            }
+            document.addEventListener("click",function(event){
+              const bankAnswer=event.target.closest&&event.target.closest(".alt[data-a]");
+              if(bankAnswer){
+                const card=bankAnswer.closest(".card");
+                if(!card)return;
+                const id=card.dataset.id,q=window.__eearBridgeQ&&window.__eearBridgeQ[id];
+                const question=(typeof B!=="undefined"&&B[id])||q;
+                const picked=(typeof ans!=="undefined"&&ans[id])||bankAnswer.dataset.a;
+                if(!question||question.open||!question.r||question.r==="ANULADA")return;
+                const accepted=question.legacy_d==="Física 2"?[question.r,question.r2].filter(Boolean):[question.r];
+                emit("banco",id,question.d,question.u||question.s||question.m,picked,accepted.includes(picked));
+                return;
+              }
+              const examAnswer=event.target.closest&&event.target.closest("[data-exam-answer]");
+              if(examAnswer){
+                const card=examAnswer.closest("[data-exam-q]");
+                if(!card||typeof provaState==="undefined"||typeof PROVAS_DATA==="undefined")return;
+                const number=Number(card.dataset.examQ),exam=PROVAS_DATA[provaState.exam];
+                const question=exam&&exam.questions.find(item=>Number(item.n)===number);
+                const picked=provaState.answers[provaState.exam+"_"+number];
+                if(!question||!picked||question.a==="ANULADA")return;
+                emit("prova",provaState.exam+"_q"+number,question.s,exam.title,picked,picked===question.a);
+                return;
+              }
+              const simAnswer=event.target.closest&&event.target.closest("[data-sim-answer]");
+              if(simAnswer){
+                const card=simAnswer.closest("[data-sim-q]");
+                if(!card||typeof simState==="undefined"||typeof SIMULADOS_DATA==="undefined")return;
+                const parts=card.dataset.simQ.split("_"),subject=parts[0],number=Number(parts[1]);
+                const questions=SIMULADOS_DATA[simState.exam]&&SIMULADOS_DATA[simState.exam][subject];
+                const question=questions&&questions.find(item=>Number(item.n)===number);
+                const picked=simState.answers[simState.exam+"_"+subject+"_"+number];
+                if(!question||!picked)return;
+                const year=simState.exam==="s1"?"2021.1":"2021.2";
+                emit("simulado",simState.exam+"_"+subject+"_q"+number,subject,"Simulado "+year,picked,picked===question.a);
+              }
+            },false);
+          }.toString()+")();";
+          targetDoc.body.appendChild(bridgeScript);
+        }catch(bridgeError){
+          console.error("Não foi possível ativar a integração de desempenho do banco EEAR:",bridgeError);
+        }
       bank.onload=function(){
         status.style.display="none";
         bank.style.display="block";
