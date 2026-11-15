@@ -324,6 +324,18 @@ h1{text-align:center;font-size:28px;margin:22px 0 18px;letter-spacing:-.03em}
 #cfm .cr .cn{display:block;grid-template-columns:none;margin:0;background:var(--in);color:var(--tx);border:1px solid var(--bd)}
 #cfm .cr .cy{background:var(--rd);color:#111}
 .central-return{display:block;margin:12px 0 14px;border:1px solid var(--bd);background:var(--cd);color:var(--mu);border-radius:10px;padding:8px 12px;font:600 12px system-ui;cursor:pointer}.central-return:hover{color:var(--tx);border-color:var(--gold)}
+
+/* Tema Evolução: acabamento visual somente; mantém medalhas, símbolos e cores de estado. */
+<style id="tema-evolucao-visual-only">
+:root{--bg:#050505;--cd:#111;--bd:rgba(255,255,255,.10);--tx:#fafafa;--mu:#8e8e95;--in:rgba(255,255,255,.055);--lt:#fff;--ltx:#080808}
+html,body{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) fixed;color:var(--tx);font-family:Inter,-apple-system,"SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+#app{background:transparent}
+.mc,.sb,.ch,.cs,.ac,.tp,.rc,.sp,.bt,.gg,.mb,.dn,.pr,.pc,.sg,.wkb,.fab{border-color:var(--bd)}
+.mc,.sb,.ch,.cs,.tp,.rc,.sp,.bt,.gg,.mb,.dn,.pr,.pc,.sg,.wkb{box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 12px 30px rgba(0,0,0,.22)}
+.seg{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.025));border-color:var(--bd);border-radius:16px}
+.seg button.on{background:#fff;color:#080808}
+input,select,textarea{background:rgba(255,255,255,.055);border-color:var(--bd);border-radius:13px;color:var(--tx)}
+</style>
 </style>
 </head>
 <body>
