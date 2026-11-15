@@ -511,6 +511,80 @@ h1{font-size:clamp(20px,2vw,24px)!important;margin:clamp(10px,1.2vw,16px) 0 12px
  .days button{width:clamp(58px,18vw,68px)!important}
  .wkb button i{width:35px!important;height:35px!important}
 }
+
+/* Ajuste responsivo real da Constância: reduz a escala sem usar zoom global. */
+#app{width:100%!important;max-width:none!important;min-width:0!important;padding:clamp(8px,1.1vw,14px) clamp(10px,1.35vw,20px) 24px!important}
+#app h1{font-size:clamp(19px,1.8vw,25px)!important;margin:clamp(10px,1.2vw,16px) 0!important}
+#app .hd{gap:10px!important}
+#app .av{width:clamp(42px,4vw,54px)!important;height:clamp(42px,4vw,54px)!important}
+#app .av svg{width:26px!important;height:26px!important}
+#app .nm h2{font-size:clamp(16px,1.5vw,20px)!important}
+#app .xp{margin-top:10px!important}
+#app .dn{margin:4px 0 14px!important}
+#app .dn>button{width:clamp(38px,3.6vw,46px)!important;height:clamp(38px,3.6vw,46px)!important}
+#app .dn b{font-size:clamp(21px,2.1vw,27px)!important}
+#app .dn small{font-size:clamp(12px,1.1vw,14px)!important}
+#app .wkb button{font-size:clamp(10px,.95vw,12px)!important;gap:5px!important;padding:6px 0 8px!important}
+#app .wkb button i{width:clamp(34px,3.6vw,44px)!important;height:clamp(34px,3.6vw,44px)!important;font-size:18px!important}
+#app .cs{margin-top:10px!important;padding:11px 13px!important;font-size:clamp(12px,1.05vw,14px)!important;border-radius:16px!important}
+#app .days{gap:7px!important}
+#app .days button{width:clamp(62px,7vw,82px)!important;padding:8px 0!important;border-radius:15px!important}
+#app .days button b{font-size:clamp(19px,1.8vw,23px)!important}
+#app .pr{margin-top:18px!important;font-size:13px!important}
+#app .seg{margin:20px 0 12px!important;padding-bottom:10px!important}
+#app .seg button{padding:9px 0!important;font-size:13px!important}
+#app .seg button b{font-size:20px!important}
+#app .ch{gap:6px!important;padding-bottom:10px!important}
+#app .ch button{padding:9px 13px!important;font-size:13px!important}
+#app .mc{border-radius:19px!important;margin-bottom:10px!important}
+#app .mn{padding:13px!important}
+#app .ttl{font-size:15px!important}
+#app .ttl b{font-size:18px!important}
+#app .mt{font-size:12px!important;gap:5px 10px!important;margin-top:8px!important}
+#app .ar{width:48px!important;padding-top:18px!important}
+#app .tm{font-size:12px!important;padding:5px 8px!important}
+#app .mb{font-size:14px!important;padding:9px 11px!important}
+#app .mb i{width:38px!important;height:38px!important}
+#app .sb{margin-top:17px!important;padding:9px 11px 9px 17px!important}
+#app .sb .sx{font-size:15px!important}
+#app .sb .sx b{font-size:14px!important}
+#app .gg{padding:16px 12px 14px!important;border-radius:15px!important}
+#app .sp{padding:8px 11px!important;font-size:13px!important}
+#app .bt{font-size:14px!important;gap:10px!important}
+#app .ph{gap:12px!important}
+#app .pf{width:84px!important;height:84px!important}
+#app .pf svg{width:32px!important;height:32px!important}
+#app .pt{padding:11px 13px!important;border-radius:16px!important}
+#app .pt b{font-size:19px!important}
+#app .at2{margin-top:16px!important;padding:14px 12px 16px!important;border-radius:16px!important}
+#app .at2 h4{font-size:19px!important}
+#app .ag{gap:18px 12px!important;margin-top:14px!important}
+#app .ac2 h5{font-size:14px!important}
+#app .cn{gap:8px!important}
+#app .cn div{padding:10px 11px!important;border-radius:13px!important}
+#app .cn b{font-size:23px!important}
+#app .ds{margin-top:16px!important;padding:13px!important;border-radius:17px!important}
+#app .dr{gap:10px!important;padding:8px 0!important}
+#app .dr .ic{width:40px!important;height:40px!important}
+#app .dr .t1 b{font-size:15px!important}
+#app .dr .bg{font-size:12px!important;padding:4px 8px!important}
+@media(max-width:600px){
+ #app{padding:7px 9px 22px!important}
+ #app .pf{width:70px!important;height:70px!important}
+ #app .pt b{font-size:16px!important}
+ #app .at2 h4{font-size:16px!important}
+ #app .cn b{font-size:20px!important}
+ #app .mn{padding:11px!important}
+ #app .ttl b{font-size:16px!important}
+ #app .ag{gap:14px 8px!important}
+}
+@media(max-width:380px){
+ #app .pf{width:64px!important;height:64px!important}
+ #app .wkb button i{width:31px!important;height:31px!important}
+ #app .days button{width:clamp(54px,17vw,64px)!important}
+ #app .dr .ic{width:34px!important;height:34px!important}
+}
+
 </style>
 <script>
 (function(){function apply(){var t='dark';try{t=localStorage.getItem('app-theme-evolucao')||'dark'}catch(e){}document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark')}apply();window.addEventListener('storage',function(e){if(e.key==='app-theme-evolucao')apply()})})();
