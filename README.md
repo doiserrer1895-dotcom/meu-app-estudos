@@ -40,10 +40,13 @@ Aplicativo web pessoal para organizar estudos, acompanhar desempenho e acessar �
 ## Backups importantes
 
 - `backup-versao-2.0-2026-11-11`: versão 2.0 preservada.
+- `backup-versao-3.0-banco-instantaneo-2026-11-15`: versão atual com o Banco de Questões persistente.
 - `backup-versao-2.1-2026-11-12`: backup anterior da versão 2.1.
 - `backup-checkup-2026-11-12`: fotografia integral da `main` antes da organização e documentação deste check-up.
 
 ## Documentação complementar
+
+Consulte [docs/RECUPERAR-APP.md](docs/RECUPERAR-APP.md) para baixar o pacote completo e recuperar a publicação e os dados.
 
 Consulte [docs/README-ESTRUTURA.md](docs/README-ESTRUTURA.md) para entender cada área e [docs/CHECKUP-2026-11-12.md](docs/CHECKUP-2026-11-12.md) para ver o estado, os riscos e os testes pendentes.
 
