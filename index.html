@@ -362,7 +362,7 @@ function topicDone(m,t){return (m.doneTopics||[]).includes(t)}
 function subjectDone(m){return m.topics.length>0&&m.topics.every(t=>topicDone(m,t))}
 function toggleTopic(id,encoded){const t=decodeURIComponent(encoded),m=S.edital.find(x=>x.id===id);if(!m)return;m.doneTopics=m.doneTopics||[];const i=m.doneTopics.indexOf(t);if(i>=0)m.doneTopics.splice(i,1);else m.doneTopics.push(t);save();render()}
 let bankTaxonomy={};
-function canonicalBankSubject(name){const raw=String(name||'').trim(),n=raw.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/\\s+/g,' ');if(/^fisica(?:\\s*[123])?$/.test(n))return 'Física';if(/^matematica(?:\\s*[123])?$/.test(n))return 'Matemática';if(/^ingles(?:\\s*[123])?$/.test(n))return 'Inglês';return raw}
+function canonicalBankSubject(name){const raw=String(name||'').trim(),n=raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[ ]+/g,' ');if(/^fisica(?:[ ]*[123])?$/.test(n))return 'Física';if(/^matematica(?:[ ]*[123])?$/.test(n))return 'Matemática';if(/^ingles(?:[ ]*[123])?$/.test(n))return 'Inglês';return raw}
 function bankSubjects(){return [...new Set(Object.keys(bankTaxonomy).map(canonicalBankSubject))].sort((a,b)=>a.localeCompare(b,'pt-BR'))}
 function bankTopics(name){const target=canonicalBankSubject(name).toLowerCase(),topics=[];Object.keys(bankTaxonomy).filter(x=>canonicalBankSubject(x).toLowerCase()===target).forEach(x=>(bankTaxonomy[x]||[]).forEach(t=>{if(!topics.includes(t))topics.push(t)}));return topics.sort((a,b)=>a.localeCompare(b,'pt-BR'))}
 function topicLabel(m,t){return m&&m.topicAliases&&m.topicAliases[t]||t}
