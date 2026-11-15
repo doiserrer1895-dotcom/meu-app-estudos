@@ -50,13 +50,21 @@
         const ds=new DecompressionStream("gzip");
         writer=ds.writable.getWriter();
         const blobPromise=new Response(ds.readable).blob();
-        for(let i=1;i<=TOTAL;i++){
-          detail.textContent="Carregando arquivo "+i+" de "+TOTAL+"…";
-          const name="questoes-banco-"+String(i).padStart(2,"0")+".gz";
-          const response=await fetch(name);
-          if(!response.ok)throw new Error("Não foi possível carregar "+name+" (HTTP "+response.status+").");
-          await writer.write(new Uint8Array(await response.arrayBuffer()));
-          progress.style.width=(i/TOTAL*100)+"%";
+        const BATCH=3;
+        for(let start=1;start<=TOTAL;start+=BATCH){
+          const end=Math.min(start+BATCH-1,TOTAL);
+          detail.textContent="Carregando arquivos "+start+"–"+end+" de "+TOTAL+" em paralelo…";
+          const files=await Promise.all(Array.from({length:end-start+1},async function(_,offset){
+            const i=start+offset,name="questoes-banco-"+String(i).padStart(2,"0")+".gz";
+            const response=await fetch(name);
+            if(!response.ok)throw new Error("Não foi possível carregar "+name+" (HTTP "+response.status+").");
+            return new Uint8Array(await response.arrayBuffer());
+          }));
+          for(let offset=0;offset<files.length;offset++){
+            await writer.write(files[offset]);
+            const done=start+offset;
+            progress.style.width=(done/TOTAL*100)+"%";
+          }
         }
         await writer.close();
         blob=await blobPromise;
