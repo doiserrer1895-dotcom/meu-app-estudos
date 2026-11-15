@@ -28,7 +28,8 @@
   const retry=document.getElementById("retry");
   const bank=document.getElementById("bank");
   window.addEventListener("message",function(event){
-    if(event.source===bank.contentWindow&&event.data&&event.data.type==="eear-question-attempt"){
+    if(event.source===bank.contentWindow&&event.data&&event.data.type&&
+       (event.data.type==="eear-question-attempt"||event.data.type==="eear-question-taxonomy")){
       window.parent.postMessage(event.data,"*");
     }
   });
@@ -55,6 +56,9 @@
       await writer.close();
       const blob=await blobPromise;
       if(blob.size<1000000)throw new Error("O banco descompactado parece incompleto.");
+      bank.onload=function(){
+        status.style.display="none";
+        bank.style.display="block";
         try{
           const targetDoc=bank.contentDocument;
           const bridgeScript=targetDoc.createElement("script");
@@ -70,6 +74,19 @@
                 topic:String(topic||"Geral"),picked:String(picked),correct:correct,date:date
               }},"*");
             }
+            const rawBank=(typeof B!=="undefined"&&B)||window.__eearBridgeQ||{};
+            const taxonomy={};
+            Object.keys(rawBank).forEach(function(id){
+              const question=rawBank[id];
+              if(!question||typeof question!=="object")return;
+              const discipline=String(question.d||question.discipline||question.subject||"").trim();
+              if(!discipline)return;
+              const topic=String(question.u||question.s||question.m||question.topic||"Geral").trim()||"Geral";
+              if(!taxonomy[discipline])taxonomy[discipline]=[];
+              if(!taxonomy[discipline].includes(topic))taxonomy[discipline].push(topic);
+            });
+            Object.keys(taxonomy).forEach(function(name){taxonomy[name].sort(function(a,b){return a.localeCompare(b,"pt-BR")})});
+            window.parent.postMessage({type:"eear-question-taxonomy",taxonomy:taxonomy},"*");
             document.addEventListener("click",function(event){
               const bankAnswer=event.target.closest&&event.target.closest(".alt[data-a]");
               if(bankAnswer){
@@ -112,9 +129,6 @@
         }catch(bridgeError){
           console.error("Não foi possível ativar a integração de desempenho do banco EEAR:",bridgeError);
         }
-      bank.onload=function(){
-        status.style.display="none";
-        bank.style.display="block";
       };
       bank.src=URL.createObjectURL(new Blob([blob],{type:"text/html;charset=utf-8"}));
     }catch(error){
