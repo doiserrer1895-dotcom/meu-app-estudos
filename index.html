@@ -23,13 +23,62 @@
 :root[data-theme="dark"] .themeToggle,:root[data-theme="dark"] .hamb{background:#171717;color:#fff;border-color:#333}
 :root[data-theme="light"] .sidebar{background:linear-gradient(180deg,#101010,#050505);color:#fff}
 :root[data-theme="light"] .topbar{background:rgba(255,255,255,.9);border-color:#ddd}
+
+/* === Layout integrado: painel pessoal e identidade visual === */
+.welcomePanel{display:block;background:#fff;color:#111;border:1px solid #dedede;border-radius:14px;padding:9px;margin:0 0 13px;box-shadow:0 3px 12px #00000012}
+.welcomeGreeting{background:#111;color:#fff;border-radius:10px;padding:11px}
+.welcomeGreeting h2{font-size:15px;line-height:1.25;letter-spacing:-.035em;margin:0;color:#fff}
+.welcomeNameLine{display:flex;align-items:center;gap:6px}
+.welcomeEdit{margin-left:auto;border:0!important;border-radius:8px;background:#fff!important;color:#111!important;padding:4px 7px;font-size:12px;cursor:pointer}
+.welcomeClock{display:flex;align-items:baseline;flex-wrap:wrap;gap:5px 8px;margin-top:7px}
+.welcomeClock strong{font-size:22px;line-height:1;letter-spacing:-.06em;color:#fff}
+.welcomeClock span{font-size:9px;line-height:1.35;color:#dedede}
+.weatherCard{border:1px solid #e5e5e5;border-radius:10px;padding:9px;margin-top:8px;background:#fff;color:#111}
+.weatherHead{display:flex;justify-content:space-between;align-items:center;gap:5px}
+.weatherHead small{font-size:8px;letter-spacing:.08em;color:#777;font-weight:800}
+.weatherHead strong{display:block;font-size:12px;margin-top:3px;color:#111}
+.weatherHead>span{font-size:23px}
+.weatherNow{display:flex;align-items:center;gap:9px;margin:7px 0}
+.weatherNow strong{font-size:28px;line-height:1;color:#111}
+.weatherNow span,.weatherDetails{font-size:9px;line-height:1.4;color:#555}
+.weatherButton{width:100%;margin-top:8px;border:1px solid #ddd;border-radius:8px;background:#f5f5f5;color:#222;padding:7px;font-size:10px;cursor:pointer}
+:root[data-theme="dark"] .welcomePanel{background:#111;color:#fff;border-color:#303030;box-shadow:none}
+:root[data-theme="dark"] .welcomeGreeting{background:#050505;border:1px solid #303030}
+:root[data-theme="dark"] .welcomeGreeting h2,
+:root[data-theme="dark"] .welcomeClock strong,
+:root[data-theme="dark"] .welcomeClock span{color:#fff!important}
+:root[data-theme="dark"] .weatherCard{background:#171717;border-color:#333;color:#fff}
+:root[data-theme="dark"] .weatherHead small,
+:root[data-theme="dark"] .weatherHead strong,
+:root[data-theme="dark"] .weatherNow strong,
+:root[data-theme="dark"] .weatherNow span,
+:root[data-theme="dark"] .weatherDetails{color:#fff!important}
+:root[data-theme="dark"] .weatherButton{background:#222;color:#fff;border-color:#444}
+.themeToggle{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;padding:0}
+#g-study>.navitem .ico{color:#60a5fa}
+#g-nutri>.navitem .ico{color:#4ade80}
+#g-const>.navitem .ico{color:#f87171}
+#g-community>.navitem .ico{color:#fb923c}
+:root[data-theme="dark"] .navitem.active,:root[data-theme="dark"] .navitem.open{background:#f1f3f1;color:#101211}
+:root[data-theme="dark"] .subitem.active{background:#292e2b;color:#fff}
+@media(max-width:800px){.welcomePanel{padding:8px;margin-bottom:10px}.welcomeGreeting{padding:9px}.welcomeGreeting h2{font-size:14px}.weatherCard{padding:8px}.weatherNow strong{font-size:26px}}
+
 </style></head>
 <body><div class="shade" id="shade" onclick="drawer(false)"></div>
 <div class="layout"><aside class="sidebar" id="sidebar">
 <div class="brand">MEU APP <small>ESTUDOS · EVOLUÇÃO</small></div>
+<aside class="welcomePanel" id="welcomePanel" aria-label="Painel pessoal">
+ <div class="welcomeGreeting">
+  <div class="welcomeNameLine"><h2><span id="welcomePart">Boa tarde</span>, <span id="welcomeName">Rafael</span>!</h2><button class="welcomeEdit" type="button" onclick="editNameFromApp()" aria-label="Editar nome" title="Editar nome">✎</button></div>
+  <div class="welcomeClock"><strong id="liveClock">--:--</strong><span id="liveDate">Carregando data...</span></div>
+ </div>
+ <div class="weatherCard"><div class="weatherHead"><div><small>PREVISÃO DO TEMPO · HOJE</small><strong id="weatherPlace">São João de Meriti, RJ</strong></div><span id="weatherIcon">☁️</span></div><div class="weatherNow"><strong id="weatherTemp">--°</strong><span id="weatherDesc">Carregando previsão de hoje...</span></div><div class="weatherDetails" id="weatherDetails">Consultando a previsão para hoje.</div><button class="weatherButton" type="button" onclick="loadSidebarWeather()">↻ Atualizar previsão</button></div>
+</aside>
+<div class="navlabel">PRINCIPAL</div>
+<button class="navitem active" data-page="home" onclick="route('home',this)"><span class="ico">⌂</span>Início</button>
 <div class="navlabel">ÁREAS DO APP</div>
 <div class="group expanded" id="g-study"><button class="navitem open" onclick="toggleGroup('g-study')"> <span class="ico">▤</span> Estudos <span style="margin-left:auto">⌄</span></button><div class="subitems">
-<button class="subitem active" data-page="study-d" onclick="route('study-d',this)"><span class="tool-ico" data-icon="d">▦</span>Visão geral</button>
+<button class="subitem" data-page="study-d" onclick="route('study-d',this)"><span class="tool-ico" data-icon="d">▦</span>Visão geral</button>
 <button class="subitem" data-page="study-p" onclick="route('study-p',this)"><span class="tool-ico" data-icon="p">◈</span>Agenda / LDI</button>
 <button class="subitem" data-page="study-s" onclick="route('study-s',this)"><span class="tool-ico" data-icon="s">▣</span>Banco de questões</button>
 <button class="subitem" data-page="study-c" onclick="route('study-c',this)"><span class="tool-ico" data-icon="c">◷</span>Foco</button>
@@ -38,15 +87,38 @@
 <div class="group" id="g-const"><button class="navitem" onclick="toggleGroup('g-const')"><span class="ico">◷</span> Constância pessoal <span style="margin-left:auto">⌄</span></button><div class="subitems"><button class="subitem" data-page="constancy" onclick="route('constancy',this)"><span class="tool-ico">⌂</span>Visão geral</button><button class="subitem" data-page="constancy-field" onclick="route('constancy-field',this)"><span class="tool-ico">✦</span>Campo</button><button class="subitem" data-page="constancy-profile" onclick="route('constancy-profile',this)"><span class="tool-ico">♙</span>Perfil</button></div></div>
 <div class="group" id="g-community"><button class="navitem" onclick="toggleGroup('g-community')"><span class="ico">◎</span> Comunidade <span style="margin-left:auto">⌄</span></button><div class="subitems"><button class="subitem" data-page="community" onclick="route('community',this)"><span class="tool-ico">♧</span>Ranking</button><button class="subitem" data-page="community-friends" onclick="route('community-friends',this)"><span class="tool-ico">♙</span>Amigos</button></div></div>
 <div class="navlabel">SUA CONTA</div><button class="navitem" data-page="settings" onclick="route('settings',this)"><span class="ico">⚙</span> Configurações</button>
-</aside><main class="main"><header class="topbar"><div class="lefttop"><button class="hamb" onclick="drawer(true)" aria-label="Abrir menu">☰</button><div class="crumb" id="crumb"><b>Estudos / Visão geral</b></div></div><div class="top-actions"><button class="themeToggle" id="themeToggle" onclick="toggleTheme()" title="Alternar tema">☾</button></div></header><div class="content"><iframe class="appframe" id="appframe" title="Área do aplicativo" src="estudos-area.html?embedded=1&amp;page=d"></iframe></div></main></div>
+</aside><main class="main"><header class="topbar"><div class="lefttop"><button class="hamb" onclick="drawer(true)" aria-label="Abrir menu">☰</button><div class="crumb" id="crumb"><b>Estudos / Visão geral</b></div></div><div class="top-actions"><button class="themeToggle" id="themeToggle" onclick="toggleTheme()" title="Alternar tema">☾</button></div></header><div class="content"><iframe class="appframe" id="appframe" title="Área do aplicativo" src="estudos-area.html"></iframe></div></main></div>
 <script>
-const names={'study-d':'Estudos / Visão geral','study-p':'Estudos / Agenda / LDI','study-s':'Estudos / Banco de questões','study-c':'Estudos / Foco','study-f':'Estudos / Desempenho','nutrition':'Nutrição / Início','nutrition-diet':'Nutrição / Dieta','nutrition-market':'Nutrição / Mercado','nutrition-body':'Nutrição / Físico','constancy':'Constância pessoal / Visão geral','constancy-field':'Constância pessoal / Campo','constancy-profile':'Constância pessoal / Perfil','community':'Comunidade / Ranking','community-friends':'Comunidade / Amigos','settings':'Configurações'};
+const names={'home':'Início / Painel geral','study-d':'Estudos / Visão geral','study-p':'Estudos / Agenda / LDI','study-s':'Estudos / Banco de questões','study-c':'Estudos / Foco','study-f':'Estudos / Desempenho','nutrition':'Nutrição / Início','nutrition-diet':'Nutrição / Dieta','nutrition-market':'Nutrição / Mercado','nutrition-body':'Nutrição / Físico','constancy':'Constância pessoal / Visão geral','constancy-field':'Constância pessoal / Campo','constancy-profile':'Constância pessoal / Perfil','community':'Comunidade / Ranking','community-friends':'Comunidade / Amigos','settings':'Configurações'};
+
+function updateWelcome(){
+ const now=new Date(),h=now.getHours(),part=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+ const f=document.getElementById('appframe');let name='Rafael';
+ try{const appName=f&&f.contentWindow&&f.contentWindow.__displayName;if(appName&&String(appName).trim())name=String(appName).trim()}catch(e){}
+ const p=document.getElementById('welcomePart'),n=document.getElementById('welcomeName'),clock=document.getElementById('liveClock'),date=document.getElementById('liveDate');
+ if(p)p.textContent=part;if(n)n.textContent=name;if(clock)clock.textContent=now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});if(date)date.textContent=now.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+}
+function editNameFromApp(){try{const fn=document.getElementById('appframe').contentWindow.__editDisplayName;if(typeof fn==='function'){fn();return}}catch(e){}route('settings')}
+function weatherDescription(code){if(code===0)return 'Céu limpo';if([1,2,3].includes(code))return 'Parcialmente nublado';if([45,48].includes(code))return 'Neblina';if([51,53,55,56,57].includes(code))return 'Garoa';if([61,63,65,66,67,80,81,82].includes(code))return 'Chuva';if([71,73,75,77,85,86].includes(code))return 'Neve';if([95,96,99].includes(code))return 'Trovoadas';return 'Condição variável'}
+function weatherSymbol(code){if(code===0)return '☀️';if([1,2,3,45,48].includes(code))return '☁️';if([95,96,99].includes(code))return '⛈️';if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code))return '🌧️';return '🌤️'}
+async function loadSidebarWeather(){
+ const desc=document.getElementById('weatherDesc'),details=document.getElementById('weatherDetails'),temp=document.getElementById('weatherTemp'),icon=document.getElementById('weatherIcon');
+ if(desc)desc.textContent='Atualizando previsão...';
+ try{
+  const url='https://api.open-meteo.com/v1/forecast?latitude=-22.8039&longitude=-43.3722&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=1';
+  const response=await fetch(url);if(!response.ok)throw new Error('forecast');const data=await response.json(),c=data.current,d=data.daily,code=d.weather_code[0],rain=d.precipitation_probability_max[0];
+  if(temp)temp.textContent=Math.round(c.temperature_2m)+'°C';if(icon)icon.textContent=weatherSymbol(code);
+  if(desc)desc.textContent=weatherDescription(code)+' · mín. '+Math.round(d.temperature_2m_min[0])+'° / máx. '+Math.round(d.temperature_2m_max[0])+'°';
+  if(details)details.textContent='Sensação '+Math.round(c.apparent_temperature)+'°C · chance de chuva '+(rain==null?'indisponível':rain+'%')+' · umidade '+c.relative_humidity_2m+'%';
+ }catch(e){if(desc)desc.textContent='Previsão indisponível no momento.';if(details)details.textContent='Tente atualizar novamente mais tarde.'}
+}
+
 function drawer(open){document.getElementById('sidebar').classList.toggle('show',open);document.getElementById('shade').classList.toggle('show',open)}
 function toggleGroup(id){const g=document.getElementById(id);g.classList.toggle('expanded');g.querySelector('.navitem').classList.toggle('open',g.classList.contains('expanded'))}
-let active='study-d';
+let active='home';
 let pendingAreaTab=null;function activateAreaTab(id,attempt=0){const f=document.getElementById('appframe');try{const w=f.contentWindow,d=f.contentDocument;if(!d||d.readyState==='loading'){if(attempt<12)setTimeout(()=>activateAreaTab(id,attempt+1),100);return}if(id.startsWith('constancy')){const v=id==='constancy'?'i':id==='constancy-field'?'c':'j';if(typeof w.go==='function'){w.go(v);return}const b=d.querySelector('[data-page="'+v+'"],[data-t="'+v+'"]');if(b){b.click();return}}if(id.startsWith('community')){const t=id==='community'?'rank':'amigos';const b=d.querySelector('[data-t="'+t+'"]');if(b){b.click();return}}if(id.startsWith('nutrition')){const target=({'nutrition':'i','nutrition-diet':'d','nutrition-market':'m','nutrition-body':'c'})[id]||'i';if(typeof w.go==='function'){w.go(target);pendingAreaTab=null;return}if(attempt<30)setTimeout(()=>activateAreaTab(id,attempt+1),120);return}if(attempt<12)setTimeout(()=>activateAreaTab(id,attempt+1),100)}catch(e){if(attempt<12)setTimeout(()=>activateAreaTab(id,attempt+1),100)}}
 function route(id,el){active=id;document.getElementById('crumb').innerHTML='<b>'+names[id]+'</b>';document.querySelectorAll('.subitem').forEach(x=>x.classList.toggle('active',x.dataset.page===id));document.querySelectorAll('.navitem[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===id));let group={'study-d':'g-study','study-p':'g-study','study-s':'g-study','study-c':'g-study','study-f':'g-study','nutrition':'g-nutri','nutrition-diet':'g-nutri','nutrition-market':'g-nutri','nutrition-body':'g-nutri','constancy':'g-const','constancy-field':'g-const','constancy-profile':'g-const','community':'g-community','community-friends':'g-community'}[id];if(group){document.getElementById(group).classList.add('expanded');document.getElementById(group).querySelector('.navitem').classList.add('open')}
-const frame=document.getElementById('appframe');if(id.startsWith('study-')){let page=id.slice(6);if(!frame.src.includes('estudos-area.html?embedded=1'))frame.src='estudos-area.html?embedded=1&page='+page;else{try{frame.contentWindow.go(page)}catch(e){frame.src='estudos-area.html?embedded=1&page='+page}}}else if(id==='settings'){frame.src='estudos-area.html?embedded=1&page=settings'}else{let src=id.startsWith('nutrition')?'nutricao.html':id.startsWith('constancy')?'constancia.html':'comunidade.html';pendingAreaTab=id;if(!frame.src.includes(src)){frame.onload=()=>{frame.onload=null;const target=pendingAreaTab||id;activateAreaTab(target)};frame.src=src}else activateAreaTab(id)}
+const frame=document.getElementById('appframe');if(id==='home'){if(frame.src.includes('embedded=1')||!frame.src.split('?')[0].endsWith('/estudos-area.html'))frame.src='estudos-area.html'}else if(id.startsWith('study-')){let page=id.slice(6);if(!frame.src.includes('estudos-area.html?embedded=1'))frame.src='estudos-area.html?embedded=1&page='+page;else{try{frame.contentWindow.go(page)}catch(e){frame.src='estudos-area.html?embedded=1&page='+page}}}else if(id==='settings'){frame.src='estudos-area.html?embedded=1&page=settings'}else{let src=id.startsWith('nutrition')?'nutricao.html':id.startsWith('constancy')?'constancia.html':'comunidade.html';pendingAreaTab=id;if(!frame.src.includes(src)){frame.onload=()=>{frame.onload=null;const target=pendingAreaTab||id;activateAreaTab(target)};frame.src=src}else activateAreaTab(id)}
 drawer(false)}
 function integrationCss(theme,area){const base='#nav{display:none!important}#app{padding-bottom:24px!important}.fab{bottom:24px!important}';if(!area)return base;const dark=theme==='dark';if(area==='community'){return (dark?'nav{display:none!important}.app{padding-bottom:24px!important}': 'nav{display:none!important}.app{padding-bottom:24px!important}')+base}if(area==='constancy'){return (dark?':root{--bg:#080808!important;--cd:#111!important;--bd:#303030!important;--tx:#f5f5f5!important;--mu:#aaa!important;--in:#171717!important;--lt:#f5f5f5!important;--ltx:#111!important;color-scheme:dark!important}body{background:linear-gradient(180deg,#141414,#080808 420px)!important;background-color:#080808!important;color:#f5f5f5!important}':':root{--bg:#f5f5f5!important;--cd:#fff!important;--bd:#ddd!important;--tx:#111!important;--mu:#667069!important;--in:#f0f1f0!important;--lt:#111!important;--ltx:#fff!important;color-scheme:light!important}body{background:linear-gradient(180deg,#fff,#f3f4f3 420px)!important;background-color:#f5f5f5!important;color:#111!important}.gg,.at2,.rl,.rkb,.sp,.cs,.mc:not(.ok),.sb:not(.on),.mb,.sh{background:#fff!important;color:#111!important;border-color:#ddd!important}.nm span,.dn small,.pr,.mt,.empty,.soon,.nt2,.al,.ac2 h5{color:#667069!important}.dn>button,.days button,.ch button,.tm,.sg i,.gg,.rkb,.sb:not(.on){background:#f0f1f0!important;color:#111!important}.days button b,.seg button b,.ttl b,.bt .xx,.gn{color:#111!important}.seg button.on,.sp.on,.ck.on,.pills button.on,.wk button.on,.act button{background:#111!important;color:#fff!important}.seg button.on b{color:#fff!important}.sh input,.pfl input{background:#f0f1f0!important;color:#111!important;border-color:#ddd!important}.at2 h4{color:#111!important}.atk{background:#ddd!important}.atk i{background:#111!important}')+base}
 const core=dark?':root{--bg:#080808!important;--card:#111!important;--bd:#303030!important;--tx:#f5f5f5!important;--mu:#b8b8b8!important;--ac:#fff!important;--in:#1b1b1b!important;--cg:linear-gradient(150deg,#111,#050505 70%)!important;color-scheme:dark!important}body,#app{background:#080808!important;color:#f5f5f5!important}.card,.hero{background:#111!important;color:#f5f5f5!important;border-color:#303030!important}input,select,textarea{background:#1b1b1b!important;color:#fff!important;border-color:#303030!important}':':root{--bg:#f5f5f5!important;--card:#fff!important;--bd:#ddd!important;--tx:#111!important;--mu:#59635d!important;--ac:#111!important;--in:#f1f2f1!important;--cg:#fff!important;color-scheme:light!important}body,#app{background:#f5f5f5!important;color:#111!important}.card,.hero{background:#fff!important;color:#111!important;border-color:#ddd!important}input,select,textarea{background:#fff!important;color:#111!important;border-color:#ddd!important}';
@@ -56,5 +128,6 @@ const nutritionVisual=dark?'body,#app{background:#000!important;color:#fff!impor
 function applyTheme(theme){const t=theme==='light'?'light':'dark';document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('previewTheme',t);localStorage.setItem('app-theme-evolucao',t)}catch(e){}const btn=document.getElementById('themeToggle');if(btn)btn.textContent=t==='dark'?'☀':'☾';const f=document.getElementById('appframe');try{const d=f&&f.contentDocument;if(d){d.documentElement.setAttribute('data-theme',t);let s=d.getElementById('central-shell-integration');if(!s){s=d.createElement('style');s.id='central-shell-integration';d.head.appendChild(s)}s.textContent=integrationCss(t,f.src.includes('nutricao.html')?'nutrition':f.src.includes('constancia.html')?'constancy':f.src.includes('comunidade.html')?'community':false)}}catch(e){}}
 function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')}
 (function(){let t=localStorage.getItem('app-theme-evolucao')||localStorage.getItem('previewTheme')||'dark';applyTheme(t)})();
+updateWelcome();setInterval(updateWelcome,15000);loadSidebarWeather();
 window.addEventListener('message',event=>{const f=document.getElementById('appframe');if(event.source!==f.contentWindow||!event.data||event.data.type!=='app-theme-change')return;applyTheme(event.data.theme)});
-const f=document.getElementById('appframe');f.addEventListener('load',()=>{try{const d=f.contentDocument;if(!d)return;const t=localStorage.getItem('app-theme-evolucao')||document.documentElement.getAttribute('data-theme')||'dark';d.documentElement.setAttribute('data-theme',t);let s=d.getElementById('central-shell-integration');if(!s){s=d.createElement('style');s.id='central-shell-integration';d.head.appendChild(s)}s.textContent=integrationCss(t,f.src.includes('nutricao.html')?'nutrition':f.src.includes('constancia.html')?'constancy':f.src.includes('comunidade.html')?'community':false);if(f.src.includes('estudos-area.html?embedded=1')){const spans=d.querySelectorAll('#nav button span');const keys=['d','p','s','c','f'];spans.forEach((sp,i)=>{let target=document.querySelector('[data-icon="'+keys[i]+'"]');if(target&&sp.innerHTML.trim())target.innerHTML=sp.innerHTML})}}catch(e){}});</script></body></html>
+const f=document.getElementById('appframe');f.addEventListener('load',()=>{updateWelcome();try{const d=f.contentDocument;if(!d)return;const t=localStorage.getItem('app-theme-evolucao')||document.documentElement.getAttribute('data-theme')||'dark';d.documentElement.setAttribute('data-theme',t);let s=d.getElementById('central-shell-integration');if(!s){s=d.createElement('style');s.id='central-shell-integration';d.head.appendChild(s)}s.textContent=integrationCss(t,f.src.includes('nutricao.html')?'nutrition':f.src.includes('constancia.html')?'constancy':f.src.includes('comunidade.html')?'community':false);if(f.src.includes('estudos-area.html?embedded=1')){const spans=d.querySelectorAll('#nav button span');const keys=['d','p','s','c','f'];spans.forEach((sp,i)=>{let target=document.querySelector('[data-icon="'+keys[i]+'"]');if(target&&sp.innerHTML.trim())target.innerHTML=sp.innerHTML})}}catch(e){}});</script></body></html>
