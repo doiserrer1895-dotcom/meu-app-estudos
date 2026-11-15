@@ -1579,6 +1579,7 @@ function syncStudyMetrics(){
   GD.estudo.cons=Math.round(activeDays/21*100);
 }
 function drawGeral(){
+  syncStudyMetrics();
   const sq=(l,v,s,c='')=>`<div class="sq ${c}"><span>${l}</span><b>${v}</b><small>${s}</small></div>`;
   let ex=null;try{ex=localStorage.getItem('evo-exam')}catch(e){}
   const mt=ex&&/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(ex);
@@ -1699,6 +1700,7 @@ $('#nameIn').value=NAME;
 $('#nameIn').addEventListener('input',e=>{NAME=e.target.value.trim()||'Rafael';try{localStorage.setItem('evo-name',NAME)}catch(x){}applyName()});
 $('#nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('#dinfo').hidden=true});
 applyName();drawGeral();
+window.addEventListener('storage',e=>{if(e.key==='estudos-v1'||e.key===null)drawGeral()});
 /* ---------- Constância: Campo (stats) + Perfil ---------- */
 function renderCampoStats(){
   const bx=document.getElementById('cfStats');if(!bx)return;
