@@ -336,7 +336,22 @@ html,body{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) fixed;co
 .seg button.on{background:#fff;color:#080808}
 input,select,textarea{background:rgba(255,255,255,.055);border-color:var(--bd);border-radius:13px;color:var(--tx)}
 
+
+/* Aparência sincronizada com o tema escolhido na Central de Aplicativos. */
+:root[data-theme="light"]{--bg:#f1f1f1;--cd:#fff;--bd:#ddd;--tx:#111;--mu:#686868;--in:#f5f5f5;--lt:#111;--ltx:#fff;color-scheme:light}
+:root[data-theme="light"] html,:root[data-theme="light"] body{background:#f1f1f1!important;color:#111}
+:root[data-theme="light"] body{background:linear-gradient(180deg,#fff,#f1f1f1 420px) no-repeat!important}
+:root[data-theme="light"] .hm .uc,:root[data-theme="light"] .mc,:root[data-theme="light"] .gg,:root[data-theme="light"] .sb,:root[data-theme="light"] .mb,:root[data-theme="light"] .sp,:root[data-theme="light"] .card,:root[data-theme="light"] .panel{background:#fff!important;color:#111;border-color:#ddd;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+:root[data-theme="light"] .hm .ucb,:root[data-theme="light"] .tm,:root[data-theme="light"] .days button,:root[data-theme="light"] .wkb button i,:root[data-theme="light"] .seg button,:root[data-theme="light"] .ch button,:root[data-theme="light"] .in,:root[data-theme="light"] input,:root[data-theme="light"] select,:root[data-theme="light"] textarea{background:#f5f5f5!important;color:#111;border-color:#ddd}
+:root[data-theme="light"] .sb .sx,:root[data-theme="light"] .sb .sx b,:root[data-theme="light"] .mb,:root[data-theme="light"] .mb i,:root[data-theme="light"] .sp{color:#111}
+:root[data-theme="light"] .mc.ok,:root[data-theme="light"] .sb.on,:root[data-theme="light"] .sp.on,:root[data-theme="light"] .wkb button.ok i{background:#e5e5e5!important;color:#111}
+:root[data-theme="light"] #nav{background:rgba(255,255,255,.94);border-color:#ddd}
+:root[data-theme="light"] #nav button{color:#555}
+:root[data-theme="light"] #nav button.on{background:#111;color:#fff}
 </style>
+<script>
+(function(){function apply(){var t='dark';try{t=localStorage.getItem('app-theme-evolucao')||'dark'}catch(e){}document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark')}apply();window.addEventListener('storage',function(e){if(e.key==='app-theme-evolucao')apply()})})();
+</script>
 </head>
 <body>
 <div id="app"></div>
@@ -650,9 +665,6 @@ function vI(){
  const pr=nx?Math.min(100,Math.round((st.total-r[1])/(nx[1]-r[1])*100)):100;
  return `<div class="pfv hm">
  <div class="uc">
-  <div class="uct">${I.cal}<span>${gr} · ${DWN[d.getDay()]}, ${d.getDate()} de ${MESF[d.getMonth()]}</span></div>
-  <h2 class="ucn">Olá, <em>${nm?esc(nm):'Recruta'}</em></h2>
-  <p class="ucm">Aqui estão os seus dados de combate: missões do dia, ofensiva e a evolução das suas habilidades. Cumpra a missão de hoje para manter a constância e subir de patente.</p>
   <div class="ucr" style="${rkSt(ri)}"><i class="ins">${insig(ri,34)}</i><div><b>${esc(r[0])}</b><small>${nx?`${st.total} / ${nx[1]} para ${esc(nx[0])}`:'Patente máxima alcançada'}</small></div></div>
   <div class="ucg">
    <div class="ucb"><small><i style="background:#16a34a"></i>MISSÕES</small><b>${sd.k}<span>/${sd.t}</span></b></div>
