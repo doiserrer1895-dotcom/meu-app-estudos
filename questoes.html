@@ -33,29 +33,38 @@
       window.parent.postMessage(event.data,"*");
     }
   });
+  function openBankCache(){return new Promise(function(resolve,reject){if(!window.indexedDB)return resolve(null);const request=indexedDB.open("meu-app-estudos-question-bank",1);request.onupgradeneeded=function(){request.result.createObjectStore("cache")};request.onsuccess=function(){resolve(request.result)};request.onerror=function(){resolve(null)}})}
+  async function readCachedBank(){const db=await openBankCache();if(!db)return null;return new Promise(function(resolve){try{const request=db.transaction("cache","readonly").objectStore("cache").get("bank-html-v1");request.onsuccess=function(){resolve(request.result instanceof Blob?request.result:null)};request.onerror=function(){resolve(null)}}catch(e){resolve(null)}finally{db.close()}})}
+  async function writeCachedBank(blob){const db=await openBankCache();if(!db)return;await new Promise(function(resolve){try{const tx=db.transaction("cache","readwrite");tx.objectStore("cache").put(blob,"bank-html-v1");tx.oncomplete=resolve;tx.onerror=resolve;tx.onabort=resolve}catch(e){resolve()}});db.close()}
   async function start(){
     retry.style.display="none";
     bank.style.display="none";
     status.style.display="grid";
-    detail.textContent="Verificando suporte à descompactação…";
-    if(typeof DecompressionStream==="undefined"){
-      throw new Error("Este navegador não oferece suporte à descompactação necessária. Atualize o Chrome ou Edge.");
-    }
-    const ds=new DecompressionStream("gzip");
-    const writer=ds.writable.getWriter();
-    const blobPromise=new Response(ds.readable).blob();
+    detail.textContent="Verificando banco salvo neste dispositivo…";
+    let writer=null;
     try{
-      for(let i=1;i<=TOTAL;i++){
-        detail.textContent="Carregando arquivo "+i+" de "+TOTAL+"…";
-        const name="questoes-banco-"+String(i).padStart(2,"0")+".gz";
-        const response=await fetch(name);
-        if(!response.ok)throw new Error("Não foi possível carregar "+name+" (HTTP "+response.status+").");
-        await writer.write(new Uint8Array(await response.arrayBuffer()));
-        progress.style.width=(i/TOTAL*100)+"%";
+      let blob=await readCachedBank();
+      if(!blob){
+        detail.textContent="Primeiro carregamento: preparando banco de questões…";
+        if(typeof DecompressionStream==="undefined")throw new Error("Este navegador não oferece suporte à descompactação necessária. Atualize o Chrome ou Edge.");
+        const ds=new DecompressionStream("gzip");
+        writer=ds.writable.getWriter();
+        const blobPromise=new Response(ds.readable).blob();
+        for(let i=1;i<=TOTAL;i++){
+          detail.textContent="Carregando arquivo "+i+" de "+TOTAL+"…";
+          const name="questoes-banco-"+String(i).padStart(2,"0")+".gz";
+          const response=await fetch(name);
+          if(!response.ok)throw new Error("Não foi possível carregar "+name+" (HTTP "+response.status+").");
+          await writer.write(new Uint8Array(await response.arrayBuffer()));
+          progress.style.width=(i/TOTAL*100)+"%";
+        }
+        await writer.close();
+        blob=await blobPromise;
+        if(blob.size<1000000)throw new Error("O banco descompactado parece incompleto.");
+        detail.textContent="Salvando banco para abrir mais rápido nas próximas vezes…";
+        await writeCachedBank(blob);
       }
-      await writer.close();
-      const blob=await blobPromise;
-      if(blob.size<1000000)throw new Error("O banco descompactado parece incompleto.");
+      progress.style.width="100%";
       bank.onload=function(){
         status.style.display="none";
         bank.style.display="block";
@@ -132,7 +141,7 @@
       };
       bank.src=URL.createObjectURL(new Blob([blob],{type:"text/html;charset=utf-8"}));
     }catch(error){
-      try{await writer.abort(error)}catch(_){}
+      if(writer)try{await writer.abort(error)}catch(_){}
       throw error;
     }
   }
