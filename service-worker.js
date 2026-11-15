@@ -1,5 +1,5 @@
 // SERVICE WORKER: mantém arquivos essenciais disponíveis offline e atualiza o cache quando a versão muda.
-const CACHE_NAME = "meu-app-estudos-shell-v36";
+const CACHE_NAME = "meu-app-estudos-shell-v37";
 const BASE = "/meu-app-estudos/";
 const SHELL = [BASE, BASE + "index.html", BASE + "questoes.html", BASE + "nutricao.html", BASE + "constancia.html", BASE + "comunidade.html", BASE + "manifest.webmanifest", BASE + "icons/icon.svg", BASE + "assets/nutricao-card-square.svg"];
 // Instala o pacote básico do aplicativo e ativa a nova versão do cache.
@@ -15,7 +15,7 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
   if (request.mode === "navigate") {
-    event.respondWith(fetch(request).then((response) => {
+    event.respondWith(fetch(request, { cache: "no-store" }).then((response) => {
       if (response.ok) { const copy = response.clone(); caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)); }
       return response;
     }).catch(() => caches.match(request).then((cached) => cached || caches.match(BASE))));
