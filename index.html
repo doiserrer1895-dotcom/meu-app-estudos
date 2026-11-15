@@ -243,6 +243,36 @@ input,select{background:rgba(255,255,255,.055);border-color:var(--bd);border-rad
   .home-clock{border-radius:15px}
 }
 
+
+:root[data-theme="light"]{--bg:#f1f1f1;--card:#fff;--bd:rgba(0,0,0,.11);--tx:#111;--mu:#686868;--ac:#111;--actx:#fff;--in:#f5f5f5;color-scheme:light}
+:root[data-theme="light"] body{background:radial-gradient(60% 50% at 50% 0%,#fff,#e9e9e9) fixed;color:#111}
+:root[data-theme="light"] .card,:root[data-theme="light"] .tile,:root[data-theme="light"] .settings-card,:root[data-theme="light"] .home-clock,:root[data-theme="light"] .home-area,:root[data-theme="light"] .sheet{background:linear-gradient(180deg,#fff,#f7f7f7);color:#111;border-color:#ddd;box-shadow:0 12px 30px rgba(0,0,0,.06)}
+:root[data-theme="light"] .seg{background:#fff;border-color:#ddd}
+:root[data-theme="light"] .seg button{color:#555}
+:root[data-theme="light"] .seg button.on{background:#111;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+:root[data-theme="light"] input,:root[data-theme="light"] select,:root[data-theme="light"] textarea{background:#fff;color:#111;border-color:#ddd}
+:root[data-theme="light"] .btn{background:#111;color:#fff}
+:root[data-theme="light"] #nav{background:rgba(255,255,255,.92);border-color:#ddd}
+:root[data-theme="light"] #nav button{color:#555}
+:root[data-theme="light"] #nav button.on{background:#111;color:#fff;border-color:#222}
+:root[data-theme="light"] .question-bank-shell{background:#f1f1f1;border-color:#ddd}
+:root[data-theme="light"] #cloud-user,:root[data-theme="light"] #cloud-auth .panel,:root[data-theme="light"] .name-edit-dialog{background:linear-gradient(180deg,#fff,#f4f4f4);color:#111;border-color:#ddd;box-shadow:0 24px 80px rgba(0,0,0,.12)}
+:root[data-theme="light"] #cloud-auth{background:radial-gradient(60% 50% at 50% 0%,#fff,#e9e9e9)}
+:root[data-theme="light"] .home-head{background:linear-gradient(145deg,#fff,#f7f7f7);border-color:#ddd;box-shadow:0 12px 30px rgba(0,0,0,.06)}
+:root[data-theme="light"] .home-eyebrow,:root[data-theme="light"] .home-welcome{color:#686868}
+:root[data-theme="light"] .home-greeting{color:#111}
+:root[data-theme="light"] .home-name-edit{background:#f1f1f1;border-color:#ddd;color:#111}
+:root[data-theme="light"] .home-name-edit:hover{background:#e8e8e8;border-color:#bbb}
+:root[data-theme="light"] .home-clock{border-color:#ddd}
+:root[data-theme="light"] .home-clock small{color:#686868}
+:root[data-theme="light"] .home-clock strong{color:#111}
+:root[data-theme="light"] .settings-intro{color:#686868}
+:root[data-theme="light"] .settings-card h2{color:#111}
+.theme-choice{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.theme-choice button{border:1px solid var(--bd);background:var(--in);color:var(--tx);border-radius:13px;padding:11px 16px;font:700 14px inherit;cursor:pointer}
+.theme-choice button.active{background:var(--ac);color:var(--actx);border-color:var(--ac);box-shadow:0 6px 18px rgba(127,127,127,.15)}
+:root[data-theme="light"] .theme-choice button{background:#fff;color:#111;border-color:#ddd}
+:root[data-theme="light"] .theme-choice button.active{background:#111;color:#fff;border-color:#111}
 </style>
 </head><body><div id="app"></div><div id="nav"><div></div></div>
 <!-- SCRIPT PRINCIPAL: controla a tela inicial, disciplinas, cronograma, registros, desempenho e salvamento local temporário. A sincronização da conta com a nuvem fica no bloco de autenticação mais abaixo. -->
@@ -302,8 +332,11 @@ function settingsPanel(){
  let cs='Aguardando sincronização da Constância.',cc='var(--gr)';
  try{cs=localStorage.getItem('constancia-cloud-status')||cs}catch(e){}
  if(/pendente|indisponível|sem conexão|execute/i.test(cs))cc='var(--gold)';
- return '<div class="top">Configurações <button class="home-back" onclick="backHome()">⌂ Central</button></div><p class="settings-intro">Gerencie sua conta e as cópias dos seus dados. Essas opções ficam aqui para liberar espaço na tela do celular.</p><section class="settings-card"><h2>Conta e sincronização</h2><div class="settings-account"><span id="settings-email-slot"></span><span id="settings-status-slot"></span></div><div id="settings-actions"></div></section><section class="settings-card"><h2>Constância Pessoal</h2><div class="settings-account"><span style="color:'+cc+';font-weight:700">● '+esc(cs)+'</span></div><p class="settings-intro" style="margin:0">Status da sincronização dos seus dados de Constância.</p></section>';
+ return '<div class="top">Configurações <button class="home-back" onclick="backHome()">⌂ Central</button></div><p class="settings-intro">Gerencie sua conta e as cópias dos seus dados. Essas opções ficam aqui para liberar espaço na tela do celular.</p><section class="settings-card"><h2>Aparência · Tema Evolução</h2><p class="settings-intro" style="margin:0">Escolha o visual do aplicativo. A preferência fica salva neste dispositivo.</p><div class="theme-choice"><button type="button" class="'+(getAppTheme()==="light"?"active":"")+'" onclick="setAppTheme(\'light\')">☀ Tema claro</button><button type="button" class="'+(getAppTheme()==="dark"?"active":"")+'" onclick="setAppTheme(\'dark\')">☾ Tema escuro</button></div></section><section class="settings-card"><h2>Conta e sincronização</h2><div class="settings-account"><span id="settings-email-slot"></span><span id="settings-status-slot"></span></div><div id="settings-actions"></div></section><section class="settings-card"><h2>Constância Pessoal</h2><div class="settings-account"><span style="color:'+cc+';font-weight:700">● '+esc(cs)+'</span></div><p class="settings-intro" style="margin:0">Status da sincronização dos seus dados de Constância.</p></section>';
 }
+function getAppTheme(){try{return localStorage.getItem('app-theme-evolucao')||'dark'}catch(e){return 'dark'}}
+function setAppTheme(theme){const value=theme==='light'?'light':'dark';try{localStorage.setItem('app-theme-evolucao',value)}catch(e){}document.documentElement.setAttribute('data-theme',value);if(view==='settings')render()}
+document.documentElement.setAttribute('data-theme',getAppTheme());
 function go(v){if(v!=='settings')parkCloudControls();view=v;scrollTo(0,0);render()}
 
 
