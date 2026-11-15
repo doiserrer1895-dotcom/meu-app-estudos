@@ -1548,9 +1548,27 @@ function renderRank(){
 }
 renderRank();
 
-const SL_DEF=[['Seg','23:10','23:30','07:00',1],['Ter','00:00','00:20','07:00',2],['Qua','22:40','23:00','07:00',0],['Qui','23:20','23:40','06:40',1],['Sex','23:00','23:15','07:05',1],['Sáb','22:45','23:00','07:10',0],['Dom','23:00','23:20','07:00',1]];
+const SL_DEF=[['Seg','','','',null],['Ter','','','',null],['Qua','','','',null],['Qui','','','',null],['Sex','','','',null],['Sáb','','','',null],['Dom','','','',null]];
+const SL_LEGACY=[['Seg','23:10','23:30','07:00',1],['Ter','00:00','00:20','07:00',2],['Qua','22:40','23:00','07:00',0],['Qui','23:20','23:40','06:40',1],['Sex','23:00','23:15','07:05',1],['Sáb','22:45','23:00','07:10',0],['Dom','23:00','23:20','07:00',1]];
 let SLP={d:SL_DEF.map(x=>x.slice()),sel:6};
-try{const s=JSON.parse(localStorage.getItem('evo-sono')||'null'),ok=t=>/^\d\d:\d\d$/.test(t);if(s&&Array.isArray(s.d)&&s.d.length===7&&s.d.every(r=>Array.isArray(r)&&r.length===5&&ok(r[1])&&ok(r[2])&&ok(r[3])&&Number.isInteger(r[4])))SLP={d:s.d,sel:Math.min(6,Math.max(0,+s.sel||0))}}catch(e){}
+let sleepLegacyMigrated=false;
+try{
+ const s=JSON.parse(localStorage.getItem('evo-sono')||'null'),ok=t=>/^\d\d:\d\d$/.test(String(t||''));
+ if(s&&Array.isArray(s.d)&&s.d.length===7){
+  const rows=s.d.map((r,i)=>{
+   if(!Array.isArray(r)||r.length!==5||r[0]!==SL_DEF[i][0])return null;
+   const seed=SL_LEGACY[i],sameSeedTimes=r[1]===seed[1]&&r[2]===seed[2]&&r[3]===seed[3];
+   if(sameSeedTimes){
+    sleepLegacyMigrated=true;
+    return [r[0],'','','',r[4]===seed[4]?null:(Number.isInteger(r[4])?r[4]:null)];
+   }
+   if(!ok(r[1])||!ok(r[2])||!ok(r[3])||!(r[4]===null||Number.isInteger(r[4])))return null;
+   return r.slice();
+  });
+  if(rows.every(Boolean))SLP={d:rows,sel:Math.min(6,Math.max(0,+s.sel||0))};
+ }
+ if(sleepLegacyMigrated)localStorage.setItem('evo-sono',JSON.stringify(SLP));
+}catch(e){}
 const saveSL=()=>{try{localStorage.setItem('evo-sono',JSON.stringify(SLP))}catch(e){}};
 const tm=t=>{const p=t.split(':');return +p[0]*60+ +p[1]},df=(a,b)=>(tm(b)-tm(a)+1440)%1440;
 const fd=m=>Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')+'min';
