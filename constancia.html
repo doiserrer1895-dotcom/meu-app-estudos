@@ -415,6 +415,102 @@ input,select,textarea{background:rgba(255,255,255,.055);border-color:var(--bd);b
  .pt em{font-size:10px!important}
  .cn small{font-size:8px!important}
 }
+
+
+/* Ajuste fino de escala visual — Constância Pessoal (Visão Geral, Campo e Perfil).
+   Mantém zoom do navegador em 1 e reduz medidas dos componentes de forma responsiva. */
+#app{padding:clamp(8px,1vw,14px) clamp(10px,1.4vw,20px) 24px!important}
+h1{font-size:clamp(20px,2vw,24px)!important;margin:clamp(10px,1.2vw,16px) 0 12px!important}
+.nm h2{font-size:clamp(17px,1.5vw,20px)!important}
+.av{width:52px!important;height:52px!important}
+.av svg{width:26px!important;height:26px!important}
+.av b{width:22px!important;height:22px!important;font-size:12px!important}
+.pl span{padding:6px 8px!important;font-size:13px!important}
+.dn{margin-bottom:16px!important}
+.dn>button{width:44px!important;height:44px!important}
+.dn>button svg{width:20px!important;height:20px!important}
+.dn b{font-size:clamp(23px,2vw,27px)!important}
+.dn small{font-size:13px!important}
+.wkb button{font-size:13px!important;gap:6px!important}
+.wkb button i{width:44px!important;height:44px!important;font-size:20px!important}
+.cs{font-size:15px!important;padding:12px 14px!important;margin-top:12px!important}
+.days{gap:8px!important}
+.days button{width:clamp(68px,7vw,88px)!important;padding:9px 0!important}
+.days button b{font-size:23px!important}
+.pr{font-size:13px!important;margin-top:20px!important}
+.pr b{font-size:17px!important}
+.ph{gap:12px!important}
+.pf{width:90px!important;height:90px!important}
+.pf svg{width:34px!important;height:34px!important}
+.pf b{width:27px!important;height:27px!important}
+.pt{gap:9px!important;margin-top:12px!important;padding:12px!important}
+.pt>svg{width:26px!important;height:26px!important}
+.pt b{font-size:18px!important}
+.pt span,.pt em{font-size:11.5px!important}
+.at2{margin-top:14px!important;padding:16px 12px 17px!important}
+.at2 h4{font-size:20px!important}
+.ag{gap:14px 8px!important;margin-top:14px!important}
+.ac2 h5{font-size:14px!important}
+.al{font-size:13px!important}
+.cn{gap:8px!important}
+.cn div{padding:10px 12px!important}
+.cn small{font-size:10px!important}
+.cn b{font-size:24px!important}
+.cn b .u{font-size:12px!important}
+.ds{margin-top:18px!important;padding:14px!important}
+.dr{gap:9px!important;padding:7px 0!important}
+.dr .ic{width:36px!important;height:36px!important}
+.dr .t1 b{font-size:15px!important}
+.dr .t1 span{font-size:11px!important}
+.dr .bg{font-size:11px!important;padding:5px 8px!important}
+.hm .uc{padding:18px 16px!important}
+.hm .ucn{font-size:32px!important}
+.hm .ucm{font-size:14px!important}
+.hm .ucb{min-height:78px!important;padding:10px 8px!important}
+.hm .ucb small{font-size:10px!important}
+.hm .ucb b{font-size:26px!important}
+.hm .skh{margin-top:18px!important}
+.hm .skh h3{font-size:14px!important}
+.hm .pcd{min-height:112px!important;padding:12px!important}
+.hm .pcn b{font-size:15px!important}
+.hm .pkm b{font-size:17px!important}
+@media(max-width:600px){
+ #app{padding:8px 10px 24px!important}
+ h1{font-size:20px!important;margin:10px 0 10px!important}
+ .av{width:46px!important;height:46px!important}
+ .av svg{width:23px!important;height:23px!important}
+ .nm h2{font-size:17px!important}
+ .dn>button{width:40px!important;height:40px!important}
+ .dn b{font-size:23px!important}
+ .wkb button i{width:38px!important;height:38px!important;font-size:18px!important}
+ .wkb button{font-size:11px!important}
+ .cs{font-size:13px!important;padding:10px 12px!important}
+ .days button{width:clamp(62px,19vw,78px)!important;padding:8px 0!important}
+ .days button b{font-size:21px!important}
+ .ph{gap:10px!important}
+ .pf{width:78px!important;height:78px!important}
+ .pf svg{width:30px!important;height:30px!important}
+ .pf b{width:24px!important;height:24px!important}
+ .pt{padding:10px!important}
+ .pt b{font-size:16px!important}
+ .at2{padding:13px 10px 14px!important}
+ .at2 h4{font-size:18px!important}
+ .cn div{padding:9px 10px!important}
+ .cn b{font-size:21px!important}
+ .hm .uc{padding:14px 12px!important}
+ .hm .ucn{font-size:27px!important}
+ .hm .ucb{min-height:70px!important;padding:9px 7px!important}
+ .hm .ucb b{font-size:23px!important}
+ .hm .pcd{min-height:102px!important;padding:10px!important}
+ .hm .pcn b{font-size:13px!important}
+ .hm .pkm b{font-size:15px!important}
+}
+@media(max-width:380px){
+ .pf{width:72px!important;height:72px!important}
+ .days{gap:5px!important}
+ .days button{width:clamp(58px,18vw,68px)!important}
+ .wkb button i{width:35px!important;height:35px!important}
+}
 </style>
 <script>
 (function(){function apply(){var t='dark';try{t=localStorage.getItem('app-theme-evolucao')||'dark'}catch(e){}document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark')}apply();window.addEventListener('storage',function(e){if(e.key==='app-theme-evolucao')apply()})})();
