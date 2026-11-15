@@ -1673,6 +1673,7 @@ async function refreshDashboardCommunity(){
     try{const raw=localStorage.getItem('estudos-v1:'+user.id);if(raw){const parsed=JSON.parse(raw);if(parsed&&Array.isArray(parsed.entries)&&Array.isArray(parsed.edital))localStudy=parsed}}catch(e){}
     const cloudStudy=!studyResult.error&&studyResult.data&&studyResult.data.dados&&Array.isArray(studyResult.data.dados.entries)&&Array.isArray(studyResult.data.dados.edital)?studyResult.data.dados:null;
     DASH_STUDY_STATE=localStudy||cloudStudy;
+    if(DASH_STUDY_STATE)drawGeral(); /* Atualiza os indicadores de Estudo mesmo se a consulta da Comunidade falhar. */
     if(!cResult.error&&cResult.data&&cResult.data.data)DASH_CONSTANCIA_STATE=cResult.data.data;
     else DASH_CONSTANCIA_STATE=readConstanciaLocal();
     if(pResult.error)throw pResult.error;
