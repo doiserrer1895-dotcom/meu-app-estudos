@@ -993,10 +993,20 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register(
-        "/meu-app-estudos/service-worker.js",
+        "/meu-app-estudos/service-worker.js?v=39",
         { scope: "/meu-app-estudos/", updateViaCache: "none" }
       );
       await registration.update();
+      if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
+      registration.addEventListener("updatefound", () => {
+        const installing = registration.installing;
+        if (!installing) return;
+        installing.addEventListener("statechange", () => {
+          if (installing.state === "installed" && navigator.serviceWorker.controller) {
+            installing.postMessage("SKIP_WAITING");
+          }
+        });
+      });
     } catch (erro) {
       console.error("Falha ao atualizar o modo offline:", erro);
     }
