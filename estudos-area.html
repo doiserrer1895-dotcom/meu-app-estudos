@@ -592,7 +592,7 @@ function painel(){const rows=S.edital.map((m,i)=>{const A=agg(S.entries.filter(e
 function constCalendar(){const y=cm.getFullYear(),m=cm.getMonth(),n=new Date(y,m+1,0).getDate(),off=(new Date(y,m,1).getDay()+6)%7,st={};S.entries.forEach(e=>{if(net(e)>0||e.q>0)st[e.date]=(st[e.date]||0)+net(e)});S.sim.forEach(e=>{st[e.date]=(st[e.date]||0)+net(e)});const tk=iso(today());let cells='';for(let i=0;i<off;i++)cells+='<span></span>';for(let i=1;i<=n;i++){const k=y+'-'+pad(m+1)+'-'+pad(i);cells+=`<button class="cal ${k in st?'on':''} ${k===tk?'now':''} ${cs===k?'sel':''}" onclick="cs='${k}';render()">${i}</button>`}const L=cs?[...S.entries.filter(e=>e.date===cs),...S.sim.filter(e=>e.date===cs)]:[];return`<div class="top" style="margin:0 0 10px;font-size:16px"><button onclick="cmv(-1)">‹</button>${MES[m]} ${y}<button onclick="cmv(1)">›</button></div><div class="calh">${DN.map(x=>`<span>${x}</span>`).join('')}</div><div class="calg">${cells}</div><div class="leg">Verde = dia com estudo · selecione uma data para ver os registros</div>`+(cs?`<div style="margin-top:10px"><b>${br(cs)}</b>${L.map(e=>`<div class="row"><div class="g"><b><i class="dot" style="background:${subjectColor(e.subj)}"></i>${esc(e.subj||'Simulado')}${e.top?' · '+esc(e.top):''}</b><small>${f1(net(e))}h líquidas · ${e.a||0}/${e.q||0} acertos</small></div></div>`).join('')||'<div class="empty">Nenhum estudo registrado nesta data</div>'}</div>`:'')}
 
 function vG(){const t=today(),k=iso(t),w0=mon(t),w1=new Date(w0);w1.setDate(w0.getDate()+6);
- const W=sumP(w0,w1),A=agg(S.entries),pa=A.q?Math.round(A.a/A.q*100):0,
+ const W=sumP(w0,w1),A=agg(S.entries),AH=agg([...S.entries,...S.sim]),pa=A.q?Math.round(A.a/A.q*100):0,
  tot=S.edital.reduce((s,m)=>s+m.topics.length,0),
  dn=S.edital.reduce((s,m)=>s+(m.doneTopics||[]).filter(x=>m.topics.includes(x)).length,0),
  pp=tot?Math.round(dn/tot*100):0,{c,rec,st}=streak(),
@@ -600,9 +600,9 @@ function vG(){const t=today(),k=iso(t),w0=mon(t),w1=new Date(w0);w1.setDate(w0.g
  hj=S.sched.filter(x=>x.date===k),
  es=[...S.entries].reverse().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10),
  rm=[...S.rem].sort((a,b)=>(a.done-b.done)||(a.date||'9').localeCompare(b.date||'9')),
- hojeH=agg(S.entries.filter(e=>e.date===k)).h;
+ hojeH=agg([...S.entries,...S.sim].filter(e=>e.date===k)).h;
  return`<div class="top">Visão Geral</div><div class="sub">Informações e registros de estudo</div>`+exCard()+
- `<div class="t3"><div class="tile"><small>Tempo de estudo</small><b>${fHM(A.h)}</b><small>&nbsp;</small></div>
+ `<div class="t3"><div class="tile"><small>Tempo de estudo</small><b>${fHM(AH.h)}</b><small>inclui simulados · horas líquidas</small></div>
  <div class="tile"><small>Desempenho</small><b style="color:${A.q?pc(pa):'var(--mu)'}">${A.q?pa+'%':'—'}</b><small style="color:var(--gr)">${A.a} acertos</small><small style="color:var(--rd)">${A.q-A.a} erros</small></div>
  <div class="tile"><small>Progresso no edital</small><b style="color:${tot?pc(pp):'var(--mu)'}">${pp}%</b><small style="color:var(--gr)">${dn} concluídos</small><small>${tot-dn} pendentes</small></div></div>`+
  `<div class="card"><h2>Constância nos estudos</h2>Você está há <b>${c}</b> ${c===1?'dia':'dias'} sem falhar! Seu recorde é de <b>${rec}</b> ${rec===1?'dia':'dias'}.${strip(st)}<div class="leg">Últimos 21 dias · verde = estudou</div><div style="border-top:1px solid var(--bd);margin-top:14px;padding-top:12px">${constCalendar()}</div></div>`+
@@ -657,9 +657,9 @@ function fQ(es,T,B,P){
  `<div class="tq tt"><span>Total</span><span>${nf(o.q)}</span><span>100%</span><span>${Math.round(o.a/o.q*100)}%</span></div></div>`).join('')||'<div class="card"><div class="empty">Nenhuma questão no período para as disciplinas selecionadas</div></div>';
  return chips+big+tiles+chart+tabs}
 function fH(es,T,B,P){const t=today(),w0=mon(t),w1=new Date(w0);w1.setDate(w0.getDate()+6);const wk=sumP(w0,w1).h;
- return`<div class="tiles"><div class="tile"><small>Horas líquidas</small><b style="color:var(--gr)">${f1(T.h)}h</b><small>no período</small></div><div class="tile"><small>Horas na semana</small><b>${f1(wk)}h</b><small>total semanal</small></div></div>
- <div class="card"><h2>Horas por período</h2>${hbars(B,P)}</div><div class="card"><h2>Horas líquidas acumuladas</h2>${line(B,P)}</div>`}
-function cmv(k){cm.setDate(1);cm.setMonth(cm.getMonth()+k);cs=null;render()}
+ const periodo=B.reduce((total,dia)=>total+dia.h,0);
+ return\`<div class="tiles"><div class="tile"><small>Horas líquidas</small><b style="color:var(--gr)">${f1(periodo)}h</b><small>no período · igual ao último ponto acumulado</small></div><div class="tile"><small>Horas na semana</small><b>${f1(wk)}h</b><small>total semanal real</small></div></div>
+ <div class="card"><h2>Horas por período</h2>${hbars(B,P)}</div><div class="card"><h2>Horas líquidas acumuladas</h2>${line(B,P)}</div>\`}function cmv(k){cm.setDate(1);cm.setMonth(cm.getMonth()+k);cs=null;render()}
 function fC(){const y=cm.getFullYear(),m=cm.getMonth(),n=new Date(y,m+1,0).getDate(),off=new Date(y,m,1).getDay(),tk=iso(today()),daily={},bySubject={};
  S.entries.forEach(e=>{if(!e.date.startsWith(y+'-'+pad(m+1)))return;const h=net(e);if(h<=0&&!e.q)return;(daily[e.date]||(daily[e.date]=[])).push(e);bySubject[e.subj]=(bySubject[e.subj]||0)+h});
  S.sim.forEach(e=>{if(e.date.startsWith(y+'-'+pad(m+1)))(daily[e.date]||(daily[e.date]=[])).push({...e,subj:e.subj||'Simulado'})});
