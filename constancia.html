@@ -647,7 +647,9 @@ h1{font-size:clamp(20px,2vw,24px)!important;margin:clamp(10px,1.2vw,16px) 0 12px
  #app .pfl .r2{grid-template-columns:minmax(55px,.7fr) minmax(0,1.3fr)!important}
 }
 
-#nav{display:none!important;height:0!important;visibility:hidden!important;pointer-events:none!important}</style>
+#nav{display:none!important;height:0!important;visibility:hidden!important;pointer-events:none!important}/* Ajuste de escala para evitar aparência ampliada na Constância */
+@media (max-width: 900px){body{zoom:.90}}
+</style>
 <script>
 (function(){function apply(){var t='dark';try{t=localStorage.getItem('app-theme-evolucao')||'dark'}catch(e){}document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark')}apply();window.addEventListener('storage',function(e){if(e.key==='app-theme-evolucao')apply()})})();
 </script>
