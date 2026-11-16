@@ -7,7 +7,7 @@
 :root[data-theme="dark"]{--bg:#0a0a0a;--card:#121212;--bd:#262626;--tx:#fff;--mu:#8a8a8a;--in:#1c1c1c;--ac:#1c1c1c}
 *{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-#app{max-width:520px;margin:0 auto;padding:58px 14px 24px}#central-link{position:fixed;z-index:99;top:10px;left:max(12px,calc((100vw - 520px)/2 + 12px));display:inline-flex;align-items:center;gap:6px;padding:9px 12px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);font:700 12px system-ui;text-decoration:none;box-shadow:0 4px 16px #0002}
+#app{max-width:520px;margin:0 auto;padding:14px 14px 24px}
 .top{font-weight:800;font-size:22px;margin:6px 0 12px}.top small{display:block;color:var(--mu);font-size:13px;font-weight:400}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:24px;padding:18px;margin-bottom:14px}
 .card h2{font-size:17px;margin:0 0 12px;padding-bottom:12px;border-bottom:1px solid var(--bd)}
@@ -924,7 +924,7 @@ input,select,textarea{background:var(--in);border-color:var(--bd);border-radius:
 @media(prefers-color-scheme:light){:root:not([data-theme="dark"]) .seg button.on{background:#111;color:#fff}:root:not([data-theme="dark"]) #nav button.on{background:#111;color:#fff}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-</head><body><a id="central-link" href="https://doiserrer1895-dotcom.github.io/meu-app-estudos/">⌂ Central do Aplicativo</a><div id="nutri-sync-status" role="status" style="position:fixed;z-index:98;top:12px;right:12px;max-width:48vw;padding:7px 10px;border:1px solid var(--bd);border-radius:999px;background:var(--card);font:600 10px system-ui;color:var(--mu);text-align:center">Verificando sincronização…</div><div id="app"></div>
+</head><body><div id="nutri-sync-status" role="status" style="position:fixed;z-index:98;top:12px;right:12px;max-width:48vw;padding:7px 10px;border:1px solid var(--bd);border-radius:999px;background:var(--card);font:600 10px system-ui;color:var(--mu);text-align:center">Verificando sincronização…</div><div id="app"></div>
 <script>
 const K='nutri-v1',RESET_KEY='nutri-config-reset-v2',$=s=>document.querySelector(s),GR=['#a78bfa','#facc15','#f5f5f5','#38bdf8','#fb923c'];
 const F=['k','p','c','f','fib','sug','sod','sat','col','pot'],FL=['Calorias (kcal)','Proteínas (g)','Carboidratos (g)','Gorduras (g)','Fibras (g)','Açúcares (g)','Sódio (mg)','Gord. saturadas (g)','Colesterol (mg)','Potássio (mg)'];
