@@ -1550,7 +1550,8 @@ renderRank();
 
 const SL_DEF=[['Seg','','','',null],['Ter','','','',null],['Qua','','','',null],['Qui','','','',null],['Sex','','','',null],['Sáb','','','',null],['Dom','','','',null]];
 const SL_LEGACY=[['Seg','23:10','23:30','07:00',1],['Ter','00:00','00:20','07:00',2],['Qua','22:40','23:00','07:00',0],['Qui','23:20','23:40','06:40',1],['Sex','23:00','23:15','07:05',1],['Sáb','22:45','23:00','07:10',0],['Dom','23:00','23:20','07:00',1]];
-let SLP={d:SL_DEF.map(x=>x.slice()),sel:6};
+const SLEEP_TODAY_INDEX=(new Date().getDay()+6)%7;
+let SLP={d:SL_DEF.map(x=>x.slice()),sel:SLEEP_TODAY_INDEX};
 let sleepLegacyMigrated=false;
 try{
  const s=JSON.parse(localStorage.getItem('evo-sono')||'null'),ok=t=>/^\d\d:\d\d$/.test(String(t||''));
@@ -1866,7 +1867,7 @@ function drawGeral(){
     const it=(cls,ac,ico,l,v)=>`<div class="mt ${cls}" style="--ac:${ac}"><i class="mb">${ico}</i><div><small>${l}</small><b>${v}</b></div></div>`;
     return `<div class="sec"><h3>Sono</h3></div>
   <div class="sn-hero"><svg class="moon" viewBox="0 0 64 64"><path d="M46 38A20 20 0 0 1 26 12a20 20 0 1 0 20 26z" fill="rgba(255,255,255,.88)"/><path d="M52 14l1.4 3 3 1.4-3 1.4-1.4 3-1.4-3-3-1.4 3-1.4zM14 40l1 2.2 2.2 1-2.2 1-1 2.2-1-2.2-2.2-1 2.2-1z" fill="rgba(255,255,255,.5)"/></svg><div><small>Média de sono · registros reais</small><b>${med===null?'Sem registros':fd(med)}</b><i class="dl ${dm===null?'d':dm>=0?'u':'d'}">${dm===null?'Nenhum horário informado':(dm>=0?'▲':'▼')+' '+Math.abs(dm)+' min da meta'}</i></div><div class="sn-ef"><small>Eficiência média</small><b>${efm===null?'—':c1(efm)+'%'}</b>${bar(Math.round(efm||0))}</div></div>
-  <div class="card sn-reg"><div class="snh"><span>${ic('bed')}Registro · ${DN[r[0]]}${SLP.sel===6?' (hoje)':''}</span></div>
+  <div class="card sn-reg"><div class="snh"><span>${ic('bed')}Registro · ${DN[r[0]]}${SLP.sel===SLEEP_TODAY_INDEX?' (hoje)':''}</span></div>
   <p class="snhint">Toque nos horários para editar. O resto é calculado.</p>
   <div class="sn3">${tin('bed','Deitar',1)}${tin('zzz','Dormir',2)}${tin('sun','Acordar',3)}</div>
   <div class="tl" title="Tempo até dormir e tempo dormindo"><u class="a" style="flex:${Math.max(s.lat,1)}"></u><u class="b" style="flex:${Math.max(s.dor,1)}"></u></div><div class="tll"><span>até dormir</span><span>dormindo</span></div>
