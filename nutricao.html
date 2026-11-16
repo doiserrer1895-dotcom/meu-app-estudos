@@ -926,9 +926,9 @@ input,select,textarea{background:var(--in);border-color:var(--bd);border-radius:
 #nav{background:rgba(5,5,5,.92);border-color:var(--bd);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
 @media(prefers-color-scheme:light){:root:not([data-theme="dark"]) #nav{background:rgba(255,255,255,.92)}}
 @media(prefers-color-scheme:light){:root:not([data-theme="dark"]) .seg button.on{background:#111;color:#fff}:root:not([data-theme="dark"]) #nav button.on{background:#111;color:#fff}}
-#nav{display:none!important;height:0!important;min-height:0!important;visibility:hidden!important;pointer-events:none!important}
 </style>
-</head><body><div id="app"></div><div id="nav"><div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head><body><a id="central-link" href="https://doiserrer1895-dotcom.github.io/meu-app-estudos/">⌂ Central do Aplicativo</a><div id="nutri-sync-status" role="status" style="position:fixed;z-index:98;top:12px;right:12px;max-width:48vw;padding:7px 10px;border:1px solid var(--bd);border-radius:999px;background:var(--card);font:600 10px system-ui;color:var(--mu);text-align:center">Verificando sincronização…</div><div id="app"></div><div id="nav"><div></div></div>
 <script>
 const K='nutri-v1',RESET_KEY='nutri-config-reset-v2',$=s=>document.querySelector(s),GR=['#a78bfa','#facc15','#f5f5f5','#38bdf8','#fb923c'];
 const F=['k','p','c','f','fib','sug','sod','sat','col','pot'],FL=['Calorias (kcal)','Proteínas (g)','Carboidratos (g)','Gorduras (g)','Fibras (g)','Açúcares (g)','Sódio (mg)','Gord. saturadas (g)','Colesterol (mg)','Potássio (mg)'];
@@ -940,13 +940,19 @@ const M=[
 ];
 let bodyTab='corpo';
 let bodyEvoMetric='pe',bodyEvoRange='all';
-// Limpeza única da configuração antiga: preserva os dados de outras áreas do aplicativo.
-try{if(localStorage.getItem(RESET_KEY)!=='1'){localStorage.removeItem(K);localStorage.setItem(RESET_KEY,'1')}}catch(e){}
+// Não apagar nutri-v1 automaticamente: os dados locais precisam ser preservados para sincronização entre dispositivos.
 let S={diary:[],market:[],marketShoppingList:[],marketDiary:[],marketCart:[],water:{},body:[],health:{},act:{},plan:{cafe:'',almoco:'',tarde:'',janta:'',supl:0,suplTxt:'',suplOk:{}},goal:{k:0,p:0,c:0,f:0,w:0,fib:0,sug:0,sat:0,sod:0,col:0,pot:0}};
 try{const r=JSON.parse(localStorage.getItem(K));if(r)S=Object.assign(S,r)}catch(e){}
 S.goal=Object.assign({k:0,p:0,c:0,f:0,w:0,fib:0,sug:0,sat:0,sod:0,col:0,pot:0},S.goal);
 S.health=S.health||{};
-const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+let nutritionCloud=null,nutritionUid=null,nutritionReady=false,nutritionSaveTimer=null,nutritionSyncing=false;
+function setNutritionSyncStatus(t,failed){const el=$('#nutri-sync-status');if(el){el.textContent=t;el.style.color=failed?'#f87171':'var(--mu)';el.title=t}}
+function hasNutritionData(v){if(!v||typeof v!=='object')return false;const g=v.goal||{};return Object.values(g).some(x=>Number(x)>0)||['diary','market','marketShoppingList','marketDiary','marketCart','body'].some(k=>Array.isArray(v[k])&&v[k].length>0)||['water','health','act'].some(k=>v[k]&&typeof v[k]==='object'&&Object.keys(v[k]).length>0)||!!(v.plan&&Object.values(v.plan).some(x=>typeof x==='string'?x.trim():x&&typeof x==='object'&&Object.keys(x).length>0))}
+function queueNutritionCloudSave(){if(!nutritionReady||!nutritionCloud||!nutritionUid)return;clearTimeout(nutritionSaveTimer);nutritionSaveTimer=setTimeout(flushNutritionCloudSave,650)}
+async function flushNutritionCloudSave(){if(!nutritionReady||!nutritionCloud||!nutritionUid||nutritionSyncing)return;nutritionSyncing=true;setNutritionSyncStatus('Sincronizando…');try{const uid=nutritionUid;const current=await nutritionCloud.from('estudos').select('dados').eq('id',uid).maybeSingle();if(current.error)throw current.error;const rootData=current.data&&current.data.dados&&typeof current.data.dados==='object'&&!Array.isArray(current.data.dados)?current.data.dados:{};rootData.nutricao=JSON.parse(JSON.stringify(S));const saved=await nutritionCloud.from('estudos').upsert({id:uid,dados:rootData,atualizado_em:new Date().toISOString()},{onConflict:'id'});if(saved.error)throw saved.error;try{localStorage.setItem(K+':'+uid,JSON.stringify(S))}catch(e){}setNutritionSyncStatus('Sincronizado com a nuvem')}catch(e){console.warn('Falha ao sincronizar Nutrição:',e);setNutritionSyncStatus('Falha na sincronização — tente novamente',true)}finally{nutritionSyncing=false}}
+async function activateNutritionCloud(user){if(!user||!user.id||!nutritionCloud)return;nutritionReady=false;nutritionUid=user.id;setNutritionSyncStatus('Carregando dados…');try{const result=await nutritionCloud.from('estudos').select('dados').eq('id',user.id).maybeSingle();if(result.error)throw result.error;const rootData=result.data&&result.data.dados&&typeof result.data.dados==='object'&&!Array.isArray(result.data.dados)?result.data.dados:{};const cloudNutri=rootData.nutricao;const localHasData=hasNutritionData(S);if(cloudNutri&&typeof cloudNutri==='object'&&!Array.isArray(cloudNutri)){const cloudStamp=Number(cloudNutri._syncUpdatedAt||0),localStamp=Number(S._syncUpdatedAt||0);if(localHasData&&localStamp>cloudStamp){nutritionReady=true;queueNutritionCloudSave()}else{S=Object.assign(S,cloudNutri);S.goal=Object.assign({k:0,p:0,c:0,f:0,w:0,fib:0,sug:0,sat:0,sod:0,col:0,pot:0},S.goal||{});try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}}else if(localHasData){nutritionReady=true;await flushNutritionCloudSave()}nutritionReady=true;try{localStorage.setItem(K+':'+user.id,JSON.stringify(S))}catch(e){}setNutritionSyncStatus('Sincronizado com a nuvem');render()}catch(e){console.warn('Não foi possível carregar a Nutrição da nuvem:',e);nutritionReady=false;setNutritionSyncStatus('Erro ao carregar sincronização',true)}}
+async function initNutritionCloud(){try{if(!window.supabase||!window.supabase.createClient)throw new Error('Biblioteca Supabase indisponível');nutritionCloud=window.supabase.createClient('https://nwwwydwevgftbpjuasgz.supabase.co','sb_publishable_7-zqJxrp67zBzWZcwUmlQw_wLpb-Gqc');nutritionCloud.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'){nutritionReady=false;nutritionUid=null;clearTimeout(nutritionSaveTimer);setNutritionSyncStatus('Entre na Central para sincronizar')}else if(session&&session.user){setTimeout(()=>activateNutritionCloud(session.user),0)}});const {data,error}=await nutritionCloud.auth.getSession();if(error)throw error;if(data.session&&data.session.user)await activateNutritionCloud(data.session.user);else setNutritionSyncStatus('Entre na Central para sincronizar')}catch(e){console.warn('Inicialização da sincronização nutricional:',e);setNutritionSyncStatus('Sincronização indisponível',true)}}
+const save=()=>{S._syncUpdatedAt=Date.now();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}queueNutritionCloudSave()};
 const pad=n=>String(n).padStart(2,'0'),iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),td=()=>iso(new Date());
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -1850,4 +1856,5 @@ function render(){const previousScroll=window.scrollY||0;if(!['i','d','m','c'].i
   $('#nav div').innerHTML=[['i',NI.i,'Início'],['d',NI.d,'Dieta'],['m',NI.m,'Mercado'],['c',NI.c,'Físico']].map(x=>`<button class="${view===x[0]?'on':''}" onclick="go('${x[0]}')"><span>${x[1]}</span>${x[2]}</button>`).join('');
   if(view==='m')window.scrollTo(0,previousScroll)}
 render();
+initNutritionCloud();
 </script></body></html>
