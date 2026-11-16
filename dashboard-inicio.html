@@ -1631,7 +1631,7 @@ function cuAnim(){
 }
 /* Integração dos indicadores de Estudo com a fonte real estudos-v1 (estudos-area.html). */
 function syncStudyMetrics(){
-  /* Fonte de verdade: estudos-v1 da conta autenticada; chave legada só como fallback. */
+  /* Fonte de verdade: mesmos registros e regras da Visão Geral em Estudos. */
   let S=DASH_STUDY_STATE&&Array.isArray(DASH_STUDY_STATE.entries)&&Array.isArray(DASH_STUDY_STATE.edital)?DASH_STUDY_STATE:null;
   const keys=DASH_USER_ID?['estudos-v1:'+DASH_USER_ID,'estudos-v1']:['estudos-v1'];
   if(!S)for(const key of keys){try{const candidate=JSON.parse(localStorage.getItem(key)||'null');if(candidate&&Array.isArray(candidate.entries)&&Array.isArray(candidate.edital)){S=candidate;break}}catch(e){}}
@@ -1640,25 +1640,33 @@ function syncStudyMetrics(){
   const dayKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   const today=new Date();today.setHours(0,0,0,0);const todayKey=dayKey(today);
   const monday=new Date(today);monday.setDate(today.getDate()-(today.getDay()+6)%7);monday.setHours(0,0,0,0);
-  const sunday=new Date(monday);sunday.setDate(monday.getDate()+6);sunday.setHours(23,59,59,999);
+  const sunday=new Date(monday);sunday.setDate(monday.getDate()+6);
   const net=e=>Math.max(0,(Number(e&&e.h)||0)-(Number(e&&e.p)||0)/60);
-  const entries=S.entries.filter(e=>e&&parseDate(e.date)),hourEntries=[...entries,...(Array.isArray(S.sim)?S.sim:[])].filter(e=>e&&parseDate(e.date));
+  const entries=S.entries.filter(e=>e&&parseDate(e.date));
+  const simulated=Array.isArray(S.sim)?S.sim.filter(e=>e&&parseDate(e.date)):[];
+  /* Estudos > Visão Geral soma entries + simulados no tempo total, hoje e semana. */
+  const timeEntries=[...entries,...simulated];
+  const todayH=timeEntries.filter(e=>e.date===todayKey).reduce((a,e)=>a+net(e),0);
+  const mondayKey=dayKey(monday),sundayKey=dayKey(sunday);
+  const weekH=timeEntries.filter(e=>e.date>=mondayKey&&e.date<=sundayKey).reduce((a,e)=>a+net(e),0);
+  const totalH=timeEntries.reduce((a,e)=>a+net(e),0);
+  /* Desempenho e progresso seguem exatamente os cálculos da Visão Geral de Estudos. */
   const totalQ=entries.reduce((a,e)=>a+(Number(e.q)||0),0),totalA=entries.reduce((a,e)=>a+(Number(e.a)||0),0);
-  /* Agrupa por dia como a série base dos gráficos; os valores de Hoje e Semana saem desses mesmos pontos. */
-  const dailyHours={};hourEntries.forEach(e=>{dailyHours[e.date]=(dailyHours[e.date]||0)+net(e)});
-  const totalH=Object.values(dailyHours).reduce((a,h)=>a+h,0);
-  const todayH=dailyHours[todayKey]||0;
-  /* O total semanal segue o painel da aba Estudos: registros de estudo (S.entries), sem simulados. */
-   const mondayKey=dayKey(monday),sundayKey=dayKey(sunday);
-   const weekH=entries.filter(e=>e.date>=mondayKey&&e.date<=sundayKey).reduce((a,e)=>a+net(e),0);
   const topics=S.edital.reduce((a,m)=>a+(Array.isArray(m&&m.topics)?m.topics.length:0),0);
   const done=S.edital.reduce((a,m)=>a+(Array.isArray(m&&m.doneTopics)?m.doneTopics.filter(t=>(m.topics||[]).includes(t)).length:0),0);
-  const fmt=m=>Math.floor(m/60)+'h'+String(Math.round(m)%60).padStart(2,'0');
-  GD.estudo.hoje=fmt(todayH);
-  GD.estudo.semana=fmt(weekH);
-  GD.estudo.acumulado=fmt(totalH);
+  /* Constância de Estudos: dias estudados nos últimos 21 dias, igual ao calendário da aba. */
+  const studied=new Set();
+  entries.forEach(e=>{if(net(e)>0||(Number(e.q)||0)>0)studied.add(e.date)});
+  simulated.forEach(e=>studied.add(e.date));
+  let activeDays=0;
+  for(let i=0;i<21;i++){const d=new Date(today);d.setDate(today.getDate()-i);if(studied.has(dayKey(d)))activeDays++}
+  const fmtHours=h=>{const minutes=Math.round(h*60);return Math.floor(minutes/60)+'h'+String(minutes%60).padStart(2,'0')};
+  GD.estudo.hoje=fmtHours(todayH);
+  GD.estudo.semana=fmtHours(weekH);
+  GD.estudo.acumulado=fmtHours(totalH);
   GD.estudo.desemp=totalQ?Math.round(totalA/totalQ*100):0;
   GD.estudo.prog=topics?Math.round(done/topics*100):0;
+  GD.estudo.cons=Math.round(activeDays/21*100);
 }
 
 function syncNutritionMetrics(){
@@ -1733,7 +1741,6 @@ function syncConstancyMetrics(){
   const ranks=[['Recruta',0],['Soldado',50],['Cabo',150],['Sargento',300],['Segundo Sargento',500],['Primeiro Sargento',700],['Subtenente',900],['Aspirante a Oficial',1200],['Segundo Tenente',1600],['Primeiro Tenente',2000],['Capitão',2500],['Major',3100],['Tenente-Coronel',3800],['Coronel',4600],['General de Brigada',5500],['General de Exército',6500],['Marechal',8000]];
   let patent=ranks[0][0],patentLevel=1;ranks.forEach((r,i)=>{if(totalDone>=r[1]){patent=r[0];patentLevel=i+1}});
   GD.constancia={cf:{d:todayStat.d,t:todayStat.t},pct:todayStat.t?Math.round(todayStat.d/todayStat.t*100):0,totalDone:totalDone,patentLevel:patentLevel};
-  GD.estudo.cons=GD.constancia.pct; /* Constância do painel vem do calendário de missões. */
   GD.ofensiva=streak;GD.patente=patent;
 }
 async function refreshDashboardCommunity(){
