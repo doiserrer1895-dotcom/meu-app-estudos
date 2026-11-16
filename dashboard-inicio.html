@@ -1594,9 +1594,9 @@ async function syncDashboardSleep(userId){
     if(error)throw error;
     const validData=v=>v&&Array.isArray(v.d)&&v.d.length===7&&v.d.every((r,i)=>
       Array.isArray(r)&&r.length===5&&r[0]===SL_DEF[i][0]&&
-      (r[1]===''||/^\\d{2}:\\d{2}$/.test(r[1]))&&
-      (r[2]===''||/^\\d{2}:\\d{2}$/.test(r[2]))&&
-      (r[3]===''||/^\\d{2}:\\d{2}$/.test(r[3]))&&
+      (r[1]===''||/^\d{2}:\d{2}$/.test(r[1]))&&
+      (r[2]===''||/^\d{2}:\d{2}$/.test(r[2]))&&
+      (r[3]===''||/^\d{2}:\d{2}$/.test(r[3]))&&
       (r[4]===null||Number.isInteger(r[4]))
     );
     if(data&&validData(data.data)){
