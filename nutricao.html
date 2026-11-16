@@ -949,8 +949,77 @@ let nutritionCloud=null,nutritionUid=null,nutritionReady=false,nutritionSaveTime
 function setNutritionSyncStatus(t,failed){const el=$('#nutri-sync-status');if(el){el.textContent=t;el.style.color=failed?'#f87171':'var(--mu)';el.title=t}}
 function hasNutritionData(v){if(!v||typeof v!=='object')return false;const g=v.goal||{};return Object.values(g).some(x=>Number(x)>0)||['diary','market','marketShoppingList','marketDiary','marketCart','body'].some(k=>Array.isArray(v[k])&&v[k].length>0)||['water','health','act'].some(k=>v[k]&&typeof v[k]==='object'&&Object.keys(v[k]).length>0)||!!(v.plan&&Object.values(v.plan).some(x=>typeof x==='string'?x.trim():x&&typeof x==='object'&&Object.keys(x).length>0))}
 function queueNutritionCloudSave(){if(!nutritionReady||!nutritionCloud||!nutritionUid)return;clearTimeout(nutritionSaveTimer);nutritionSaveTimer=setTimeout(flushNutritionCloudSave,650)}
-async function flushNutritionCloudSave(){if(!nutritionReady||!nutritionCloud||!nutritionUid||nutritionSyncing)return;nutritionSyncing=true;setNutritionSyncStatus('Sincronizando…');try{const uid=nutritionUid;const current=await nutritionCloud.from('estudos').select('dados').eq('id',uid).maybeSingle();if(current.error)throw current.error;const rootData=current.data&&current.data.dados&&typeof current.data.dados==='object'&&!Array.isArray(current.data.dados)?current.data.dados:{};rootData.nutricao=JSON.parse(JSON.stringify(S));const saved=await nutritionCloud.from('estudos').upsert({id:uid,dados:rootData,atualizado_em:new Date().toISOString()},{onConflict:'id'});if(saved.error)throw saved.error;try{localStorage.setItem(K+':'+uid,JSON.stringify(S))}catch(e){}setNutritionSyncStatus('Sincronizado com a nuvem')}catch(e){console.warn('Falha ao sincronizar Nutrição:',e);setNutritionSyncStatus('Falha na sincronização — tente novamente',true)}finally{nutritionSyncing=false}}
-async function activateNutritionCloud(user){if(!user||!user.id||!nutritionCloud)return;nutritionReady=false;nutritionUid=user.id;setNutritionSyncStatus('Carregando dados…');try{const result=await nutritionCloud.from('estudos').select('dados').eq('id',user.id).maybeSingle();if(result.error)throw result.error;const rootData=result.data&&result.data.dados&&typeof result.data.dados==='object'&&!Array.isArray(result.data.dados)?result.data.dados:{};const cloudNutri=rootData.nutricao;const localHasData=hasNutritionData(S);if(cloudNutri&&typeof cloudNutri==='object'&&!Array.isArray(cloudNutri)){const cloudStamp=Number(cloudNutri._syncUpdatedAt||0),localStamp=Number(S._syncUpdatedAt||0);if(localHasData&&localStamp>cloudStamp){nutritionReady=true;queueNutritionCloudSave()}else{S=Object.assign(S,cloudNutri);S.goal=Object.assign({k:0,p:0,c:0,f:0,w:0,fib:0,sug:0,sat:0,sod:0,col:0,pot:0},S.goal||{});try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}}else if(localHasData){nutritionReady=true;await flushNutritionCloudSave()}nutritionReady=true;try{localStorage.setItem(K+':'+user.id,JSON.stringify(S))}catch(e){}setNutritionSyncStatus('Sincronizado com a nuvem');render()}catch(e){console.warn('Não foi possível carregar a Nutrição da nuvem:',e);nutritionReady=false;setNutritionSyncStatus('Erro ao carregar sincronização',true)}}
+async function flushNutritionCloudSave(){
+ if(!nutritionReady||!nutritionCloud||!nutritionUid||nutritionSyncing)return;
+ nutritionSyncing=true;
+ const uid=nutritionUid;
+ // Congela uma cópia do estado para que alterações feitas durante o envio não se percam.
+ const snapshot=JSON.stringify(S);
+ try{
+  setNutritionSyncStatus('Sincronizando…');
+  const current=await nutritionCloud.from('estudos').select('dados').eq('id',uid).maybeSingle();
+  if(current.error)throw current.error;
+  const rootData=current.data&&current.data.dados&&typeof current.data.dados==='object'&&!Array.isArray(current.data.dados)?current.data.dados:{};
+  rootData.nutricao=JSON.parse(snapshot);
+  const saved=await nutritionCloud.from('estudos').upsert({id:uid,dados:rootData,atualizado_em:new Date().toISOString()},{onConflict:'id'});
+  if(saved.error)throw saved.error;
+  try{
+   localStorage.setItem(K+':'+uid,snapshot);
+   if(JSON.stringify(S)===snapshot)localStorage.setItem(K,snapshot);
+  }catch(e){}
+  setNutritionSyncStatus('Sincronizado com a nuvem');
+ }catch(e){
+  console.warn('Falha ao sincronizar Nutrição:',e);
+  setNutritionSyncStatus('Falha na sincronização — tente novamente',true);
+ }finally{
+  nutritionSyncing=false;
+  // Se o usuário alterou algo enquanto a gravação estava em andamento, envia a versão mais nova.
+  if(nutritionUid===uid&&JSON.stringify(S)!==snapshot)queueNutritionCloudSave();
+ }
+}
+async function activateNutritionCloud(user){
+ if(!user||!user.id||!nutritionCloud)return;
+ nutritionReady=false;
+ nutritionUid=user.id;
+ setNutritionSyncStatus('Carregando dados…');
+ try{
+  const result=await nutritionCloud.from('estudos').select('dados').eq('id',user.id).maybeSingle();
+  if(result.error)throw result.error;
+  const rootData=result.data&&result.data.dados&&typeof result.data.dados==='object'&&!Array.isArray(result.data.dados)?result.data.dados:{};
+  const cloudNutri=rootData.nutricao;
+  // A cópia por usuário é necessária: localStorage comum não é compartilhado entre celular e computador.
+  let accountLocal=null;
+  try{const raw=localStorage.getItem(K+':'+user.id);if(raw)accountLocal=JSON.parse(raw)}catch(e){}
+  const localCandidates=[accountLocal,S].filter(hasNutritionData);
+  localCandidates.sort((a,b)=>Number(b._syncUpdatedAt||0)-Number(a._syncUpdatedAt||0));
+  const localBest=localCandidates[0]||null;
+  const cloudHasData=hasNutritionData(cloudNutri);
+  const cloudStamp=Number(cloudNutri&&cloudNutri._syncUpdatedAt||0);
+  const localStamp=Number(localBest&&localBest._syncUpdatedAt||0);
+  const defaults={diary:[],market:[],marketShoppingList:[],marketDiary:[],marketCart:[],water:{},body:[],health:{},act:{},plan:{cafe:'',almoco:'',tarde:'',janta:'',supl:0,suplTxt:'',suplOk:{}},goal:{k:0,p:0,c:0,f:0,w:0,fib:0,sug:0,sat:0,sod:0,col:0,pot:0}};
+  let pushLocal=false;
+  if(cloudHasData&&(!localBest||cloudStamp>=localStamp)){
+   S=Object.assign({},defaults,cloudNutri);
+  }else if(localBest){
+   S=Object.assign({},defaults,localBest);
+   pushLocal=true;
+  }else if(cloudNutri&&typeof cloudNutri==='object'&&!Array.isArray(cloudNutri)){
+   S=Object.assign({},defaults,cloudNutri);
+  }
+  S.goal=Object.assign(defaults.goal,S.goal||{});
+  S.health=S.health||{};
+  nutritionReady=true;
+  // Recupera do dispositivo atual ou publica a cópia local mais nova quando necessário.
+  if(pushLocal||(!cloudHasData&&hasNutritionData(S)))await flushNutritionCloudSave();
+  try{localStorage.setItem(K,JSON.stringify(S));localStorage.setItem(K+':'+user.id,JSON.stringify(S))}catch(e){}
+  setNutritionSyncStatus('Sincronizado com a nuvem');
+  render();
+ }catch(e){
+  console.warn('Não foi possível carregar a Nutrição da nuvem:',e);
+  nutritionReady=false;
+  setNutritionSyncStatus('Erro ao carregar sincronização',true);
+ }
+}
 async function initNutritionCloud(){try{if(!window.supabase||!window.supabase.createClient)throw new Error('Biblioteca Supabase indisponível');nutritionCloud=window.supabase.createClient('https://nwwwydwevgftbpjuasgz.supabase.co','sb_publishable_7-zqJxrp67zBzWZcwUmlQw_wLpb-Gqc');nutritionCloud.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'){nutritionReady=false;nutritionUid=null;clearTimeout(nutritionSaveTimer);setNutritionSyncStatus('Entre na Central para sincronizar')}else if(session&&session.user){setTimeout(()=>activateNutritionCloud(session.user),0)}});const {data,error}=await nutritionCloud.auth.getSession();if(error)throw error;if(data.session&&data.session.user)await activateNutritionCloud(data.session.user);else setNutritionSyncStatus('Entre na Central para sincronizar')}catch(e){console.warn('Inicialização da sincronização nutricional:',e);setNutritionSyncStatus('Sincronização indisponível',true)}}
 const save=()=>{S._syncUpdatedAt=Date.now();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}queueNutritionCloudSave()};
 const pad=n=>String(n).padStart(2,'0'),iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),td=()=>iso(new Date());
