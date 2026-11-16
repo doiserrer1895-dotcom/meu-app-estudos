@@ -1619,7 +1619,7 @@ async function syncDashboardSleep(userId){
 }
 const tm=t=>{const p=t.split(':');return +p[0]*60+ +p[1]},df=(a,b)=>(tm(b)-tm(a)+1440)%1440;
 const fd=m=>Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')+'min';
-const sn=r=>{const lat=df(r[1],r[2]),cama=df(r[1],r[3]),dor=Math.max(0,cama-lat);return{lat,cama,dor,ef:cama?Math.min(100,dor/cama*100):0}};
+const sn=r=>{const lat=r[2]?df(r[1],r[2]):0,cama=df(r[1],r[3]),dor=Math.max(0,cama-lat);return{lat,cama,dor,ef:cama?Math.min(100,dor/cama*100):0}};
 const ql=s=>s.dor>=420&&s.ef>=90?['Ótima','Noite completa e eficiente.']:s.dor>=390&&s.ef>=85?['Boa','Você descansou bem!']:['Regular','Tente dormir um pouco mais.'];
 function cuAnim(){
   const red=matchMedia('(prefers-reduced-motion:reduce)').matches;
@@ -1850,7 +1850,7 @@ function drawGeral(){
   const DN={Seg:'segunda',Ter:'terça',Qua:'quarta',Qui:'quinta',Sex:'sexta','Sáb':'sábado',Dom:'domingo'};
   const sonoHTML=()=>{
     window.DASH_SLEEP_PENDING=window.DASH_SLEEP_PENDING||{};
-    const valid=r=>/^\d\d:\d\d$/.test(String(r[1]||''))&&/^\d\d:\d\d$/.test(String(r[2]||''))&&/^\d\d:\d\d$/.test(String(r[3]||''));
+    const valid=r=>/^\d\d:\d\d$/.test(String(r[1]||''))&&/^\d\d:\d\d$/.test(String(r[3]||''));
     const records=SLP.d.filter(valid).map(sn),r=SLP.d[SLP.sel],has=valid(r),s=has?sn(r):{lat:0,cama:0,dor:0,ef:0},q=has?ql(s):['Sem registro','Informe seus horários de sono.'];
     const med=records.length?Math.round(records.reduce((x,y)=>x+y.dor,0)/records.length):null,efm=records.length?records.reduce((x,y)=>x+y.ef,0)/records.length:null,dm=med===null?null:med-450,c1=v=>v.toFixed(1).replace('.',',');
     const TI={
@@ -1871,7 +1871,7 @@ function drawGeral(){
   <div class="sn3">${tin('bed','Deitar',1)}${tin('zzz','Dormir',2)}${tin('sun','Acordar',3)}</div>
   <div class="tl" title="Tempo até dormir e tempo dormindo"><u class="a" style="flex:${Math.max(s.lat,1)}"></u><u class="b" style="flex:${Math.max(s.dor,1)}"></u></div><div class="tll"><span>até dormir</span><span>dormindo</span></div>
   <div class="sn2">${it('m-lat','#f6b04a',MI.lat,'Latência do sono',has?s.lat+' min':'—')}${it('m-bed','#8b8cff',MI.bed,'Tempo na cama',has?fd(s.cama):'—')}${it('m-dor','#5bb5ff',MI.moon,'Tempo dormido',has?fd(s.dor):'—')}${it('m-ef','#4cd07d',ef(s.ef),'Eficiência da noite',has?c1(s.ef)+'%':'—')}</div></div>
-  <div class="card sn-week"><div class="snh"><span> <span>▥</span> Evolução da semana</span><small>somente registros confirmados</small></div><div class="sn-week-bars">${SLP.d.map((row,i)=>{const ok=/^\\d{2}:\\d{2}$/.test(row[1]||'')&&/^\\d{2}:\\d{2}$/.test(row[2]||'')&&/^\\d{2}:\\d{2}$/.test(row[3]||'');const mins=ok?sn(row).dor:0;const pct=ok?Math.max(4,Math.min(100,mins/600*100)):0;return `<div class="sn-week-day"><div class="sn-week-track"><i style="height:${pct}%"></i></div><b>${ok?fd(mins):'—'}</b><small>${row[0]}</small></div>`}).join('')}</div></div>
+  <div class="card sn-week"><div class="snh"><span> <span>▥</span> Evolução da semana</span><small>somente registros confirmados</small></div><div class="sn-week-bars">${SLP.d.map((row,i)=>{const ok=/^\d{2}:\d{2}$/.test(row[1]||'')&&/^\d{2}:\d{2}$/.test(row[3]||'');const mins=ok?sn(row).dor:0;const pct=ok?Math.max(4,Math.min(100,mins/600*100)):0;return `<div class="sn-week-day"><div class="sn-week-track"><i style="height:${pct}%"></i></div><b>${ok?fd(mins):'—'}</b><small>${row[0]}</small></div>`}).join('')}</div></div>
 
   <div class="gx-grid">${sq('Qualidade do sono',ic('star','ci sm')+q[0],q[1],'s3')}<div class="sq s3"><span>Despertares</span><div class="stp"><button data-dp="-1" aria-label="Menos">−</button><b>${Number.isInteger(r[4])?r[4]:'—'}</b><button data-dp="1" aria-label="Mais">+</button></div><small>durante a noite</small></div></div>`};
   window.drawSono=()=>{const bx=$('#sonoBox');if(!bx)return;bx.classList.add('again');bx.innerHTML=sonoHTML()};
@@ -1945,7 +1945,7 @@ const TP={k:1,h:0,m:0};
   document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 })();
 $('#gx').addEventListener('click',e=>{if(e.target.closest('[data-tpok]'))return;const t=e.target.closest('[data-tp]');if(t)openTP(+t.dataset.tp)});
-$('#gx').addEventListener('click',e=>{const b=e.target.closest('[data-tpok]');if(!b)return;const k=+b.dataset.tpok,p=window.DASH_SLEEP_PENDING&&window.DASH_SLEEP_PENDING[k],r=SLP.d[SLP.sel];if(!p||p.day!==SLP.sel){if(!r[k]){toast('Escolha primeiro o horário de '+(k===1?'deitar':'acordar'));return}toast('Horário já registrado');return}const old=r[k];r[k]=p.time;if(r[1]&&r[2]&&r[3]&&df(r[1],r[2])>df(r[1],r[3])){r[k]=old;toast('Confira a ordem: deitar → dormir → acordar');return}delete window.DASH_SLEEP_PENDING[k];saveSL();drawSono();toast(k===1?'Hora de deitar registrada!':'Hora de acordar registrada!')});
+$('#gx').addEventListener('click',e=>{const b=e.target.closest('[data-tpok]');if(!b)return;const k=+b.dataset.tpok,p=window.DASH_SLEEP_PENDING&&window.DASH_SLEEP_PENDING[k],r=SLP.d[SLP.sel];if(!p||p.day!==SLP.sel){if(!r[k]){toast('Escolha primeiro o horário de '+(k===1?'deitar':'acordar'));return}toast('Horário já registrado');return}const old=r[k];r[k]=p.time;if(r[2]&&r[3]&&df(r[1],r[2])>df(r[1],r[3])){r[k]=old;toast('Confira a ordem: deitar → dormir → acordar');return}delete window.DASH_SLEEP_PENDING[k];saveSL();drawSono();toast(k===1?'Hora de deitar registrada!':'Hora de acordar registrada!')});
 $('#gx').addEventListener('click',e=>{const d=e.target.closest('[data-day]');if(d){SLP.sel=+d.dataset.day;saveSL();drawSono();return}const p=e.target.closest('[data-dp]');if(p){const r=SLP.d[SLP.sel];r[4]=Math.min(9,Math.max(0,(Number.isInteger(r[4])?r[4]:0)+ +p.dataset.dp));saveSL();drawSono()}});
 $('#gx').addEventListener('change',e=>{if(e.target.id!=='exD')return;const v=e.target.value.trim();if(v&&!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(v)){toast('Use dd/mm/aaaa');return}try{localStorage.setItem('evo-exam',v)}catch(x){}drawGeral()});
 let NAME='Rafael';try{NAME=localStorage.getItem('evo-name')||NAME}catch(e){}
