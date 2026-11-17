@@ -197,17 +197,29 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
 
           targetDoc.body.appendChild(bridgeScript);
 
-          const triangleModuleScript=targetDoc.createElement("script");
-          triangleModuleScript.textContent="("+function(data){
-            "use strict";
-            const doc=document,topics=[...new Set(data.map(q=>q.topico))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
-            const root=doc.createElement("section");root.id="eear-triangle-module";
-            const css=doc.createElement("style");css.textContent=`
-              #eear-triangle-module{margin:18px auto 28px;padding:18px;max-width:1100px;background:#111;border:1px solid #343434;border-radius:16px;color:#f5f5f5;font:15px/1.55 system-ui,sans-serif}
-              #eear-triangle-module h2{margin:0 0 5px;font-size:21px}
-              #eear-triangle-module .bt-sub{color:#aaa;margin:0 0 14px}
-              #eear-triangle-module .bt-tools{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px}
-              #eear-triangle-module select{min-width:min(100%,280px);max-width:100%;padding:11px 12px;ba background: #141414 !important;
+          // Ajustes visuais exclusivos do Banco de Questões: largura mais confortável,
+          // maior área vertical para leitura e paleta estritamente neutra.
+          const bankVisualStyle = targetDoc.createElement("style");
+          bankVisualStyle.id = "eear-bank-visual-adjustments";
+          bankVisualStyle.textContent = `
+            :root { color-scheme: dark; }
+            html, body {
+              background: #080808 !important;
+              color: #f5f5f5 !important;
+              accent-color: #f5f5f5 !important;
+            }
+            body {
+              background-image: none !important;
+            }
+            .card[data-id] {
+              width: 100% !important;
+              max-width: none !important;
+              min-height: 190px !important;
+              height: auto !important;
+              margin: 0 0 24px !important;
+              padding: 30px !important;
+              box-sizing: border-box !important;
+              background: #141414 !important;
               color: #f5f5f5 !important;
               border: 1px solid #383838 !important;
               border-radius: 14px !important;
