@@ -1043,7 +1043,7 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register(
-        "/meu-app-estudos/service-worker.js?v=50",
+        "/meu-app-estudos/service-worker.js?v=51",
         { scope: "/meu-app-estudos/", updateViaCache: "none" }
       );
       await registration.update();
