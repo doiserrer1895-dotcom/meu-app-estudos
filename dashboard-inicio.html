@@ -1576,7 +1576,17 @@ try{
    if(!ok(r[1])||!ok(r[2])||!ok(r[3])||!(r[4]===null||Number.isInteger(r[4])))return null;
    return r.slice();
   });
-  if(rows.every(Boolean))SLP={d:rows,sel:Math.min(6,Math.max(0,+s.sel||0))};
+  if(rows.every(Boolean)){
+   const daily=s.daily&&typeof s.daily==='object'&&!Array.isArray(s.daily)?s.daily:{};
+   const cleanDaily={};
+   for(const [date,row] of Object.entries(daily)){
+    if(/^\\d{4}-\\d{2}-\\d{2}$/.test(date)&&Array.isArray(row)&&row.length>=5&&row[0]===SL_DEF[sleepWeekIndex(date)][0]&&[1,2,3].every(k=>row[k]===''||ok(row[k]))&&(row[4]===null||Number.isInteger(row[4]))){
+      cleanDaily[date]=[row[0],row[1],row[2],row[3],row[4],row[5]==='realizado'?'realizado':'planejado'];
+    }
+   }
+   const date=/^\\d{4}-\\d{2}-\\d{2}$/.test(s.date||'')?s.date:sleepTodayKey;
+   SLP={d:rows,sel:sleepWeekIndex(date),date,mode:s.mode==='fixed'?'fixed':'daily',daily:cleanDaily};
+  }
  }
  if(sleepLegacyMigrated)localStorage.setItem('evo-sono',JSON.stringify(SLP));
 }catch(e){}
@@ -1605,13 +1615,14 @@ async function syncDashboardSleep(userId){
     if(error)throw error;
     const validData=v=>v&&Array.isArray(v.d)&&v.d.length===7&&v.d.every((r,i)=>
       Array.isArray(r)&&r.length===5&&r[0]===SL_DEF[i][0]&&
-      (r[1]===''||/^\d{2}:\d{2}$/.test(r[1]))&&
-      (r[2]===''||/^\d{2}:\d{2}$/.test(r[2]))&&
-      (r[3]===''||/^\d{2}:\d{2}$/.test(r[3]))&&
+      (r[1]===''||/^\\d{2}:\\d{2}$/.test(r[1]))&&
+      (r[2]===''||/^\\d{2}:\\d{2}$/.test(r[2]))&&
+      (r[3]===''||/^\\d{2}:\\d{2}$/.test(r[3]))&&
       (r[4]===null||Number.isInteger(r[4]))
-    );
+    )&&(!v.daily||typeof v.daily==='object')&&(!v.mode||v.mode==='daily'||v.mode==='fixed');
     if(data&&validData(data.data)){
-      SLP={d:data.data.d.map(r=>r.slice()),sel:Math.min(6,Math.max(0,Number(data.data.sel)||0))};
+      const date=/^\\d{4}-\\d{2}-\\d{2}$/.test(data.data.date||'')?data.data.date:sleepTodayKey;
+      SLP={d:data.data.d.map(r=>r.slice()),sel:sleepWeekIndex(date),date,mode:data.data.mode==='fixed'?'fixed':'daily',daily:data.data.daily&&typeof data.data.daily==='object'?data.data.daily:{}};
       const snapshot=JSON.stringify(SLP);
       localStorage.setItem('evo-sono',snapshot);
       localStorage.setItem('evo-sono:'+userId,snapshot);
@@ -1620,7 +1631,8 @@ async function syncDashboardSleep(userId){
       /* Migra os registros locais existentes para a conta sem apagar nada. */
       const local=JSON.parse(localStorage.getItem('evo-sono:'+userId)||localStorage.getItem('evo-sono')||'null');
       if(validData(local)){
-        SLP={d:local.d.map(r=>r.slice()),sel:Math.min(6,Math.max(0,Number(local.sel)||0))};
+        const date=/^\\d{4}-\\d{2}-\\d{2}$/.test(local.date||'')?local.date:sleepTodayKey;
+        SLP={d:local.d.map(r=>r.slice()),sel:sleepWeekIndex(date),date,mode:local.mode==='fixed'?'fixed':'daily',daily:local.daily&&typeof local.daily==='object'?local.daily:{}};
         saveSL();
       }else{
         saveSL();
@@ -1864,14 +1876,11 @@ function drawGeral(){
   const ic=(k,c='ci')=>`<svg class="${c}" viewBox="0 0 24 24">${ICO[k]}</svg>`;
   const DN={Seg:'segunda',Ter:'terça',Qua:'quarta',Qui:'quinta',Sex:'sexta','Sáb':'sábado',Dom:'domingo'};
   const sonoHTML=()=>{
-    window.DASH_SLEEP_PENDING=window.DASH_SLEEP_PENDING||{};
-    const valid=r=>/^\d\d:\d\d$/.test(String(r[1]||''))&&/^\d\d:\d\d$/.test(String(r[3]||''));
+    const valid=r=>/^\\d\\d:\\d\\d$/.test(String(r[1]||''))&&/^\\d\\d:\\d\\d$/.test(String(r[3]||''));
     const r=sleepRow(),has=valid(r),s=has?sn(r):{lat:0,cama:0,dor:0,ef:0},q=has?ql(s):['Sem registro','Informe os horários desta data.'];
     const status=r[5]==='realizado'?'Registro realizado':'Planejamento';
     if(has&&r[5]!=='realizado')q[0]='Planejado';
-    const status=r[5]==='realizado'?'Registro realizado':'Planejamento';
     const records=Object.values(SLP.daily||{}).filter(row=>valid(row)&&(row[5]==='realizado'||row[5]===undefined)).map(sn);
-    const med=records.length?Math.round(records.reduce((x,y)=>x+y.dor,0)/records.length):null,efm=records.length?records.reduce((x,y)=>x+y.ef,0)/records.length:null,dm=med===null?null:med-450,c1=v=>v.toFixed(1).replace('.',',');,has=valid(r),s=has?sn(r):{lat:0,cama:0,dor:0,ef:0},q=has?ql(s):['Sem registro','Informe seus horários de sono.'];
     const med=records.length?Math.round(records.reduce((x,y)=>x+y.dor,0)/records.length):null,efm=records.length?records.reduce((x,y)=>x+y.ef,0)/records.length:null,dm=med===null?null:med-450,c1=v=>v.toFixed(1).replace('.',',');
     const TI={
       1:['#8b8cff','<svg class="ti bd2" viewBox="0 0 24 24"><path d="M3 19V6M3 13h18v6M21 13v-3a2 2 0 0 0-2-2h-7v5"/></svg>'],
