@@ -128,10 +128,6 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
         bank.style.display="block";
         try{
 
-          const triangleResponse=await fetch(new URL("bt_questoes.json",location.href),{cache:"no-store"});
-          if(!triangleResponse.ok)throw new Error("Não foi possível carregar o arquivo das 53 questões de triângulos.");
-          const triangleData=await triangleResponse.json();
-          if(!Array.isArray(triangleData)||triangleData.length!==53||triangleData.some(q=>q.materia!=="Matemática"||q.assunto!=="Geometria Plana"))throw new Error("O arquivo de triângulos não passou na validação de segurança.");
           const targetDoc=bank.contentDocument;
           const bridgeScript=targetDoc.createElement("script");
           bridgeScript.textContent="("+function(){
@@ -158,9 +154,6 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               if(!taxonomy[discipline].includes(topic))taxonomy[discipline].push(topic);
             });
 
-            const triangleTopics=["Cevianas notáveis (mediana, bissetriz, altura, mediatriz)","Pontos Notáveis (Baricentro, Incentro, Circuncentro, Ortocentro)","Soma dos Ângulos Internos do Triângulo","Outros Tópicos e Questões Mescladas sobre Triângulos"];
-            if(!taxonomy["Matemática"])taxonomy["Matemática"]=[];
-            triangleTopics.forEach(function(topic){if(!taxonomy["Matemática"].includes(topic))taxonomy["Matemática"].push(topic)});
             Object.keys(taxonomy).forEach(function(name){taxonomy[name].sort(function(a,b){return a.localeCompare(b,"pt-BR")})});
             window.parent.postMessage({type:"eear-question-taxonomy",taxonomy:taxonomy},"*");
             document.addEventListener("click",function(event){
@@ -214,69 +207,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               #eear-triangle-module h2{margin:0 0 5px;font-size:21px}
               #eear-triangle-module .bt-sub{color:#aaa;margin:0 0 14px}
               #eear-triangle-module .bt-tools{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px}
-              #eear-triangle-module select{min-width:min(100%,280px);max-width:100%;padding:11px 12px;background:#202020;color:#fff;border:1px solid #555;border-radius:10px;font:inherit}
-              #eear-triangle-module .bt-card{padding:16px;margin:12px 0;background:#191919;border:1px solid #383838;border-radius:13px}
-              #eear-triangle-module .bt-meta{color:#aaa;font-size:12px;margin-bottom:8px}
-              #eear-triangle-module .bt-question{white-space:pre-wrap;margin:0 0 12px}
-              #eear-triangle-module .bt-image{display:block;width:auto;max-width:100%;height:auto;max-height:none;object-fit:contain;margin:12px auto;border-radius:8px}
-              #eear-triangle-module .bt-options{display:grid;gap:8px}
-              #eear-triangle-module .bt-option{width:100%;padding:11px 13px;text-align:left;color:#f5f5f5;background:#242424;border:1px solid #484848;border-radius:9px;font:inherit;cursor:pointer}
-              #eear-triangle-module .bt-option:disabled{cursor:default;opacity:1}
-              #eear-triangle-module .bt-option.bt-picked{border-color:#aaa}
-              #eear-triangle-module .bt-answer{margin-top:12px;padding:10px 12px;background:#202020;border-radius:9px;font-weight:700}
-              #eear-triangle-module .bt-answer[hidden]{display:none}
-              @media(max-width:600px){#eear-triangle-module{margin:10px;padding:14px}#eear-triangle-module .bt-card{padding:12px}}
-            `;
-            doc.head.appendChild(css);
-            const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-            root.innerHTML='<h2>Questões de Triângulos</h2><p class="bt-sub">Matemática · Geometria Plana · 53 questões</p><div class="bt-tools"><select id="bt-topic-filter" aria-label="Filtrar por tópico"><option value="">Todos os tópicos</option>'+topics.map(t=>'<option value="'+esc(t)+'">'+esc(t)+'</option>').join("")+'</select></div><div id="bt-question-list"></div>';
-            const old=doc.getElementById("eear-triangle-module");if(old)old.remove();
-            doc.body.insertBefore(root,doc.body.firstChild);
-            const list=root.querySelector("#bt-question-list"),filter=root.querySelector("#bt-topic-filter");
-            const base="https://doiserrer1895-dotcom.github.io/meu-app-estudos/";
-            function render(){
-              const selected=filter.value,items=data.filter(q=>!selected||q.topico===selected);
-              list.innerHTML=items.map(q=>'<article class="bt-card" data-q="'+q.numero+'"><div class="bt-meta">Questão '+q.numero+' · '+esc(q.topico)+' · '+esc(q.dificuldade||"")+'</div><p class="bt-question">'+esc(q.enunciado)+'</p>'+(q.imagem_questao?'<img class="bt-image" loading="lazy" src="'+base+encodeURIComponent(q.imagem_questao)+'" alt="Imagem da questão '+q.numero+'">':"")+(q.figura?'<img class="bt-image" loading="lazy" src="'+base+encodeURIComponent(q.figura)+'" alt="Figura de apoio da questão '+q.numero+'">':"")+'<div class="bt-options">'+Object.entries(q.alternativas).map(([letter,value])=>'<button type="button" class="bt-option" data-answer="'+esc(letter)+'">'+esc(letter)+') '+esc(value)+'</button>').join("")+'</div><div class="bt-answer" hidden></div></article>').join("");
-            }
-            filter.addEventListener("change",render);
-            list.addEventListener("click",function(event){
-              const button=event.target.closest(".bt-option");if(!button)return;
-              const card=button.closest(".bt-card");if(!card||card.dataset.answered==="1")return;
-              const q=data.find(item=>String(item.numero)===card.dataset.q);if(!q)return;
-              card.dataset.answered="1";
-              card.querySelectorAll(".bt-option").forEach(el=>{el.disabled=true;if(el.dataset.answer===button.dataset.answer)el.classList.add("bt-picked")});
-              const answer=card.querySelector(".bt-answer");answer.hidden=false;answer.textContent="R: "+q.gabarito+" — "+(q.alternativas[q.gabarito]||"");
-              const now=new Date(),date=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
-              window.parent.postMessage({type:"eear-question-attempt",attempt:{source:"banco",questionId:"triangulos_"+q.numero,eventId:"triangulos_"+q.numero+"_"+Date.now(),subject:"Matemática",topic:q.topico,picked:button.dataset.answer,correct:button.dataset.answer===q.gabarito,date:date}},"*");
-            });
-            render();
-          }.toString()+")("+JSON.stringify(triangleData)+");";
-          targetDoc.body.appendChild(triangleModuleScript);
-
-
-          // Ajustes visuais exclusivos do Banco de Questões: largura mais confortável,
-          // maior área vertical para leitura e paleta estritamente neutra.
-          const bankVisualStyle = targetDoc.createElement("style");
-          bankVisualStyle.id = "eear-bank-visual-adjustments";
-          bankVisualStyle.textContent = `
-            :root { color-scheme: dark; }
-            html, body {
-              background: #080808 !important;
-              color: #f5f5f5 !important;
-              accent-color: #f5f5f5 !important;
-            }
-            body {
-              background-image: none !important;
-            }
-            .card[data-id] {
-              width: 100% !important;
-              max-width: none !important;
-              min-height: 190px !important;
-              height: auto !important;
-              margin: 0 0 24px !important;
-              padding: 30px !important;
-              box-sizing: border-box !important;
-              background: #141414 !important;
+              #eear-triangle-module select{min-width:min(100%,280px);max-width:100%;padding:11px 12px;ba background: #141414 !important;
               color: #f5f5f5 !important;
               border: 1px solid #383838 !important;
               border-radius: 14px !important;
