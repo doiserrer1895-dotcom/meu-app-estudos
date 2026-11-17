@@ -1888,7 +1888,7 @@ function drawGeral(){
   const ic=(k,c='ci')=>`<svg class="${c}" viewBox="0 0 24 24">${ICO[k]}</svg>`;
   const DN={Seg:'segunda',Ter:'terça',Qua:'quarta',Qui:'quinta',Sex:'sexta','Sáb':'sábado',Dom:'domingo'};
   const sonoHTML=()=>{
-    const valid=r=>/^\d\d:\d\d$/.test(String(r[1]||''))&&/^\d\d:\d\d$/.test(String(r[3]||''));
+    const valid=r=>[1,2,3].every(k=>/^\d\d:\d\d$/.test(String(r[k]||'')));
     const r=sleepRow(),has=valid(r),s=has?sn(r):{lat:0,cama:0,dor:0,ef:0},q=has?ql(s):['Sem registro','Informe os horários desta data.'];
     const status=r[5]==='realizado'?'Registro realizado':'Planejamento';
     if(has&&r[5]!=='realizado'){q[0]='Planejado';q[1]='Horários previstos para esta data. Confirme após a noite.';}
@@ -1913,7 +1913,7 @@ function drawGeral(){
   <div class="sn3">${tin('bed','Deitar',1)}${tin('zzz','Dormir',2)}${tin('sun','Acordar',3)}</div>
   <div class="tl" title="Tempo até dormir e tempo dormindo"><u class="a" style="flex:${Math.max(s.lat,1)}"></u><u class="b" style="flex:${Math.max(s.dor,1)}"></u></div><div class="tll"><span>até dormir</span><span>dormindo</span></div>
   <div class="sn2">${it('m-lat','#f6b04a',MI.lat,'Latência do sono',has?s.lat+' min':'—')}${it('m-bed','#8b8cff',MI.bed,'Tempo na cama',has?fd(s.cama):'—')}${it('m-dor','#5bb5ff',MI.moon,'Tempo dormido',has?fd(s.dor):'—')}${it('m-ef','#4cd07d',ef(s.ef),'Eficiência da noite',has?c1(s.ef)+'%':'—')}</div>${has&&r[5]!=='realizado'?'<button type="button" class="sleep-finish" data-sleep-finish>Marcar como realizado</button>':has?'<div class="sleep-done">✓ Registro real confirmado</div>':''}</div>
-  <div class="card sn-week"><div class="snh"><span> <span>▥</span> Evolução da semana</span><small>somente registros confirmados</small></div><div class="sn-week-bars">${Array.from({length:7},(_,i)=>{const date=new Date(SLP.date+'T12:00:00');date.setDate(date.getDate()-(sleepWeekIndex(SLP.date)-i));const key=sleepDateKey(date),row=SLP.daily&&SLP.daily[key],ok=row&&row[5]==='realizado'&&/^\d{2}:\d{2}$/.test(row[1]||'')&&/^\d{2}:\d{2}$/.test(row[3]||''),mins=ok?sn(row).dor:0,pct=ok?Math.max(4,Math.min(100,mins/600*100)):0;return `<div class="sn-week-day"><div class="sn-week-track"><i style="height:${pct}%"></i></div><b>${ok?fd(mins):'—'}</b><small>${SL_DEF[i][0]}</small></div>`}).join('')}</div></div>
+  <div class="card sn-week"><div class="snh"><span> <span>▥</span> Evolução da semana</span><small>somente registros confirmados</small></div><div class="sn-week-bars">${Array.from({length:7},(_,i)=>{const date=new Date(SLP.date+'T12:00:00');date.setDate(date.getDate()-(sleepWeekIndex(SLP.date)-i));const key=sleepDateKey(date),row=SLP.daily&&SLP.daily[key],ok=row&&row[5]==='realizado'&&[1,2,3].every(k=>/^\d{2}:\d{2}$/.test(row[k]||'')),mins=ok?sn(row).dor:0,pct=ok?Math.max(4,Math.min(100,mins/600*100)):0;return `<div class="sn-week-day"><div class="sn-week-track"><i style="height:${pct}%"></i></div><b>${ok?fd(mins):'—'}</b><small>${SL_DEF[i][0]}</small></div>`}).join('')}</div></div>
 
   <div class="gx-grid">${sq('Qualidade do sono',ic('star','ci sm')+q[0],q[1],'s3')}<div class="sq s3"><span>Despertares</span><div class="stp"><button data-dp="-1" aria-label="Menos">−</button><b>${Number.isInteger(r[4])?r[4]:'—'}</b><button data-dp="1" aria-label="Mais">+</button></div><small>durante a noite</small></div></div>`};
   window.drawSono=()=>{const bx=$('#sonoBox');if(!bx)return;bx.classList.add('again');bx.innerHTML=sonoHTML()};
