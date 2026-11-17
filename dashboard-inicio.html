@@ -579,7 +579,7 @@ button:focus-visible,input:focus-visible,[data-go]:focus-visible{outline:2px sol
 .dl.u{animation:dlGlow 2.8s ease-in-out infinite}
 @keyframes dlGlow{0%,100%{box-shadow:0 0 0 rgba(255,255,255,0)}50%{box-shadow:0 0 14px rgba(255,255,255,.35)}}
 .top.shim{position:relative;overflow:hidden}
-.top.shim::after{content:"";position:absolute;top:0;bottom:0;left:-40%;width:35%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);animation:sheen 3.2s ease-in-out infinite}
+.top.shim::after{content:"";position:absolute;top:0;bottom:0;left:-40%;width:35%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);animation:sheen 3.2s ease-in-out infinite;display:none!important}
 .chipn{display:flex!important;align-items:flex-start}.chipn .odo{--h:1.15em;animation-duration:2.6s}
 .chip2:has(.chipn){animation:glowW 3s ease-in-out infinite}
 /* hero do rank (Comunidade) */
@@ -1700,6 +1700,7 @@ const saveSL=()=>{
 };
 async function syncDashboardSleep(userId){
   if(!DASH_SUPABASE||!userId)return;
+  const previousSleep=JSON.stringify(SLP);
   try{
     const {data,error}=await DASH_SUPABASE.from('sleep_data').select('data').eq('user_id',userId).maybeSingle();
     if(error)throw error;
@@ -1720,7 +1721,6 @@ async function syncDashboardSleep(userId){
       const snapshot=JSON.stringify(SLP);
       localStorage.setItem('evo-sono',snapshot);
       localStorage.setItem('evo-sono:'+userId,snapshot);
-      drawGeral();
     }else if(!data){
       /* Migra os registros locais existentes para a conta sem apagar nada. */
       const local=JSON.parse(localStorage.getItem('evo-sono:'+userId)||localStorage.getItem('evo-sono')||'null');
@@ -1732,6 +1732,7 @@ async function syncDashboardSleep(userId){
         saveSL();
       }
     }
+    if(JSON.stringify(SLP)!==previousSleep&&typeof window.drawSono==='function')window.drawSono();
   }catch(e){console.warn('Não foi possível carregar os horários de sono da nuvem:',e)}
 }
 const sleepRow=(key=SLP.date)=>((SLP.daily&&SLP.daily[key])||(SLP.mode==='fixed'?SLP.d[sleepWeekIndex(key)].concat('planejado'):sleepBlankRow(key)));
@@ -1877,12 +1878,14 @@ async function refreshDashboardCommunity(){
       DASH_SUPABASE.from('estudos').select('dados').eq('id',user.id).maybeSingle()
     ]);
     const cResult=results[0],pResult=results[1],studyResult=results[2];
+    const previousStudy=JSON.stringify(DASH_STUDY_STATE);
+    const previousConstancy=JSON.stringify(DASH_CONSTANCIA_STATE);
+    const previousRank=JSON.stringify(GD.rank);
     /* Lê primeiro o cache da mesma conta que a aba Estudos usa; nuvem é fallback. */
     let localStudy=null;
     try{const raw=localStorage.getItem('estudos-v1:'+user.id);if(raw){const parsed=JSON.parse(raw);if(parsed&&Array.isArray(parsed.entries)&&Array.isArray(parsed.edital))localStudy=parsed}}catch(e){}
     const cloudStudy=!studyResult.error&&studyResult.data&&studyResult.data.dados&&Array.isArray(studyResult.data.dados.entries)&&Array.isArray(studyResult.data.dados.edital)?studyResult.data.dados:null;
     DASH_STUDY_STATE=localStudy||cloudStudy;
-    if(DASH_STUDY_STATE)drawGeral(); /* Atualiza os indicadores de Estudo mesmo se a consulta da Comunidade falhar. */
     if(!cResult.error&&cResult.data&&cResult.data.data)DASH_CONSTANCIA_STATE=cResult.data.data;
     else DASH_CONSTANCIA_STATE=readConstanciaLocal();
     if(pResult.error)throw pResult.error;
@@ -1908,7 +1911,9 @@ async function refreshDashboardCommunity(){
       es:{p:position('average_daily_minutes'),n:n,d:null,s:studySeries},
       ev:{p:position('evolution_score'),n:n,d:null,s:Array(7).fill(metrics.evolution_score)}
     };
-    drawGeral();
+    if(JSON.stringify(DASH_STUDY_STATE)!==previousStudy||
+       JSON.stringify(DASH_CONSTANCIA_STATE)!==previousConstancy||
+       JSON.stringify(GD.rank)!==previousRank)drawGeral();
   }catch(e){console.warn('Não foi possível sincronizar os dados da Comunidade no painel geral:',e)}
   finally{DASH_REFRESHING=false}
 }
