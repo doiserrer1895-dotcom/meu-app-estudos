@@ -35,6 +35,9 @@ svg{width:100%;height:auto;display:block}
 .big{font-size:40px;font-weight:800;color:var(--ac)}
 .add{display:flex;gap:8px}
 input,select{width:100%;background:var(--in);border:1px solid var(--bd);color:var(--tx);border-radius:14px;padding:12px;font-size:16px;font-family:inherit}
+select{color-scheme:dark}
+select option{background:var(--card);color:var(--tx)}
+select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 label{display:block;font-size:13px;color:var(--mu);margin:12px 0 5px}
 .btn{background:var(--ac);color:var(--actx);border:0;border-radius:14px;padding:12px 18px;font-weight:700;font-size:15px;cursor:pointer;white-space:nowrap}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -465,9 +468,10 @@ function ldiCard(m){const s=mStat(m),o=open[m.id],dy=m.days||[],es=S.entries.fil
  <label>Dias da semana</label><div class="chips">${DN.map((n,i)=>`<button class="chip ${dy.includes(i)?'on':''}" onclick="tgD('${m.id}',${i})">${n}</button>`).join('')}</div>
  <label>Meta semanal (horas)</label><input type="number" min="0" step="0.5" value="${m.goal||''}" placeholder="Defina sua meta" onchange="setGoal('${m.id}',this.value)">
  <label>Conteúdos — marque quando concluir</label>`+
- (m.topics.length?m.topics.map((t,i)=>{const A=agg(es.filter(e=>e.top===t)),ok=topicDone(m,t);return `<div class="row"><button class="ck" style="${ok?'background:var(--gr);border-color:var(--gr);color:#04121a':''}" onclick="toggleTopic('${m.id}','${encodeURIComponent(t).replace(/'/g,'%27')}')">${ok?'✓':''}</button><div class="g"><b class="${ok?'done':''}">${esc(topicLabel(m,t))}</b>${A.h>0?`<small>${f1(A.h)}h estudadas</small>`:''}</div><button class="x" onclick="delT('${m.id}',${i})">×</button></div>`}).join(''):'<div class="empty" style="padding:12px 0">Nenhum conteúdo ainda</div>')+
- `<label>Nome do conteúdo</label><input id="topic_text_${m.id}" type="text" placeholder="Digite o tópico que deseja adicionar" autocomplete="off">
- <label>Selecione um conteúdo do banco (adiciona automaticamente)</label><select id="t_${m.id}" onchange="selectBankTopic('${m.id}')"><option value="">Escolha um conteúdo da lista</option>${opts(bankTopics(m.name),'')}</select>
+ (m.topics.length?m.topics.map((t,i)=>{const A=agg(es.filter(e=>e.top===t)),ok=topicDone(m,t),display=topicLabel(m,t);return `<div class="row"><button class="ck" style="${ok?'background:var(--gr);border-color:var(--gr);color:#04121a':''}" onclick="toggleTopic('${m.id}','${encodeURIComponent(t).replace(/'/g,'%27')}')">${ok?'✓':''}</button><div class="g"><b class="${ok?'done':''}">${esc(display)}</b>${display!==t?`<small>Vinculado ao banco: ${esc(t)}</small>`:''}${A.h>0?`<small>${f1(A.h)}h estudadas</small>`:''}</div><button class="x" onclick="delT('${m.id}',${i})">×</button></div>`}).join(''):'<div class="empty" style="padding:12px 0">Nenhum conteúdo ainda</div>')+
+ `<label>Nome do conteúdo</label><input id="topic_text_${m.id}" type="text" placeholder="Digite o nome que você usa no seu curso" autocomplete="off">
+ <label>Vincular ao conteúdo do banco de questões</label><select id="t_${m.id}" onchange="selectBankTopic('${m.id}')"><option value="">Escolha o conteúdo correspondente</option>${opts(bankTopics(m.name),'')}</select>
+ <small class="sub" id="bank_link_hint_${m.id}">O nome digitado será mantido; escolha abaixo o conteúdo correspondente no banco.</small>
  <button class="btn" style="width:100%;margin-top:8px" onclick="addT('${m.id}')">Adicionar conteúdo</button>
  <div style="margin-top:14px;text-align:right">${pend[m.id]? `<button class="btn" style="background:var(--rd);color:#fff;padding:8px 12px" onclick="delM('${m.id}')">Confirmar exclusão</button> <button class="x" onclick="pend={};render()">Cancelar</button>`:`<button class="x" style="font-size:14px" onclick="pend={'${m.id}':1};render()">Apagar disciplina</button>`}</div></div>`;
  return `<div class="ldc ${s.st}">${head}${body}</div>`}
@@ -485,8 +489,8 @@ function vP(){const C={all:S.edital.length,prog:0,done:0,new:0};S.edital.forEach
  <div id="ldiList" style="margin-top:14px">${ldiList()}</div>
  <div class="card"><h2>Adicionar disciplina do banco de questões</h2><div class="add"><select id="nm"><option value="">Escolha uma disciplina</option>${opts(bankSubjects(),'')}</select><button class="btn" onclick="addM()">Adicionar</button></div><small class="sub">As disciplinas e os tópicos são carregados do banco de questões.</small></div>`+vS()}
 function addM(){const v=$('#nm').value.trim();if(v&&!S.edital.some(m=>m.name.toLowerCase()===v.toLowerCase())){const id=uid();S.edital.push({id,name:v,topics:[],days:[]});open[id]=true;save();render()}}
-function selectBankTopic(id){const m=S.edital.find(x=>x.id===id),select=$('#t_'+id),input=$('#topic_text_'+id);if(!m||!select||select.selectedIndex<=0)return;const v=String(select.value||select.options[select.selectedIndex].textContent||'').trim();if(!v)return;if(input)input.value=v;if(!m.topics.includes(v)){m.topics.push(v);save();render();}}
-function addT(id){const m=S.edital.find(x=>x.id===id),input=$('#topic_text_'+id),select=$('#t_'+id);let v=input?String(input.value||'').trim():'';if(!v&&select&&select.selectedIndex>0)v=String(select.options[select.selectedIndex].value||select.options[select.selectedIndex].textContent).trim();if(!m||!v)return;if(m.topics.includes(v))return;m.topics.push(v);save();render()}
+function selectBankTopic(id){const select=$('#t_'+id),hint=$('#bank_link_hint_'+id);if(!select||!hint)return;const v=select.selectedIndex>0?String(select.value||select.options[select.selectedIndex].textContent||'').trim():'';hint.textContent=v?'Vínculo selecionado: '+v:'O nome digitado será mantido; escolha abaixo o conteúdo correspondente no banco.';}
+function addT(id){const m=S.edital.find(x=>x.id===id),input=$('#topic_text_'+id),select=$('#t_'+id);if(!m)return;const label=input?String(input.value||'').trim():'';const bankTopic=select&&select.selectedIndex>0?String(select.value||select.options[select.selectedIndex].textContent||'').trim():'';const key=bankTopic||label;if(!key)return;if(m.topics.includes(key)){alert('Esse conteúdo já foi adicionado a esta disciplina.');return;}m.topics.push(key);if(bankTopic&&label&&label!==bankTopic){m.topicAliases=m.topicAliases||{};m.topicAliases[bankTopic]=label;}else if(bankTopic&&m.topicAliases)delete m.topicAliases[bankTopic];save();render();}
 function editT(id){const m=S.edital.find(x=>x.id===id),input=$('#t_'+id),v=input&&input.selectedIndex>0?String(input.options[input.selectedIndex].value||input.options[input.selectedIndex].textContent).trim():'';if(!m||!v){alert('Escolha primeiro um tópico do banco de questões.');return;}const current=topicLabel(m,v),next=prompt('Digite o nome que deseja usar neste tópico no LDI:',current);if(next===null)return;const clean=next.trim();if(!clean){alert('O nome do tópico não pode ficar vazio.');return;}m.topicAliases=m.topicAliases||{};if(clean===v)delete m.topicAliases[v];else m.topicAliases[v]=clean;save();render()}
 function delM(id){S.edital=S.edital.filter(x=>x.id!==id);S.sched=S.sched.filter(x=>S.edital.some(m=>m.name===x.subj));pend={};save();render()}
 function delT(id,i){const m=S.edital.find(x=>x.id===id);if(!m)return;const t=m.topics.splice(i,1)[0];m.doneTopics=(m.doneTopics||[]).filter(x=>x!==t);if(m.topicAliases)delete m.topicAliases[t];save();render()}
@@ -1019,7 +1023,7 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register(
-        "/meu-app-estudos/service-worker.js?v=49",
+        "/meu-app-estudos/service-worker.js?v=50",
         { scope: "/meu-app-estudos/", updateViaCache: "none" }
       );
       await registration.update();
