@@ -1621,15 +1621,15 @@ async function syncDashboardSleep(userId){
     if(error)throw error;
     const validData=v=>v&&Array.isArray(v.d)&&v.d.length===7&&v.d.every((r,i)=>
       Array.isArray(r)&&r.length===5&&r[0]===SL_DEF[i][0]&&
-      (r[1]===''||/^\\d{2}:\\d{2}$/.test(r[1]))&&
-      (r[2]===''||/^\\d{2}:\\d{2}$/.test(r[2]))&&
-      (r[3]===''||/^\\d{2}:\\d{2}$/.test(r[3]))&&
+      (r[1]===''||/^\d{2}:\d{2}$/.test(r[1]))&&
+      (r[2]===''||/^\d{2}:\d{2}$/.test(r[2]))&&
+      (r[3]===''||/^\d{2}:\d{2}$/.test(r[3]))&&
       (r[4]===null||Number.isInteger(r[4]))
     )&&(!v.daily||(
       typeof v.daily==='object'&&!Array.isArray(v.daily)&&
-      Object.entries(v.daily).every(([date,row])=>/^\\d{4}-\\d{2}-\\d{2}$/.test(date)&&
+      Object.entries(v.daily).every(([date,row])=>/^\d{4}-\d{2}-\d{2}$/.test(date)&&
         Array.isArray(row)&&(row.length===5||row.length===6)&&row[0]===SL_DEF[sleepWeekIndex(date)][0]&&
-        [1,2,3].every(k=>row[k]===''||/^\\d{2}:\\d{2}$/.test(row[k]))&&
+        [1,2,3].every(k=>row[k]===''||/^\d{2}:\d{2}$/.test(row[k]))&&
         (row[4]===null||Number.isInteger(row[4]))&&(row[5]===undefined||row[5]==='planejado'||row[5]==='realizado'))
     ))&&(!v.mode||v.mode==='daily'||v.mode==='fixed');
     if(data&&validData(data.data)){
