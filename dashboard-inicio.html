@@ -1655,7 +1655,7 @@ async function syncDashboardSleep(userId){
 const tm=t=>{const p=t.split(':');return +p[0]*60+ +p[1]},df=(a,b)=>(tm(b)-tm(a)+1440)%1440;
 const sleepBlankRow=key=>[SL_DEF[sleepWeekIndex(key)][0],'','','',null,'planejado'];
 const sleepRow=(key=SLP.date)=>((SLP.daily&&SLP.daily[key])||(SLP.mode==='fixed'?SLP.d[sleepWeekIndex(key)]:sleepBlankRow(key)));
-const saveSleepRow=row=>{if(SLP.mode==='fixed'&&row[5]!=='realizado')SLP.d[sleepWeekIndex(SLP.date)]=row.slice(0,5);else SLP.daily[SLP.date]=row;SLP.sel=sleepWeekIndex(SLP.date);saveSL()};
+const saveSleepRow=row=>{if(SLP.mode==='fixed'&&!SLP.daily[SLP.date]&&row[5]!=='realizado')SLP.d[sleepWeekIndex(SLP.date)]=row.slice(0,5);else SLP.daily[SLP.date]=row;SLP.sel=sleepWeekIndex(SLP.date);saveSL()};
 const sleepDateLabel=key=>new Date(key+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
 const fd=m=>Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')+'min';
 const sn=r=>{const lat=r[2]?df(r[1],r[2]):0,cama=df(r[1],r[3]),dor=Math.max(0,cama-lat);return{lat,cama,dor,ef:cama?Math.min(100,dor/cama*100):0}};
