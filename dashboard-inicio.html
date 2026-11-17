@@ -952,7 +952,86 @@ html,body{width:100%!important;min-width:0!important;height:auto!important;min-h
 #geral-0{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important}
 #geral-0>*{max-width:100%!important;min-width:0!important;box-sizing:border-box!important}
 @media(max-width:560px){#content{padding:8px!important}}
-.tcell-wrap{display:grid;gap:6px;min-width:0}.sleep-ok{min-height:30px;border:1px solid rgba(255,255,255,.22);border-radius:10px;background:#fff;color:#050505;font-size:11px;font-weight:900;letter-spacing:.06em}.sleep-ok:active{transform:scale(.97)}.sn-week{margin-top:12px}.sn-week .snh{display:flex;justify-content:space-between;align-items:center;gap:8px}.sn-week .snh small{font-size:9px;color:var(--mu);font-weight:700}.sn-week-bars{height:132px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:end;margin-top:18px}.sn-week-day{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;min-width:0}.sn-week-track{height:78px;width:100%;max-width:25px;border-radius:8px;background:rgba(255,255,255,.07);display:flex;align-items:flex-end;overflow:hidden}.sn-week-track i{display:block;width:100%;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#a9a5ff,#6864c8);min-height:0}.sn-week-day b{font-size:9px;color:#eee;white-space:nowrap}.sn-week-day small{font-size:10px;color:var(--mu);font-weight:700}</style>
+.tcell-wrap{display:grid;gap:6px;min-width:0}.sleep-ok{min-height:30px;border:1px solid rgba(255,255,255,.22);border-radius:10px;background:#fff;color:#050505;font-size:11px;font-weight:900;letter-spacing:.06em}.sleep-ok:active{transform:scale(.97)}.sn-week{margin-top:12px}.sn-week .snh{display:flex;justify-content:space-between;align-items:center;gap:8px}.sn-week .snh small{font-size:9px;color:var(--mu);font-weight:700}
+/* Organização visual da aba Sono — somente apresentação, sem alterar dados ou ações. */
+#sonoBox{display:grid;gap:14px;min-width:0}
+#sonoBox>.sec{margin:0 2px -3px}
+#sonoBox>.sn-hero{margin:0;padding:17px 18px;min-height:112px;display:grid;grid-template-columns:54px minmax(0,1fr) minmax(145px,.8fr);align-items:center;gap:15px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(120deg,rgba(255,255,255,.075),rgba(255,255,255,.018))}
+#sonoBox>.sn-hero>div{min-width:0}
+#sonoBox>.sn-hero>div>small,#sonoBox .sn-ef>small{display:block;font-size:10px;line-height:1.4;color:var(--mu);font-weight:700;letter-spacing:.035em}
+#sonoBox>.sn-hero>div>b{display:block;font-size:clamp(22px,3vw,29px);line-height:1.15;margin:5px 0;font-variant-numeric:tabular-nums}
+#sonoBox>.sn-hero .moon{width:48px;height:48px}
+#sonoBox>.sn-hero .sn-ef{grid-column:auto;border:0;border-left:1px solid var(--line);border-top:0;padding:4px 0 4px 17px}
+#sonoBox>.sn-hero .sn-ef>b{font-size:22px}
+#sonoBox .sn-reg,#sonoBox .sn-week{margin:0;padding:17px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(155deg,rgba(255,255,255,.045),rgba(255,255,255,.018))}
+#sonoBox .snh{gap:10px;margin:0 0 14px;flex-wrap:wrap}
+#sonoBox .snh>span{font-size:14px}
+#sonoBox .sn-datebar{display:grid;grid-template-columns:minmax(150px,220px) minmax(0,1fr);align-items:center;gap:12px;padding:10px 12px}
+#sonoBox .sn-datebar label{font-size:9px;letter-spacing:.08em}
+#sonoBox .sn-datebar input{width:100%;max-width:none;min-width:0;margin-top:1px}
+#sonoBox .sn-date-caption{font-size:11px;line-height:1.45;text-align:right;text-transform:capitalize}
+#sonoBox .sn-mode{margin-top:10px;max-width:100%;gap:5px}
+#sonoBox .sn-mode button{min-height:36px}
+#sonoBox .snhint{margin:8px 2px 12px;font-size:10.5px;line-height:1.5}
+#sonoBox .sn3{gap:0;align-items:stretch;padding:5px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.025)}
+#sonoBox .sn3>.tcell{min-width:0;padding:10px 5px 9px;border:0;border-radius:11px;text-align:center}
+#sonoBox .sn3>.tcell+.tcell{border-left:1px solid var(--line);border-radius:11px}
+#sonoBox .sn3>.tcell:focus-visible,#sonoBox .sn3>.tcell:active{outline:1px solid var(--line2);background:rgba(255,255,255,.07)}
+#sonoBox .sn3 .tb{width:38px;height:38px;margin:0 auto 7px;display:grid;place-items:center;border-radius:50%;background:color-mix(in srgb,var(--ac) 16%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ac) 30%,transparent)}
+#sonoBox .sn3 .ti{width:19px;height:19px;fill:none;stroke:var(--ac);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#sonoBox .sn3 small{margin-top:0;font-size:10px}
+#sonoBox .sn3>.tcell b{display:block;margin-top:4px;font-size:clamp(18px,2.4vw,23px);line-height:1.2}
+#sonoBox .sn3>.tcell::after{display:none}
+#sonoBox .sn-edit-hint{margin-top:5px;font-size:9px}
+#sonoBox .tl{margin-top:15px}
+#sonoBox .tll{margin-top:6px}
+#sonoBox .sn2{gap:8px;margin-top:12px;padding-top:12px}
+#sonoBox .sn2 .mt{min-width:0;min-height:65px;padding:9px 10px;gap:9px;border-radius:13px}
+#sonoBox .sn2 .mb{width:34px;height:34px;border-radius:10px}
+#sonoBox .sn2 .mi{width:19px;height:19px}
+#sonoBox .sn2 .mt>div{min-width:0}
+#sonoBox .sn2 .mt small{font-size:9.5px;line-height:1.35}
+#sonoBox .sn2 .mt b{display:block;margin-top:3px;font-size:16px;line-height:1.2;white-space:nowrap}
+#sonoBox .sn-confirm{margin-top:12px;padding-top:12px}
+#sonoBox .sn-confirm button{min-height:40px;white-space:normal}
+#sonoBox .sn-week .snh{margin-bottom:8px}
+#sonoBox .sn-week-bars{height:132px;margin-top:10px;gap:6px}
+#sonoBox .sn-week-track{height:76px;max-width:27px}
+#sonoBox>.gx-grid{margin:0;gap:10px}
+#sonoBox .sq.s3{min-width:0}
+@media(max-width:620px){
+ #sonoBox{gap:11px}
+ #sonoBox>.sn-hero{grid-template-columns:42px minmax(0,1fr);gap:10px;padding:14px}
+ #sonoBox>.sn-hero .moon{width:40px;height:40px}
+ #sonoBox>.sn-hero .sn-ef{grid-column:1/-1;display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 10px;border:0;border-top:1px solid var(--line);padding:10px 0 0}
+ #sonoBox>.sn-hero .sn-ef>b{grid-column:2;grid-row:1;font-size:19px}
+ #sonoBox>.sn-hero .sn-ef>div{grid-column:1/-1}
+ #sonoBox .sn-reg,#sonoBox .sn-week{padding:13px}
+ #sonoBox .sn-datebar{grid-template-columns:1fr}
+ #sonoBox .sn-date-caption{text-align:left}
+ #sonoBox .sn3{padding:3px}
+ #sonoBox .sn3>.tcell{padding:8px 3px}
+ #sonoBox .sn3 .tb{width:32px;height:32px}
+ #sonoBox .sn3 .ti{width:17px;height:17px}
+ #sonoBox .sn3 small{font-size:9px}
+ #sonoBox .sn3>.tcell b{font-size:18px}
+ #sonoBox .sn-edit-hint{font-size:8px}
+ #sonoBox .sn2{grid-template-columns:1fr 1fr;gap:7px}
+ #sonoBox .sn2 .mt{padding:8px 7px;gap:7px}
+ #sonoBox .sn2 .mb{width:30px;height:30px}
+ #sonoBox .sn2 .mt b{font-size:14px}
+ #sonoBox .sn-confirm{align-items:stretch;flex-direction:column}
+ #sonoBox .sn-confirm button{width:100%;max-width:none}
+ #sonoBox .sn-week-bars{gap:3px}
+ #sonoBox .sn-week-day b{font-size:8px}
+}
+@media(max-width:360px){
+ #sonoBox .sn3>.tcell b{font-size:16px}
+ #sonoBox .sn-edit-hint{font-size:7px}
+ #sonoBox .sn2 .mt{align-items:flex-start;flex-direction:column}
+}
+
+.sn-week-bars{height:132px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:end;margin-top:18px}.sn-week-day{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;min-width:0}.sn-week-track{height:78px;width:100%;max-width:25px;border-radius:8px;background:rgba(255,255,255,.07);display:flex;align-items:flex-end;overflow:hidden}.sn-week-track i{display:block;width:100%;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#a9a5ff,#6864c8);min-height:0}.sn-week-day b{font-size:9px;color:#eee;white-space:nowrap}.sn-week-day small{font-size:10px;color:var(--mu);font-weight:700}</style>
 </head>
 <body>
 <div class="app" id="app">
