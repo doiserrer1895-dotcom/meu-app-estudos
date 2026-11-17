@@ -123,7 +123,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
         await writeCachedBank(blob);
       }
       progress.style.width="100%";
-      bank.onload=function(){
+      bank.onload=async function(){
         status.style.display="none";
         bank.style.display="block";
         try{
