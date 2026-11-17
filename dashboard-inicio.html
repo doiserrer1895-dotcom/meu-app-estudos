@@ -297,6 +297,29 @@ button:focus-visible,input:focus-visible,[data-go]:focus-visible{outline:2px sol
 .weatherNow strong{font-size:30px;line-height:1;color:var(--tx)}
 .weatherNow span,.weatherDetails{font-size:11px;line-height:1.45;color:var(--mu)}
 .weatherButton{width:100%;margin-top:9px;border:1px solid var(--line2);border-radius:12px;background:rgba(255,255,255,.06);color:var(--tx);padding:9px;font-size:11px;font-weight:700;cursor:pointer}
+/* Sono: controles por data, modo diário/fixo e confirmação sem botões OK duplicados. */
+.sn-datebar{display:flex;align-items:end;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.035)}
+.sn-datebar label{display:grid;gap:6px;font-size:10px;font-weight:800;color:var(--mu);letter-spacing:.06em;text-transform:uppercase}
+.sn-datebar input{max-width:180px;min-width:145px;padding:9px 10px;border:1px solid var(--line2);border-radius:10px;background:rgba(255,255,255,.07);color:var(--tx);font:inherit;font-size:13px;color-scheme:dark}
+.sn-date-caption{font-size:11px;color:var(--mu);text-align:right}
+.sn-mode{display:flex;gap:7px;margin-top:10px;padding:4px;border-radius:12px;background:rgba(255,255,255,.045)}
+.sn-mode button{flex:1;min-height:34px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--mu);font-size:11px;font-weight:800;cursor:pointer}
+.sn-mode button.active{background:rgba(255,255,255,.12);border-color:var(--line2);color:var(--tx)}
+.sn-status{font-size:10px;font-weight:800;color:#f2bd70;background:rgba(246,176,74,.12);border-radius:99px;padding:5px 9px}
+.sn-status.is-done{color:#73dfa0;background:rgba(76,208,125,.12)}
+.sn-edit-hint{display:block;margin-top:4px;font-size:9px;color:var(--mu);font-weight:700}
+.sn-confirm{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
+.sn-confirm>div{display:grid;gap:4px;min-width:0}
+.sn-confirm b{font-size:11px}
+.sn-confirm small{font-size:10px;color:var(--mu);line-height:1.4}
+.sn-confirm button{max-width:220px;min-height:38px;padding:8px 12px;border:1px solid rgba(255,255,255,.2);border-radius:11px;background:rgba(255,255,255,.12);color:var(--tx);font-size:10px;font-weight:900;cursor:pointer}
+.sn-confirm button:disabled{opacity:.55;cursor:default}
+.weatherCard{box-shadow:0 10px 28px rgba(0,0,0,.12);background:linear-gradient(135deg,rgba(118,150,190,.12),rgba(255,255,255,.025))}
+.weatherNow{gap:14px}
+.weatherNow strong{font-size:34px}
+.weatherDetails{padding-top:3px;line-height:1.55}
+@media(max-width:560px){.sn-datebar{align-items:stretch;flex-direction:column}.sn-date-caption{text-align:left}.sn-confirm{align-items:stretch;flex-direction:column}.sn-confirm button{max-width:none;width:100%}.sn-hero{grid-template-columns:46px 1fr;gap:10px}.sn-hero .moon{width:46px;height:46px}.sn-ef{grid-column:2;border-left:0;border-top:1px solid var(--line);padding:9px 0 0}.sn3 b{font-size:20px}}
+
 .d-info{margin:8px 14px 0;padding:14px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid var(--line);display:grid;gap:12px}
 .d-info .dt{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .d-info .dt b{font-size:30px;font-weight:900;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
@@ -1551,7 +1574,11 @@ renderRank();
 const SL_DEF=[['Seg','','','',null],['Ter','','','',null],['Qua','','','',null],['Qui','','','',null],['Sex','','','',null],['Sáb','','','',null],['Dom','','','',null]];
 const SL_LEGACY=[['Seg','23:10','23:30','07:00',1],['Ter','00:00','00:20','07:00',2],['Qua','22:40','23:00','07:00',0],['Qui','23:20','23:40','06:40',1],['Sex','23:00','23:15','07:05',1],['Sáb','22:45','23:00','07:10',0],['Dom','23:00','23:20','07:00',1]];
 const SLEEP_TODAY_INDEX=(new Date().getDay()+6)%7;
-let SLP={d:SL_DEF.map(x=>x.slice()),sel:SLEEP_TODAY_INDEX};
+const sleepDateKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const sleepTodayKey=sleepDateKey(new Date());
+const sleepWeekIndex=key=>(new Date(key+'T12:00:00').getDay()+6)%7;
+const sleepBlankRow=key=>[SL_DEF[sleepWeekIndex(key)][0],'','','',null,'planejado'];
+let SLP={d:SL_DEF.map(x=>x.slice()),sel:SLEEP_TODAY_INDEX,date:sleepTodayKey,mode:'daily',daily:{}};
 let sleepLegacyMigrated=false;
 try{
  const s=JSON.parse(localStorage.getItem('evo-sono')||'null'),ok=t=>/^\d\d:\d\d$/.test(String(t||''));
@@ -1559,14 +1586,18 @@ try{
   const rows=s.d.map((r,i)=>{
    if(!Array.isArray(r)||r.length!==5||r[0]!==SL_DEF[i][0])return null;
    const seed=SL_LEGACY[i],sameSeedTimes=r[1]===seed[1]&&r[2]===seed[2]&&r[3]===seed[3];
-   if(sameSeedTimes){
-    sleepLegacyMigrated=true;
-    return [r[0],'','','',r[4]===seed[4]?null:(Number.isInteger(r[4])?r[4]:null)];
-   }
+   if(sameSeedTimes){sleepLegacyMigrated=true;return [r[0],'','','',r[4]===seed[4]?null:(Number.isInteger(r[4])?r[4]:null)]}
    if(!ok(r[1])||!ok(r[2])||!ok(r[3])||!(r[4]===null||Number.isInteger(r[4])))return null;
    return r.slice();
   });
-  if(rows.every(Boolean))SLP={d:rows,sel:Math.min(6,Math.max(0,+s.sel||0))};
+  if(rows.every(Boolean)){
+   const daily=s.daily&&typeof s.daily==='object'&&!Array.isArray(s.daily)?s.daily:{},cleanDaily={};
+   for(const [date,row] of Object.entries(daily)){
+    if(/^\d{4}-\d{2}-\d{2}$/.test(date)&&Array.isArray(row)&&row.length===6&&row[0]===SL_DEF[sleepWeekIndex(date)][0]&&[1,2,3].every(k=>row[k]===''||ok(row[k]))&&(row[4]===null||Number.isInteger(row[4]))&&['planejado','realizado'].includes(row[5]))cleanDaily[date]=row.slice();
+   }
+   const date=/^\d{4}-\d{2}-\d{2}$/.test(s.date||'')?s.date:sleepTodayKey;
+   SLP={d:rows,sel:sleepWeekIndex(date),date,mode:s.mode==='fixed'?'fixed':'daily',daily:cleanDaily};
+  }
  }
  if(sleepLegacyMigrated)localStorage.setItem('evo-sono',JSON.stringify(SLP));
 }catch(e){}
@@ -1599,9 +1630,14 @@ async function syncDashboardSleep(userId){
       (r[2]===''||/^\d{2}:\d{2}$/.test(r[2]))&&
       (r[3]===''||/^\d{2}:\d{2}$/.test(r[3]))&&
       (r[4]===null||Number.isInteger(r[4]))
-    );
+    )&&(!v.daily||(typeof v.daily==='object'&&!Array.isArray(v.daily)&&Object.entries(v.daily).every(([date,row])=>
+      /^\d{4}-\d{2}-\d{2}$/.test(date)&&Array.isArray(row)&&row.length===6&&row[0]===SL_DEF[sleepWeekIndex(date)][0]&&
+      [1,2,3].every(k=>row[k]===''||/^\d{2}:\d{2}$/.test(row[k]))&&(row[4]===null||Number.isInteger(row[4]))&&
+      (row[5]==='planejado'||row[5]==='realizado')
+    )))&&(!v.mode||v.mode==='daily'||v.mode==='fixed');
     if(data&&validData(data.data)){
-      SLP={d:data.data.d.map(r=>r.slice()),sel:Math.min(6,Math.max(0,Number(data.data.sel)||0))};
+      const date=/^\d{4}-\d{2}-\d{2}$/.test(data.data.date||'')?data.data.date:sleepTodayKey;
+      SLP={d:data.data.d.map(r=>r.slice()),sel:sleepWeekIndex(date),date,mode:data.data.mode==='fixed'?'fixed':'daily',daily:data.data.daily&&typeof data.data.daily==='object'?data.data.daily:{}};
       const snapshot=JSON.stringify(SLP);
       localStorage.setItem('evo-sono',snapshot);
       localStorage.setItem('evo-sono:'+userId,snapshot);
@@ -1610,7 +1646,8 @@ async function syncDashboardSleep(userId){
       /* Migra os registros locais existentes para a conta sem apagar nada. */
       const local=JSON.parse(localStorage.getItem('evo-sono:'+userId)||localStorage.getItem('evo-sono')||'null');
       if(validData(local)){
-        SLP={d:local.d.map(r=>r.slice()),sel:Math.min(6,Math.max(0,Number(local.sel)||0))};
+        const date=/^\d{4}-\d{2}-\d{2}$/.test(local.date||'')?local.date:sleepTodayKey;
+        SLP={d:local.d.map(r=>r.slice()),sel:sleepWeekIndex(date),date,mode:local.mode==='fixed'?'fixed':'daily',daily:local.daily&&typeof local.daily==='object'?local.daily:{}};
         saveSL();
       }else{
         saveSL();
@@ -1618,6 +1655,8 @@ async function syncDashboardSleep(userId){
     }
   }catch(e){console.warn('Não foi possível carregar os horários de sono da nuvem:',e)}
 }
+const sleepRow=(key=SLP.date)=>((SLP.daily&&SLP.daily[key])||(SLP.mode==='fixed'?SLP.d[sleepWeekIndex(key)].concat('planejado'):sleepBlankRow(key)));
+const saveSleepRow=(row,key=SLP.date)=>{if(SLP.mode==='fixed'&&key===SLP.date&&!SLP.daily[key])SLP.d[sleepWeekIndex(key)]=row.slice(0,5);else SLP.daily[key]=row.slice();SLP.sel=sleepWeekIndex(key);saveSL()};
 const tm=t=>{const p=t.split(':');return +p[0]*60+ +p[1]},df=(a,b)=>(tm(b)-tm(a)+1440)%1440;
 const fd=m=>Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')+'min';
 const sn=r=>{const lat=r[2]?df(r[1],r[2]):0,cama=df(r[1],r[3]),dor=Math.max(0,cama-lat);return{lat,cama,dor,ef:cama?Math.min(100,dor/cama*100):0}};
@@ -1850,31 +1889,42 @@ function drawGeral(){
   const ic=(k,c='ci')=>`<svg class="${c}" viewBox="0 0 24 24">${ICO[k]}</svg>`;
   const DN={Seg:'segunda',Ter:'terça',Qua:'quarta',Qui:'quinta',Sex:'sexta','Sáb':'sábado',Dom:'domingo'};
   const sonoHTML=()=>{
-    window.DASH_SLEEP_PENDING=window.DASH_SLEEP_PENDING||{};
-    const valid=r=>/^\d\d:\d\d$/.test(String(r[1]||''))&&/^\d\d:\d\d$/.test(String(r[3]||''));
-    const records=SLP.d.filter(valid).map(sn),r=SLP.d[SLP.sel],has=valid(r),s=has?sn(r):{lat:0,cama:0,dor:0,ef:0},q=has?ql(s):['Sem registro','Informe seus horários de sono.'];
-    const med=records.length?Math.round(records.reduce((x,y)=>x+y.dor,0)/records.length):null,efm=records.length?records.reduce((x,y)=>x+y.ef,0)/records.length:null,dm=med===null?null:med-450,c1=v=>v.toFixed(1).replace('.',',');
+    const r=sleepRow(),valid=x=>[1,2,3].every(k=>/^\d{2}:\d{2}$/.test(String(x[k]||'')));
+    const has=valid(r),done=r[5]==='realizado',s=has?sn(r):{lat:0,cama:0,dor:0,ef:0},q=has?ql(s):['Sem registro','Informe os horários desta data.'];
+    const records=Object.values(SLP.daily||{}).filter(x=>x&&x[5]==='realizado'&&valid(x)).map(sn);
+    const med=records.length?Math.round(records.reduce((x,y)=>x+y.dor,0)/records.length):null;
+    const efm=records.length?records.reduce((x,y)=>x+y.ef,0)/records.length:null;
+    const dm=med===null?null:med-450,c1=v=>v.toFixed(1).replace('.',',');
+    const dateLabel=new Date(SLP.date+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
     const TI={
       1:['#8b8cff','<svg class="ti bd2" viewBox="0 0 24 24"><path d="M3 19V6M3 13h18v6M21 13v-3a2 2 0 0 0-2-2h-7v5"/></svg>'],
       2:['#5bb5ff','<svg class="ti zz" viewBox="0 0 24 24"><path class="z1" d="M5 6h5l-5 6h5"/><path class="z2" d="M13 13h4l-4 5h4"/></svg>'],
       3:['#f6b04a','<svg class="ti sn" viewBox="0 0 24 24"><circle class="core" cx="12" cy="12" r="4"/><g class="rays"><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></g></svg>']};
-    const tin=(k,lab,key)=>`<div class="tcell-wrap"><button class="tcell" data-tp="${key}" style="--ac:${TI[key][0]}" aria-label="${lab}: ${r[key]}. Toque para editar"><i class="tb">${TI[key][1]}</i><small>${lab}</small><b>${(window.DASH_SLEEP_PENDING[key]&&window.DASH_SLEEP_PENDING[key].day===SLP.sel?window.DASH_SLEEP_PENDING[key].time:r[key])||'—'}</b></button>${(key===1||key===3)?`<button type="button" class="sleep-ok" data-tpok="${key}">OK</button>`:''}</div>`;
+    const tin=(lab,key)=>`<button class="tcell" data-tp="${key}" style="--ac:${TI[key][0]}" aria-label="${lab}: ${r[key]||'não informado'}. Toque para editar"><i class="tb">${TI[key][1]}</i><small>${lab}</small><b>${r[key]||'—'}</b><span class="sn-edit-hint">Editar horário</span></button>`;
     const MI={
       lat:'<svg class="mi hg" viewBox="0 0 24 24"><path d="M7 2h10M7 22h10M8 2v4a4 4 0 0 0 1.2 2.8L12 12l2.8-3.2A4 4 0 0 0 16 6V2M8 22v-4a4 4 0 0 1 1.2-2.8L12 12l2.8 3.2A4 4 0 0 1 16 18v4"/></svg>',
       bed:'<svg class="mi bd" viewBox="0 0 24 24"><path d="M3 19V6M3 13h18v6M21 13v-3a2 2 0 0 0-2-2h-7v5"/></svg>',
-      moon:'<svg class="mi mn" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5 7.5 7.5 0 1 0 19 14.5z"/><path class="s1" d="M18 2.5v3M16.5 4h3"/><path class="s2" d="M21.5 8.5v2M20.5 9.5h2"/></svg>'};
+      moon:'<svg class="mi mn" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5 7.5 7.5 0 1 0 19 14.5z"/></svg>'};
     const ef=v=>`<svg class="mi mr" viewBox="0 0 44 44"><circle class="t" cx="22" cy="22" r="17"/><circle class="v" cx="22" cy="22" r="17" pathLength="100" stroke-dasharray="${Math.min(100,v).toFixed(1)} 100" transform="rotate(-90 22 22)"/></svg>`;
     const it=(cls,ac,ico,l,v)=>`<div class="mt ${cls}" style="--ac:${ac}"><i class="mb">${ico}</i><div><small>${l}</small><b>${v}</b></div></div>`;
+    const weekStart=new Date(SLP.date+'T12:00:00');weekStart.setDate(weekStart.getDate()-sleepWeekIndex(SLP.date));
+    const weekBars=Array.from({length:7},(_,i)=>{const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const key=sleepDateKey(dt),row=SLP.daily&&SLP.daily[key],ok=row&&row[5]==='realizado'&&valid(row),mins=ok?sn(row).dor:0,pct=ok?Math.max(4,Math.min(100,mins/600*100)):0;return `<div class="sn-week-day"><div class="sn-week-track"><i style="height:${pct}%"></i></div><b>${ok?fd(mins):'—'}</b><small>${SL_DEF[i][0]}</small></div>`}).join('');
+    const status=done?'Noite registrada':has?'Planejamento':'Sem registro';
     return `<div class="sec"><h3>Sono</h3></div>
-  <div class="sn-hero"><svg class="moon" viewBox="0 0 64 64"><path d="M46 38A20 20 0 0 1 26 12a20 20 0 1 0 20 26z" fill="rgba(255,255,255,.88)"/><path d="M52 14l1.4 3 3 1.4-3 1.4-1.4 3-1.4-3-3-1.4 3-1.4zM14 40l1 2.2 2.2 1-2.2 1-1 2.2-1-2.2-2.2-1 2.2-1z" fill="rgba(255,255,255,.5)"/></svg><div><small>Média de sono · registros reais</small><b>${med===null?'Sem registros':fd(med)}</b><i class="dl ${dm===null?'d':dm>=0?'u':'d'}">${dm===null?'Nenhum horário informado':(dm>=0?'▲':'▼')+' '+Math.abs(dm)+' min da meta'}</i></div><div class="sn-ef"><small>Eficiência média</small><b>${efm===null?'—':c1(efm)+'%'}</b>${bar(Math.round(efm||0))}</div></div>
-  <div class="card sn-reg"><div class="snh"><span>${ic('bed')}Registro · ${DN[r[0]]}${SLP.sel===SLEEP_TODAY_INDEX?' (hoje)':''}</span></div>
-  <p class="snhint">Toque nos horários para editar. O resto é calculado.</p>
-  <div class="sn3">${tin('bed','Deitar',1)}${tin('zzz','Dormir',2)}${tin('sun','Acordar',3)}</div>
-  <div class="tl" title="Tempo até dormir e tempo dormindo"><u class="a" style="flex:${Math.max(s.lat,1)}"></u><u class="b" style="flex:${Math.max(s.dor,1)}"></u></div><div class="tll"><span>até dormir</span><span>dormindo</span></div>
-  <div class="sn2">${it('m-lat','#f6b04a',MI.lat,'Latência do sono',has?s.lat+' min':'—')}${it('m-bed','#8b8cff',MI.bed,'Tempo na cama',has?fd(s.cama):'—')}${it('m-dor','#5bb5ff',MI.moon,'Tempo dormido',has?fd(s.dor):'—')}${it('m-ef','#4cd07d',ef(s.ef),'Eficiência da noite',has?c1(s.ef)+'%':'—')}</div></div>
-  <div class="card sn-week"><div class="snh"><span> <span>▥</span> Evolução da semana</span><small>somente registros confirmados</small></div><div class="sn-week-bars">${SLP.d.map((row,i)=>{const ok=/^\d{2}:\d{2}$/.test(row[1]||'')&&/^\d{2}:\d{2}$/.test(row[3]||'');const mins=ok?sn(row).dor:0;const pct=ok?Math.max(4,Math.min(100,mins/600*100)):0;return `<div class="sn-week-day"><div class="sn-week-track"><i style="height:${pct}%"></i></div><b>${ok?fd(mins):'—'}</b><small>${row[0]}</small></div>`}).join('')}</div></div>
-
-  <div class="gx-grid">${sq('Qualidade do sono',ic('star','ci sm')+q[0],q[1],'s3')}<div class="sq s3"><span>Despertares</span><div class="stp"><button data-dp="-1" aria-label="Menos">−</button><b>${Number.isInteger(r[4])?r[4]:'—'}</b><button data-dp="1" aria-label="Mais">+</button></div><small>durante a noite</small></div></div>`};
+  <div class="sn-hero"><svg class="moon" viewBox="0 0 64 64"><path d="M46 38A20 20 0 0 1 26 12a20 20 0 1 0 20 26z" fill="rgba(255,255,255,.88)"/><path d="M52 14l1.4 3 3 1.4-3 1.4-1.4 3-1.4-3-3-1.4 3-1.4zM14 40l1 2.2 2.2 1-2.2 1-1 2.2-1-2.2-2.2-1 2.2-1z" fill="rgba(255,255,255,.5)"/></svg><div><small>Média de sono · noites realizadas</small><b>${med===null?'Sem registros':fd(med)}</b><i class="dl ${dm===null?'d':dm>=0?'u':'d'}">${dm===null?'Confirme uma noite para iniciar a média':(dm>=0?'▲':'▼')+' '+Math.abs(dm)+' min da meta'}</i></div><div class="sn-ef"><small>Eficiência média</small><b>${efm===null?'—':c1(efm)+'%'}</b>${bar(Math.round(efm||0))}</div></div>
+  <div class="card sn-reg">
+    <div class="snh"><span>${ic('bed')} Registro de sono</span><small class="sn-status ${done?'is-done':''}">${status}</small></div>
+    <div class="sn-datebar"><label>Data do registro<input type="date" data-sleep-date value="${SLP.date}"></label><div class="sn-date-caption">${dateLabel}</div></div>
+    <div class="sn-mode"><button type="button" data-sleep-mode="daily" class="${SLP.mode==='daily'?'active':''}">Por dia</button><button type="button" data-sleep-mode="fixed" class="${SLP.mode==='fixed'?'active':''}">Rotina fixa</button></div>
+    <p class="snhint">${SLP.mode==='daily'?'Defina os horários desta data. Cada dia pode ser diferente.':'Edite sua rotina semanal; você pode confirmar cada noite separadamente.'}</p>
+    <div class="sn3">${tin('Deitar',1)}${tin('Dormir',2)}${tin('Acordar',3)}</div>
+    <div class="tl" title="Tempo até dormir e tempo dormindo"><u class="a" style="flex:${Math.max(s.lat,1)}"></u><u class="b" style="flex:${Math.max(s.dor,1)}"></u></div><div class="tll"><span>até dormir</span><span>dormindo</span></div>
+    <div class="sn2">${it('m-lat','#f6b04a',MI.lat,'Latência do sono',has?s.lat+' min':'—')}${it('m-bed','#8b8cff',MI.bed,'Tempo na cama',has?fd(s.cama):'—')}${it('m-dor','#5bb5ff',MI.moon,'Tempo dormido',has?fd(s.dor):'—')}${it('m-ef','#4cd07d',ef(s.ef),'Eficiência da noite',has?c1(s.ef)+'%':'—')}</div>
+    <div class="sn-confirm"><div><b>${done?'Registro confirmado':'Planejamento do dia'}</b><small>${done?'Esta noite entra no histórico e nas médias.':'Depois de acordar, confirme para contar no histórico.'}</small></div><button type="button" data-sleep-finish ${done?'disabled':''}>${done?'Noite registrada':'Marcar noite como realizada'}</button></div>
+  </div>
+  <div class="card sn-week"><div class="snh"><span>▥ Evolução da semana</span><small>somente noites realizadas</small></div><div class="sn-week-bars">${weekBars}</div></div>
+  <div class="gx-grid"><div class="sq s3"><span>Qualidade do sono</span><b>${q[0]}</b><small>${q[1]}</small></div><div class="sq s3"><span>Despertares</span><div class="stp"><button data-dp="-1" aria-label="Menos">−</button><b>${Number.isInteger(r[4])?r[4]:'—'}</b><button data-dp="1" aria-label="Mais">+</button></div><small>durante a noite</small></div></div>`;
+  };
   window.drawSono=()=>{const bx=$('#sonoBox');if(!bx)return;bx.classList.add('again');bx.innerHTML=sonoHTML()};
   const sono=`<div id="sonoBox">${sonoHTML()}</div>`;
   const gg=(l,v,s,c)=>`<div class="sq gg s2" style="--ac:${c}"><span>${l}</span><div class="rgw"><svg class="rg" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18"/><circle class="v" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="${v} 100" transform="rotate(-90 22 22)"/></svg><em data-cu="${v}" data-suf="%">0%</em></div><small>${s}</small></div>`;
@@ -1940,14 +1990,21 @@ const TP={k:1,h:0,m:0};
   const upd=()=>{TP.h=read(wH);TP.m=read(wM);pH.textContent=p2t(TP.h);pM.textContent=p2t(TP.m);mark(wH,TP.h);mark(wM,TP.m)};
   [wH,wM].forEach(w=>{w.addEventListener('scroll',()=>requestAnimationFrame(upd),{passive:true});w.addEventListener('click',e=>{const c=e.target.closest('[data-v]');if(c)w.scrollTo({top:+c.dataset.v*44,behavior:'smooth'})})});
   const close=()=>sh.classList.remove('open');
-  window.openTP=k=>{const r=SLP.d[SLP.sel],p=(r[k]||'00:00').split(':');TP.k=k;sh.querySelector('#tpK').textContent=({1:'Horário de deitar',2:'Início do sono',3:'Despertar'})[k];sh.classList.add('open');requestAnimationFrame(()=>{wH.scrollTop=+p[0]*44;wM.scrollTop=+p[1]*44;upd()})};
+  window.openTP=k=>{const r=sleepRow(),p=(r[k]||'00:00').split(':');TP.k=k;sh.querySelector('#tpK').textContent=({1:'Horário de deitar',2:'Início do sono',3:'Horário de acordar'})[k];sh.classList.add('open');requestAnimationFrame(()=>{wH.scrollTop=+p[0]*44;wM.scrollTop=+p[1]*44;upd()})};
   sh.addEventListener('click',e=>{if(e.target.closest('[data-tpx]'))close()});
-  sh.querySelector('#tpOk').onclick=()=>{const r=SLP.d[SLP.sel],k=TP.k,value=p2t(TP.h)+':'+p2t(TP.m);if(k===1||k===3){window.DASH_SLEEP_PENDING=window.DASH_SLEEP_PENDING||{};window.DASH_SLEEP_PENDING[k]={day:SLP.sel,time:value};toast('Agora aperte OK para registrar '+(k===1?'a hora de deitar':'a hora de acordar'));drawSono();close();return}const old=r[k];r[k]=value;if(df(r[1],r[2])>df(r[1],r[3])){r[k]=old;toast('Deitar → dormir → acordar, nessa ordem')}else{saveSL();toast('Horário salvo')}drawSono();close()};
+  sh.querySelector('#tpOk').onclick=()=>{const r=sleepRow().slice(),k=TP.k,value=p2t(TP.h)+':'+p2t(TP.m);r[k]=value;if(r[1]&&r[2]&&r[3]&&(df(r[1],r[2])>df(r[1],r[3])||df(r[1],r[3])===0)){toast('Confira a ordem: deitar → dormir → acordar');return}r[5]='planejado';saveSleepRow(r);drawSono();close();toast('Horário salvo para '+new Date(SLP.date+'T12:00:00').toLocaleDateString('pt-BR'))};
   document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 })();
-$('#gx').addEventListener('click',e=>{if(e.target.closest('[data-tpok]'))return;const t=e.target.closest('[data-tp]');if(t)openTP(+t.dataset.tp)});
-$('#gx').addEventListener('click',e=>{const b=e.target.closest('[data-tpok]');if(!b)return;const k=+b.dataset.tpok,p=window.DASH_SLEEP_PENDING&&window.DASH_SLEEP_PENDING[k],r=SLP.d[SLP.sel];if(!p||p.day!==SLP.sel){if(!r[k]){toast('Escolha primeiro o horário de '+(k===1?'deitar':'acordar'));return}toast('Horário já registrado');return}const old=r[k];r[k]=p.time;if(r[2]&&r[3]&&df(r[1],r[2])>df(r[1],r[3])){r[k]=old;toast('Confira a ordem: deitar → dormir → acordar');return}delete window.DASH_SLEEP_PENDING[k];saveSL();drawSono();toast(k===1?'Hora de deitar registrada!':'Hora de acordar registrada!')});
-$('#gx').addEventListener('click',e=>{const d=e.target.closest('[data-day]');if(d){SLP.sel=+d.dataset.day;saveSL();drawSono();return}const p=e.target.closest('[data-dp]');if(p){const r=SLP.d[SLP.sel];r[4]=Math.min(9,Math.max(0,(Number.isInteger(r[4])?r[4]:0)+ +p.dataset.dp));saveSL();drawSono()}});
+$('#gx').addEventListener('click',e=>{
+  const mode=e.target.closest('[data-sleep-mode]');
+  if(mode){SLP.mode=mode.dataset.sleepMode==='fixed'?'fixed':'daily';saveSL();drawSono();return}
+  const finish=e.target.closest('[data-sleep-finish]');
+  if(finish){const r=sleepRow().slice(),valid=[1,2,3].every(k=>/^\\d{2}:\\d{2}$/.test(String(r[k]||'')));if(!valid){toast('Preencha deitar, dormir e acordar antes de confirmar');return}if(df(r[1],r[2])>df(r[1],r[3])||df(r[1],r[3])===0){toast('Confira a ordem dos horários');return}r[5]='realizado';SLP.daily[SLP.date]=r;saveSL();drawSono();toast('Noite registrada no histórico!');return}
+  const p=e.target.closest('[data-dp]');
+  if(p){const r=sleepRow().slice();r[4]=Math.min(9,Math.max(0,(Number.isInteger(r[4])?r[4]:0)+Number(p.dataset.dp)));r[5]='planejado';SLP.daily[SLP.date]=r;saveSL();drawSono();return}
+  const t=e.target.closest('[data-tp]');if(t)openTP(+t.dataset.tp);
+});
+$('#gx').addEventListener('change',e=>{if(e.target.matches('[data-sleep-date]')){const v=e.target.value;if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(v))return;SLP.date=v;SLP.sel=sleepWeekIndex(v);saveSL();drawSono()}});
 $('#gx').addEventListener('change',e=>{if(e.target.id!=='exD')return;const v=e.target.value.trim();if(v&&!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(v)){toast('Use dd/mm/aaaa');return}try{localStorage.setItem('evo-exam',v)}catch(x){}drawGeral()});
 let NAME='Rafael';try{NAME=localStorage.getItem('evo-name')||NAME}catch(e){}
 function applyName(){
