@@ -385,7 +385,7 @@ async function syncEuVsPlatformFrame(){
     rows.forEach(row=>{
      if(row&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.study_date||""))){
       const day=String(row.study_date),cloudMinutes=Math.max(0,Number(row.minutes)||0);
-      dailyMap[day]=Math.max(dailyMap[day]||0,cloudMinutes);
+      if(!Object.prototype.hasOwnProperty.call(dailyMap,day))dailyMap[day]=cloudMinutes;
      }
     });
    }
