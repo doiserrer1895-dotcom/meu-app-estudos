@@ -600,18 +600,21 @@ function evBuild(){
  for(i=6;i>=0;i--){var d=new Date(now);d.setDate(now.getDate()-i);D7.push({d:d,m:0,n:0,s:[]});}
  SESS.forEach(function(x){var o=D7[6-x[0]],h=+x[1].slice(0,2),p=h<6?0:h<12?1:h<18?2:3;o.m+=x[2];o.n++;o.s.push([x[1],x[2],p]);per[p]+=x[2];});
  D7.forEach(function(x){x.s.sort(function(a,b){return a[0]<b[0]?-1:1});var hv=HORAS[dk(x.d)];if(hv!==undefined)x.m=hv});
- WEEK_BEFORE=D7.map(function(x){var d=new Date(x.d);d.setDate(d.getDate()-7);return Math.max(0,Math.round(Number(HORAS[dk(d)])||0));});
+ archiveClosedDays();
+  WEEK_BEFORE=D7.map(function(x){var d=new Date(x.d);d.setDate(d.getDate()-7);var snap=DAY_ARCHIVE[dk(d)];return snap?Math.max(0,Math.round(Number(snap.total)||0)):Math.max(0,Math.round(Number(HORAS[dk(d)])||0));});
   PPER=[0,0,0,0];
-  var prevPeriods=[0,0,0,0],prevTotal=0,prevDates={};
-  // Usa as datas que estão sendo montadas AGORA; EV.D7 só é atualizado mais abaixo.
-  D7.forEach(function(day){var pd=new Date(day.d);pd.setDate(pd.getDate()-7);prevDates[dk(pd)]=true;});
-  LOG.forEach(function(session){var sd=new Date(session.i);if(!prevDates[dk(sd)])return;var hour=sd.getHours(),bucket=hour<6?0:hour<12?1:hour<18?2:3,mins=Math.max(0,Number(session.m)||0);prevPeriods[bucket]+=mins;prevTotal+=mins;});
+  var prevPeriods=[0,0,0,0],prevTotal=0;
+  D7.forEach(function(day){
+   var pd=new Date(day.d);pd.setDate(pd.getDate()-7);var snap=DAY_ARCHIVE[dk(pd)];
+   if(snap&&Array.isArray(snap.periods))snap.periods.forEach(function(v,k){if(k<4)prevPeriods[k]+=Math.max(0,Number(v)||0)});
+  });
+  prevTotal=prevPeriods.reduce(function(a,b){return a+b},0);
   if(prevTotal)PPER=prevPeriods.map(function(v){return Math.round(v*100/prevTotal)});
   var prevDailyTotal=WEEK_BEFORE.reduce(function(a,b){return a+b},0),prevUntimed=Math.max(0,prevDailyTotal-prevTotal);
   var note=$("evp-note");
   if(note)note.textContent=prevUntimed>0
-   ?"Semana anterior: "+ft(prevTotal)+" com horário identificado; "+ft(prevUntimed)+" do total não têm horário de início salvo e não podem ser classificados."
-   :"Detectado automaticamente pelo horário em que cada sessão começa. O percentual é a parte do seu tempo de estudo da semana.";
+   ?"Semana anterior arquivada: "+ft(prevTotal)+" com horário identificado; "+ft(prevUntimed)+" sem horário de início salvo."
+   :"Distribuição arquivada dos últimos 7 dias concluídos, comparada com seus horários de estudo atuais.";
  var psum=per.reduce(function(a,b){return a+b},0),tot=D7.reduce(function(a,x){return a+x.m},0),avg=Math.round(tot/7),pav=Math.round(WEEK_BEFORE.reduce(function(a,b){return a+b},0)/7),df=pav?Math.round((avg/pav-1)*100):null,bi=0;
  D7.forEach(function(x,k){if(x.m>D7[bi].m)bi=k});
  var bd=D7[bi],pc=per.map(function(v){return Math.round(100*v/(psum||1))}),tp=psum?pc.indexOf(Math.max.apply(null,pc)):-1;
@@ -737,6 +740,29 @@ function dia0(t){var d=new Date(t);d.setHours(0,0,0,0);return d.getTime()}
 var HK="comunidade:v1:"+ck(ME)+":horas",HORAS={};
 try{var hh=JSON.parse(localStorage.getItem(HK)||"{}");if(hh&&typeof hh==="object")HORAS=hh}catch(e){}
 function dk(d){return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())}
+// Arquivo diário: congela totais e períodos quando cada dia termina.
+var DAY_ARCHIVE={},DAY_ARCHIVE_KEY="";
+function loadDayArchive(){
+ try{var saved=JSON.parse(localStorage.getItem(DAY_ARCHIVE_KEY)||"{}");DAY_ARCHIVE=saved&&typeof saved==="object"?saved:{}}catch(e){DAY_ARCHIVE={}}
+}
+function archiveClosedDays(){
+ if(!DAY_ARCHIVE_KEY)return;
+ var today=new Date();today.setHours(0,0,0,0);var changed=false;
+ for(var off=90;off>=1;off--){
+  var day=new Date(today);day.setDate(day.getDate()-off);var key=dk(day);
+  if(DAY_ARCHIVE[key])continue;
+  var periods=[0,0,0,0],sessionTotal=0;
+  LOG.forEach(function(session){
+   var started=new Date(session.i);if(dk(started)!==key)return;
+   var hour=started.getHours(),bucket=hour<6?0:hour<12?1:hour<18?2:3,mins=Math.max(0,Number(session.m)||0);
+   periods[bucket]+=mins;sessionTotal+=mins;
+  });
+  var total=HORAS[key]!==undefined?Math.max(0,Math.round(Number(HORAS[key])||0)):sessionTotal;
+  DAY_ARCHIVE[key]={total:total,periods:periods,timed:sessionTotal,untimed:Math.max(0,total-sessionTotal)};
+  changed=true;
+ }
+ if(changed){try{localStorage.setItem(DAY_ARCHIVE_KEY,JSON.stringify(DAY_ARCHIVE))}catch(e){}}
+}
 function atualizarHoras(o){
  var lista=Array.isArray(o)?o:Object.keys(o||{}).map(function(k){return{data:k,minutos:o[k]}}),lim=dk(new Date(Date.now()-90*864e5));
  lista.forEach(function(x){var m=Math.round(+x.minutos);if(x&&/^\d{4}-\d{2}-\d{2}$/.test(x.data)&&isFinite(m)&&m>=0&&m<=1440)HORAS[x.data]=m});
@@ -990,6 +1016,7 @@ async function communityInit(){
  var old=await db.from("community_profiles").select("invite_code,average_daily_minutes").eq("user_id",AUTH_USER.id).maybeSingle();if(old.error)throw old.error;
  ME=name;MY_INVITE_CODE=old.data&&old.data.invite_code||("EST-"+AUTH_USER.id.replace(/-/g,"").slice(0,8).toUpperCase());
  SK="comunidade:v1:"+ck(ME);SLK="comunidade:v1:"+ck(ME)+":sessoes";HK="comunidade:v1:"+ck(ME)+":horas";SCK="comunidade:v1:"+ck(ME)+":concurso";
+ DAY_ARCHIVE_KEY="community:v1:"+AUTH_USER.id+":daily-period-archive";loadDayArchive();
  /* Recupera os totais diários já sincronizados antes de gravar. Se o JSON antigo de estudos vier sem algum dia, não zera o histórico nem a média salva. */
  var dailyExistingResult=await db.from("community_daily_totals").select("study_date,minutes").eq("user_id",AUTH_USER.id).gte("study_date",new Date(Date.now()-90*864e5).toISOString().slice(0,10));if(dailyExistingResult.error)throw dailyExistingResult.error;
  var dailyExisting={};(dailyExistingResult.data||[]).forEach(function(x){dailyExisting[x.study_date]=Math.max(0,Math.min(1440,Math.round(+x.minutes||0)))});
