@@ -1544,15 +1544,31 @@ $('#treset').onclick=()=>{stop();left=total;drawT()};
 drawT();
 
 /* ---------- Desempenho: dados reais de Estudos ---------- */
+function readPerformanceStudyState(){
+  /* Prioridade: estado vivo da aba Estudos, a mesma fonte que alimenta a Visão Geral. */
+  try{
+    const frame=window.parent&&window.parent.document&&window.parent.document.getElementById('studyframe');
+    const getter=frame&&frame.contentWindow&&frame.contentWindow.__getPerformanceStudyData;
+    const live=typeof getter==='function'?getter():null;
+    if(live&&Array.isArray(live.entries))return live;
+  }catch(e){}
+  /* Fallback para o cache da conta atual e, por fim, para os dados já sincronizados na nuvem. */
+  const keys=[];
+  try{
+    if(DASH_USER_ID)keys.push('estudos-v1:'+DASH_USER_ID);
+    keys.push('estudos-v1');
+  }catch(e){}
+  for(const key of keys){
+    try{
+      const value=JSON.parse(localStorage.getItem(key)||'null');
+      if(value&&Array.isArray(value.entries))return value;
+    }catch(e){}
+  }
+  return typeof DASH_STUDY_STATE!=='undefined'&&DASH_STUDY_STATE&&Array.isArray(DASH_STUDY_STATE.entries)?DASH_STUDY_STATE:null;
+}
 function drawPerformanceChart(){
   const box=$('#chart');if(!box)return;
-  let S=null;
-  if(typeof DASH_STUDY_STATE!=='undefined'&&DASH_STUDY_STATE&&Array.isArray(DASH_STUDY_STATE.entries))S=DASH_STUDY_STATE;
-  if(!S){
-    const keys=[];
-    try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k==='estudos-v1'||k&&k.startsWith('estudos-v1:'))keys.push(k)}}catch(e){}
-    for(const k of keys){try{const v=JSON.parse(localStorage.getItem(k)||'null');if(v&&Array.isArray(v.entries)){S=v;break}}catch(e){}}
-  }
+  const S=readPerformanceStudyState();
   const now=new Date();now.setHours(0,0,0,0);
   const monday=new Date(now);monday.setDate(now.getDate()-(now.getDay()+6)%7);
   const previousMonday=new Date(monday);previousMonday.setDate(monday.getDate()-7);
