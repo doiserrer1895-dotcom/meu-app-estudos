@@ -273,7 +273,7 @@ html:has(body.embed-ev)::-webkit-scrollbar,body.embed-ev::-webkit-scrollbar{disp
         <div class="chd"><h2>Quando eu estudo</h2><span>últimos 7 dias</span></div>
         <div id="evp"></div>
         <p class="cap">Detectado automaticamente pelo horário em que cada sessão começa. O percentual é a parte do seu tempo de estudo da semana.</p>
-         <div class="leg"><span><b style="background:var(--ac)"></b>Você</span><span><b style="background:#a78bdb"></b>Plataforma</span></div>
+          <div class="leg"><span><b style="background:var(--ac)"></b>Você</span><span><b style="background:#a78bdb"></b>Semana anterior</span></div>
       </div>
     </div>
     <div class="stt"><h2>Ranking</h2><span>amigos e geral</span></div>
@@ -760,8 +760,12 @@ function atualizarSemana(o){
  o=o||{};
  /* A RPC do Supabase retorna days/periods; aceita também os nomes antigos em português. */
  var days=Array.isArray(o.days)?o.days:o.dias,periods=Array.isArray(o.periods)?o.periods:o.periodos;
-  /* A linha roxa usa o histórico pessoal da semana anterior; os períodos continuam vindo da plataforma. */
- if(Array.isArray(periods)&&periods.length===4)periods.forEach(function(v,k){PPER[k]=Math.max(0,Math.round(+v)||0)});
+  /* A distribuição roxa de horários é calculada pelas sessões pessoais da semana anterior. */
+  PPER=[0,0,0,0];
+  var prevPeriods=[0,0,0,0],prevTotal=0,prevDates={};
+  if(EV.D7&&EV.D7.length===7)EV.D7.forEach(function(day){var pd=new Date(day.d);pd.setDate(pd.getDate()-7);prevDates[dk(pd)]=true;});
+  LOG.forEach(function(session){var sd=new Date(session.i);if(!prevDates[dk(sd)])return;var hour=sd.getHours(),bucket=hour<6?0:hour<12?1:hour<18?2:3,mins=Math.max(0,Number(session.m)||0);prevPeriods[bucket]+=mins;prevTotal+=mins;});
+  if(prevTotal)PPER=prevPeriods.map(function(v){return Math.round(v*100/prevTotal)});
  evBuild();evFx();
 }
 var SCK="comunidade:v1:"+ck(ME)+":concurso";
