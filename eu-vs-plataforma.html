@@ -267,13 +267,13 @@ html:has(body.embed-ev)::-webkit-scrollbar,body.embed-ev::-webkit-scrollbar{disp
       <div class="ins" id="evi"></div>
       <svg id="evc" viewBox="0 0 340 202" width="100%" role="img" aria-label="Tempo de estudo dos últimos 7 dias"></svg>
       <div class="dtip" id="evt"></div>
-      <div class="leg"><span><b style="background:var(--ac)"></b>Você</span><span><b style="background:#a78bdb"></b>Semana</span><span><b style="background:none;border-top:2px dotted var(--ac);height:0;border-radius:0;margin-bottom:3px"></b>Sua média</span></div>
+       <div class="leg"><span><b style="background:var(--ac)"></b>Você</span><span><b style="background:#a78bdb"></b>Semana anterior</span><span><b style="background:none;border-top:2px dotted var(--ac);height:0;border-radius:0;margin-bottom:3px"></b>Sua média</span></div>
       <p class="cap">Seus estudos entram automaticamente quando você aperta Finalizar no cronômetro da aba Foco.</p>
       <div class="pr">
         <div class="chd"><h2>Quando eu estudo</h2><span>últimos 7 dias</span></div>
         <div id="evp"></div>
         <p class="cap">Detectado automaticamente pelo horário em que cada sessão começa. O percentual é a parte do seu tempo de estudo da semana.</p>
-        <div class="leg"><span><b style="background:var(--ac)"></b>Você</span><span><b style="background:#a78bdb"></b>Semana</span></div>
+         <div class="leg"><span><b style="background:var(--ac)"></b>Você</span><span><b style="background:#a78bdb"></b>Plataforma</span></div>
       </div>
     </div>
     <div class="stt"><h2>Ranking</h2><span>amigos e geral</span></div>
@@ -509,7 +509,7 @@ function upd(){
 function play(){CH.cur=[0,0,0,0];draw();go();}
 
 /* ---------- eu vs semana ---------- */
-var PU="#a78bdb",PLAT=[0,0,0,0,0,0,0],PPER=[0,0,0,0];
+var PU="#a78bdb",WEEK_BEFORE=[0,0,0,0,0,0,0],PPER=[0,0,0,0];
 /* sessões: [dias atrás, horário de início HH:MM, minutos] -> trocar pelos registros reais */
 var SESS=[];
 var PN=[["Madrugada","#8b8bd9",'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'],["Manhã","#e3b94a",'<path d="M3 20h18M6 16a6 6 0 0 1 12 0M12 5v3M4.5 9.5l2 2M19.5 9.5l-2 2"/>'],["Tarde","#f0883e",'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'],["Noite","#a78bdb",'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5zM17 3v3M15.5 4.5h3"/>']];
@@ -539,9 +539,9 @@ function cnt(el){
 /* gráfico de linhas: monta UMA vez; selecionar um dia só move o destaque e troca estilos (sem recriar o SVG) */
 function evDraw(){
  var D7=EV.D7,
-  mx=Math.max(Math.max.apply(null,D7.map(function(x){return x.m})),Math.max.apply(null,PLAT),60)*1.12,
+  mx=Math.max(Math.max.apply(null,D7.map(function(x){return x.m})),Math.max.apply(null,WEEK_BEFORE),60)*1.12,
   X=function(k){return 60+43*k},Y=function(v){return 158-v/mx*128},
-  me=D7.map(function(x,k){return[X(k),Y(x.m)]}),pl=PLAT.map(function(v,k){return[X(k),Y(v)]}),
+  me=D7.map(function(x,k){return[X(k),Y(x.m)]}),pl=WEEK_BEFORE.map(function(v,k){return[X(k),Y(v)]}),
   s='<defs><linearGradient id="eva" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+AC+'" stop-opacity=".38"/><stop offset="1" stop-color="'+AC+'" stop-opacity="0"/></linearGradient><linearGradient id="evy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#fff" stop-opacity=".7"/></linearGradient><clipPath id="evr"><rect x="0" y="0" width="340" height="190"/></clipPath></defs>',
   st=mx>260?60:30,v,gy,k,axl="",gd;
  for(v=st;v<mx;v+=st){gy=Y(v);gd='style="--d:'+(.2+v/st*.09).toFixed(2)+'s"';s+='<line class="gl" '+gd+' x1="40" y1="'+gy+'" x2="336" y2="'+gy+'" stroke="#2f2f33" stroke-dasharray="3 5"/>';axl+='<line class="gl" '+gd+' x1="35" y1="'+gy+'" x2="40" y2="'+gy+'" stroke="#fff" stroke-opacity=".55" stroke-width="1.5" stroke-linecap="round"/><text class="gl" '+gd+' x="30" y="'+(gy+3.5)+'" text-anchor="end" fill="#c8c8cc" font-size="10" font-weight="600">'+ft(v)+'</text>';}
@@ -579,15 +579,15 @@ function evSel(){
   E.pp[j].setAttribute("r",j===k0?4:2.5);
  }
  var pv=EV.P[k0],mv=EV.M[k0],t=E.plt;E.sr.setAttribute("cx",mv[0]);E.sr.setAttribute("cy",mv[1]);E.hl.setAttribute("y1",mv[1]+8);
- t.setAttribute("x",pv[0]);t.setAttribute("y",pv[1]<mv[1]?pv[1]-9:pv[1]+16);t.textContent=ft(PLAT[k0]);
+ t.setAttribute("x",pv[0]);t.setAttribute("y",pv[1]<mv[1]?pv[1]-9:pv[1]+16);t.textContent=ft(WEEK_BEFORE[k0]);
 }
 function panel(){
- var k=EV.sel,x=EV.D7[k],pf=PLAT[k],dd=pf?Math.round((x.m/pf-1)*100):0,mxv=Math.max(x.m,pf,1),h,
-  nm=k===6?"Hoje":k===5?"Ontem":wl(x.d);
- h='<div class="h"><b>'+nm+' · '+dm(x.d)+'</b><span class="'+(dd>=0?"up":"dn")+'">'+(pf?(dd>=0?"+":"")+dd+'% vs semana':'sem dados da plataforma')+'</span></div>';
+ var k=EV.sel,x=EV.D7[k],pf=WEEK_BEFORE[k],dd=pf?Math.round((x.m/pf-1)*100):null,delta=x.m-pf,mxv=Math.max(x.m,pf,1),h,
+  nm=k===6?"Hoje":k===5?"Ontem":wl(x.d),status=pf?(dd>=0?"+":"")+dd+"% vs semana anterior":delta>0?"+"+ft(delta)+" vs semana anterior":delta<0?ft(-delta)+" a menos que semana anterior":"igual à semana anterior";
+ h='<div class="h"><b>'+nm+' · '+dm(x.d)+'</b><span class="'+(delta>=0?"up":"dn")+'">'+status+'</span></div>';
  h+='<div class="ms"><div><small>Tempo total</small><b>'+ft(x.m)+'</b></div><div><small>Sessões</small><b>'+x.n+'</b></div><div><small>Por sessão</small><b>'+(x.n?ft(Math.round(x.m/x.n)):"—")+'</b></div></div>';
- h+='<div class="cb"><span>Você</span><div class="bar"><i style="width:'+(100*x.m/mxv)+'%;background:var(--ac)"></i></div><em>'+ft(x.m)+'</em></div><div class="cb"><span>Semana</span><div class="bar"><i style="width:'+(100*pf/mxv)+'%;background:'+PU+'"></i></div><em>'+ft(pf)+'</em></div>';
- h+='<p class="ex">'+(x.n?'Neste dia você estudou <b>'+ft(x.m)+'</b>, '+(dd===0?'o mesmo que':'<b class="'+(dd>=0?"up":"dn")+'">'+Math.abs(dd)+'% '+(dd>0?"mais":"menos")+'</b> que')+' a referência semanal ('+ft(pf)+'). ':'Você não estudou neste dia'+(pf?'; a referência semanal foi '+ft(pf):'')+'. ')+(pf?'Na semana, você passou a referência semanal em <b>'+EV.wins+' de 7</b> dias.':'')+(k===6?' O dia de hoje ainda está em andamento.':'')+'</p>';
+ h+='<div class="cb"><span>Você</span><div class="bar"><i style="width:'+(100*x.m/mxv)+'%;background:var(--ac)"></i></div><em>'+ft(x.m)+'</em></div><div class="cb"><span>Semana anterior</span><div class="bar"><i style="width:'+(100*pf/mxv)+'%;background:'+PU+'"></i></div><em>'+ft(pf)+'</em></div>';
+ h+='<p class="ex">'+(x.m>pf?'Neste dia você estudou <b>'+ft(x.m)+'</b>, '+(pf?'<b class="'+(dd>=0?"up":"dn")+'">'+Math.abs(dd)+'% '+(dd>0?"mais":"menos")+'</b> que':'<b class="up">'+ft(delta)+' a mais</b> que')+' na semana anterior ('+ft(pf)+'). ':x.m===pf?'Neste dia você estudou o mesmo tempo da semana anterior ('+ft(pf)+'). ':'Neste dia você não estudou; na semana anterior foram '+ft(pf)+'. ')+(EV.wins?'Nesta semana, você superou a semana anterior em <b>'+EV.wins+' de 7</b> dias.':'')+(k===6?' O dia de hoje ainda está em andamento.':'')+'</p>';
  if(x.n){
   h+='<div class="sh">Sessões do dia <span>o período vem da hora em que você começou</span></div>';
   x.s.forEach(function(q){h+='<div class="sr"><i style="background:'+PN[q[2]][1]+'"></i><b>'+q[0]+' → '+hm(q[0],q[1])+'</b><span>'+PN[q[2]][0]+'</span><em>'+ft(q[1])+'</em></div>'});
@@ -600,12 +600,13 @@ function evBuild(){
  for(i=6;i>=0;i--){var d=new Date(now);d.setDate(now.getDate()-i);D7.push({d:d,m:0,n:0,s:[]});}
  SESS.forEach(function(x){var o=D7[6-x[0]],h=+x[1].slice(0,2),p=h<6?0:h<12?1:h<18?2:3;o.m+=x[2];o.n++;o.s.push([x[1],x[2],p]);per[p]+=x[2];});
  D7.forEach(function(x){x.s.sort(function(a,b){return a[0]<b[0]?-1:1});var hv=HORAS[dk(x.d)];if(hv!==undefined)x.m=hv});
- var psum=per.reduce(function(a,b){return a+b},0),tot=D7.reduce(function(a,x){return a+x.m},0),avg=Math.round(tot/7),pav=Math.round(PLAT.reduce(function(a,b){return a+b})/7),df=pav?Math.round((avg/pav-1)*100):0,bi=0;
+ WEEK_BEFORE=D7.map(function(x){var d=new Date(x.d);d.setDate(d.getDate()-7);return Math.max(0,Math.round(Number(HORAS[dk(d)])||0));});
+ var psum=per.reduce(function(a,b){return a+b},0),tot=D7.reduce(function(a,x){return a+x.m},0),avg=Math.round(tot/7),pav=Math.round(WEEK_BEFORE.reduce(function(a,b){return a+b},0)/7),df=pav?Math.round((avg/pav-1)*100):null,bi=0;
  D7.forEach(function(x,k){if(x.m>D7[bi].m)bi=k});
  var bd=D7[bi],pc=per.map(function(v){return Math.round(100*v/(psum||1))}),tp=psum?pc.indexOf(Math.max.apply(null,pc)):-1;
  if(!tot)bi=-1;
  EV.D7=D7;EV.bi=bi;EV.sel=6;EV.avg=avg;EV.day=now.toDateString();
- EV.wins=D7.filter(function(x,k){return x.m>PLAT[k]}).length;
+ EV.wins=D7.filter(function(x,k){return x.m>WEEK_BEFORE[k]}).length;
  var worst=D7.reduce(function(a,x){return x.m<a.m?x:a},D7[0]),prevDay=D7[5].m,lastDay=D7[6].m,change=prevDay?Math.round((lastDay/prevDay-1)*100):null,delta=lastDay-prevDay;
  var changeValue=prevDay?(change>0?"+":"")+change+"%":(delta>0?"+"+ft(delta):delta===0?"0m":ft(delta));
  var changeLabel=prevDay?(Math.abs(change)+"% "+(change>=0?"mais":"menos")+" que ontem"):(delta>0?ft(delta)+" a mais que ontem":delta===0?"mesmo tempo de ontem":"a menos que ontem");
@@ -615,7 +616,7 @@ function evBuild(){
   ["Pior dia",IC.tro,'<b>'+(tot?wd(worst.d):"—")+'</b>',tot?ft(worst.m)+" estudados":"sem estudos ainda","#e3b94a","rgba(227,185,74,.14)"],
   ["Melhor dia",IC.cal,'<b>'+(tot?wd(bd.d):"—")+'</b>',tot?ft(bd.m)+" · "+bd.n+(bd.n===1?" sessão":" sessões"):"sem estudos ainda","#a78bdb","rgba(167,139,219,.16)"]];
  $("evk").innerHTML=K.map(function(k){return '<div style="--c:'+k[4]+';--g:'+k[5]+'"><small><svg viewBox="0 0 24 24">'+k[1]+'</svg>'+k[0]+'</small>'+k[2]+'<em>'+k[3]+'</em></div>'}).join("");
- $("evi").innerHTML=!tot?'<svg viewBox="0 0 24 24">'+IC.bulb+'</svg><div>Você ainda não tem estudos registrados. Quando começar, o app mostra aqui o seu ritmo e acompanha sua evolução semanal. Cada sessão que você finaliza no cronômetro entra aqui na hora.</div>':'<svg viewBox="0 0 24 24">'+IC.bulb+'</svg><div>Você estuda mais de <b>'+PN[tp][0].toLowerCase()+'</b> ('+pc[tp]+'% do seu tempo) e está <b class="'+(df>=0?"up":"dn")+'">'+Math.abs(df)+'% '+(df>=0?"acima":"abaixo")+'</b> da referência semanal. Toque em um dia do gráfico para ver o que aconteceu nele.</div>';
+ $("evi").innerHTML=!tot?'<svg viewBox="0 0 24 24">'+IC.bulb+'</svg><div>Você ainda não tem estudos registrados. Quando começar, o app compara seus dias com a semana anterior.</div>':'<svg viewBox="0 0 24 24">'+IC.bulb+'</svg><div>Você estuda mais de <b>'+PN[tp][0].toLowerCase()+'</b> ('+pc[tp]+'% do seu tempo). '+(df===null?'A comparação com a semana anterior está começando.':'Sua média diária está <b class="'+(df>=0?'up':'dn')+'">'+Math.abs(df)+'% '+(df>=0?'acima':'abaixo')+'</b> da semana anterior.')+' Toque em um dia do gráfico para ver a comparação.</div>';
  evDraw();panel();
  var pm=Math.max(Math.max.apply(null,pc),Math.max.apply(null,PPER))||1,h="";
  PN.forEach(function(n,k){
@@ -759,7 +760,7 @@ function atualizarSemana(o){
  o=o||{};
  /* A RPC do Supabase retorna days/periods; aceita também os nomes antigos em português. */
  var days=Array.isArray(o.days)?o.days:o.dias,periods=Array.isArray(o.periods)?o.periods:o.periodos;
- if(Array.isArray(days)&&days.length===7)days.forEach(function(v,k){PLAT[k]=Math.max(0,Math.round(+v)||0)});
+  /* A linha roxa usa o histórico pessoal da semana anterior; os períodos continuam vindo da plataforma. */
  if(Array.isArray(periods)&&periods.length===4)periods.forEach(function(v,k){PPER[k]=Math.max(0,Math.round(+v)||0)});
  evBuild();evFx();
 }
