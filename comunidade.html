@@ -242,6 +242,11 @@ body.embed-ev .app{width:100%!important;max-width:720px!important;margin:0 auto!
 body.embed-ev #rank{display:block!important}
 body.embed-ev #evtool{display:block!important;margin:0!important}
 body.embed-ev #rank>.stt,body.embed-ev #rank>.me,body.embed-ev #rank>.seg,body.embed-ev #rank>.podium,body.embed-ev #rank>.list,body.embed-ev #rank>.note,body.embed-ev #rank>.box.cmp{display:none!important}
+/* Oculta Ranking e Amigos da interface; preserva Missões e os dados existentes. */
+body:not(.embed-ev) #rank,body:not(.embed-ev) #amigos{display:none!important}
+body:not(.embed-ev) nav button[data-t="rank"]{display:none!important}
+body:not(.embed-ev) #missoes{display:block!important}
+body:not(.embed-ev) nav button[data-t="missoes"]{display:inline-flex!important}
 </style>
 </head>
 <body>
