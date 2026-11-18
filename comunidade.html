@@ -1150,11 +1150,13 @@ async function evLoadSavedStudies(){
 }
 var EMBED_EU_VS_ESTUDOS=new URLSearchParams(location.search).get("embed")==="eu-vs-plataforma";
 if(EMBED_EU_VS_ESTUDOS){
- evBuild();evFx();
+ // Avisa a tela Estudos imediatamente e inicia a leitura da nuvem antes do primeiro desenho.
+ // Assim, uma falha de renderização inicial não impede a consulta dos registros reais.
  window.parent.postMessage({type:"eu-vs-plataforma-ready"},location.origin);
  evLoadSavedStudies().then(function(result){
-  if(result)console.info("Eu versus plataforma: dados recuperados da nuvem.",result);
- }).catch(function(error){console.warn("Leitura direta dos estudos indisponível; aguardando dados da tela Estudos.",error)});
+  if(result)console.info("Eu versus Plataforma: dados reais recuperados da nuvem.",result);
+ }).catch(function(error){console.error("Eu versus Plataforma: falha ao carregar os registros reais.",error)});
+ try{evBuild();evFx()}catch(error){console.error("Eu versus Plataforma: falha no desenho inicial do gráfico.",error)}
 }
 else communityInit().catch(function(e){console.error("Falha na integração da Comunidade:",e);clock(true);D=montar();segBuild();initChart();view();renderAmigos();evBuild();evFx();toast("A Comunidade precisa da configuração do Supabase. Confira o arquivo SQL.");});
 })();
