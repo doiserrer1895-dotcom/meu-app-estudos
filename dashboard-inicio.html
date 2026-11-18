@@ -151,6 +151,18 @@ input{font:inherit;color:inherit}
 .chart i{display:block;width:100%;background:linear-gradient(180deg,#3a3a3a,#1c1c1c);border-radius:10px 10px 5px 5px;animation:grow .9s var(--ease) both;transform-origin:bottom}
 .chart div.hi i{background:linear-gradient(180deg,#fff,#a8a8a8);box-shadow:0 0 24px rgba(255,255,255,.35)}
 .chart div.hi{color:#fff}
+#chart{gap:5px}
+#chart .perf-day{gap:5px;min-width:0}
+#chart .perf-pair{height:100%;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px}
+#chart .perf-pair i{width:42%;max-width:15px;min-height:2px;margin:0;border-radius:6px 6px 3px 3px;animation:grow .65s var(--ease) both}
+#chart .perf-pair .current{background:linear-gradient(180deg,#fff,#a8a8a8);box-shadow:0 0 12px rgba(255,255,255,.2)}
+#chart .perf-pair .previous{background:linear-gradient(180deg,#a78bdb,#624c91)}
+#chart .perf-day.hi .perf-pair .current{box-shadow:0 0 18px rgba(255,255,255,.45)}
+#chart .perf-day>span:first-child{font-size:9px;white-space:nowrap}
+.perf-legend{display:flex;justify-content:center;gap:18px;margin-top:12px;color:var(--mu);font-size:10px;font-weight:700}
+.perf-legend span{display:flex;align-items:center;gap:6px}
+.perf-legend i{display:inline-block;width:8px;height:8px;border-radius:3px;background:#fff}
+.perf-legend span+span i{background:#a78bdb}
 @keyframes grow{from{transform:scaleY(0)}to{transform:none}}
 .meal{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:22px;padding:15px;margin-bottom:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 .meal-h{display:flex;align-items:center;gap:12px}
@@ -1131,8 +1143,9 @@ html,body{width:100%!important;min-width:0!important;height:auto!important;min-h
 
   <section class="sub" id="study-4">
     <div class="card">
-      <div class="row"><div><div class="mu" style="font-size:12px;font-weight:700;letter-spacing:.1em">HORAS NA SEMANA</div><div class="big" style="font-size:36px;margin-top:6px">24h 40m</div></div><div class="sp"></div><span class="up">▲ 12%</span></div>
+      <div class="row"><div><div class="mu" style="font-size:12px;font-weight:700;letter-spacing:.1em">SEMANA ATUAL × ANTERIOR</div><div class="big" id="perf-current-total" style="font-size:36px;margin-top:6px">0h 00m</div><div class="mu" id="perf-comparison" style="font-size:11px;margin-top:5px">Carregando comparação...</div></div><div class="sp"></div><span class="up" id="perf-delta">—</span></div>
       <div class="chart" id="chart"></div>
+      <div class="perf-legend"><span><i></i>Esta semana</span><span><i></i>Semana anterior</span></div>
     </div>
     <div class="grid2">
       <div class="stat"><b>82%</b><span>Acertos nos cards</span></div>
@@ -1541,21 +1554,36 @@ function drawPerformanceChart(){
     for(const k of keys){try{const v=JSON.parse(localStorage.getItem(k)||'null');if(v&&Array.isArray(v.entries)){S=v;break}}catch(e){}}
   }
   const now=new Date();now.setHours(0,0,0,0);
-  const start=new Date(now);start.setDate(now.getDate()-(now.getDay()+6)%7);
-  const labels=['S','T','Q','Q','S','S','D'],daily=Array(7).fill(0);
+  const monday=new Date(now);monday.setDate(now.getDate()-(now.getDay()+6)%7);
+  const previousMonday=new Date(monday);previousMonday.setDate(monday.getDate()-7);
+  const labels=['S','T','Q','Q','S','S','D'],current=Array(7).fill(0),previous=Array(7).fill(0);
+  const dayKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const parseDay=value=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(String(value||'')))return null;const [y,m,d]=value.split('-').map(Number);const date=new Date(y,m-1,d);return dayKey(date)===value?date:null};
   if(S){
     const all=[...(Array.isArray(S.entries)?S.entries:[]),...(Array.isArray(S.sim)?S.sim:[])];
-    const key=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     all.forEach(e=>{
-      if(!e||typeof e.date!=='string')return;
-      const idx=Math.round((new Date(e.date+'T00:00:00')-start)/86400000);
-      if(idx<0||idx>6||key(new Date(start.getTime()+idx*86400000))!==e.date)return;
+      if(!e)return;const date=parseDay(e.date);if(!date)return;
       const hours=Math.max(0,(Number(e.h)||0)-(Number(e.p)||0)/60);
-      daily[idx]+=hours;
+      const currentIndex=Math.round((date-monday)/86400000);
+      const previousIndex=Math.round((date-previousMonday)/86400000);
+      if(currentIndex>=0&&currentIndex<7)current[currentIndex]+=hours;
+      if(previousIndex>=0&&previousIndex<7)previous[previousIndex]+=hours;
     });
   }
-  const max=Math.max(1,...daily),todayIndex=(now.getDay()+6)%7;
-  box.innerHTML=daily.map((hours,i)=>'<div class="'+(i===todayIndex?'hi':'')+'"><span>'+hours.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'h</span><i style="height:'+(hours/max*100)+'%"></i><span>'+labels[i]+'</span></div>').join('');
+  const totalCurrent=current.reduce((a,b)=>a+b,0),totalPrevious=previous.reduce((a,b)=>a+b,0);
+  const fmtMinutes=h=>{const m=Math.round(h*60);return Math.floor(m/60)+'h '+String(m%60).padStart(2,'0')+'m'};
+  const totalEl=$('#perf-current-total'),comparison=$('#perf-comparison'),delta=$('#perf-delta');
+  if(totalEl)totalEl.textContent=fmtMinutes(totalCurrent);
+  if(comparison)comparison.textContent='Semana anterior: '+fmtMinutes(totalPrevious);
+  if(delta){
+    if(totalPrevious>0){const pct=((totalCurrent-totalPrevious)/totalPrevious)*100;delta.textContent=(pct>0?'▲ ':pct<0?'▼ ':'')+Math.abs(pct).toLocaleString('pt-BR',{maximumFractionDigits:0})+'%';delta.style.color=pct>0?'var(--ok)':pct<0?'var(--warn)':'var(--mu)'}
+    else{delta.textContent=totalCurrent>0?'NOVO':'—';delta.style.color='var(--mu)'}
+  }
+  const max=Math.max(1,...current,...previous),todayIndex=(now.getDay()+6)%7;
+  box.innerHTML=labels.map((label,i)=>{
+    const a=current[i],b=previous[i],ha=a>0?Math.max(2,a/max*100):0,hb=b>0?Math.max(2,b/max*100):0;
+    return '<div class="perf-day '+(i===todayIndex?'hi':'')+'"><span>'+a.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'h</span><div class="perf-pair"><i class="current" title="Esta semana: '+fmtMinutes(a)+'" style="height:'+ha+'%"></i><i class="previous" title="Semana anterior: '+fmtMinutes(b)+'" style="height:'+hb+'%"></i></div><span>'+label+'</span></div>';
+  }).join('');
 }
 
 /* ---------- Água ---------- */
