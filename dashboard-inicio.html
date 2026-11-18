@@ -2018,7 +2018,7 @@ function drawGeral(){
     <div class="sn3">${tin('Deitar',1)}${tin('Dormir',2)}${tin('Acordar',3)}</div>
     <div class="tl" title="Tempo até dormir e tempo dormindo"><u class="a" style="flex:${Math.max(s.lat,1)}"></u><u class="b" style="flex:${Math.max(s.dor,1)}"></u></div><div class="tll"><span>até dormir</span><span>dormindo</span></div>
     <div class="sn2">${it('m-lat','#f6b04a',MI.lat,'Latência do sono',has?s.lat+' min':'—')}${it('m-bed','#8b8cff',MI.bed,'Tempo na cama',has?fd(s.cama):'—')}${it('m-dor','#5bb5ff',MI.moon,'Tempo dormido',has?fd(s.dor):'—')}${it('m-ef','#4cd07d',ef(s.ef),'Eficiência da noite',has?c1(s.ef)+'%':'—')}</div>
-    <div class="sn-confirm"><div><b>${done?'Registro confirmado':'Planejamento do dia'}</b><small>${done?'Esta noite entra no histórico e nas médias.':'Depois de acordar, confirme para contar no histórico.'}</small></div><button type="button" data-sleep-finish ${done?'disabled':''}>${done?'Noite registrada':'Marcar noite como realizada'}</button></div>
+    <div class="sn-confirm"><div><b>${done?'Registro confirmado':'Planejamento do dia'}</b><small>${done?'Esta noite entra no histórico e nas médias.':'Use “Acordei agora” para registrar o horário automaticamente.'}</small></div><button type="button" class="sleep-ok" data-sleep-now ${done?'disabled':''}>☀ Acordei agora</button><button type="button" data-sleep-finish ${done?'disabled':''}>${done?'Noite registrada':'Marcar noite como realizada'}</button></div>
   </div>
   <div class="card sn-week"><div class="snh"><span>▥ Evolução da semana</span><small>somente noites realizadas</small></div><div class="sn-week-bars">${weekBars}</div></div>
   <div class="gx-grid"><div class="sq s3"><span>Qualidade do sono</span><b>${q[0]}</b><small>${q[1]}</small></div><div class="sq s3"><span>Despertares</span><div class="stp"><button data-dp="-1" aria-label="Menos">−</button><b>${Number.isInteger(r[4])?r[4]:'—'}</b><button data-dp="1" aria-label="Mais">+</button></div><small>durante a noite</small></div></div>`;
@@ -2096,8 +2096,14 @@ const TP={k:1,h:0,m:0};
 $('#gx').addEventListener('click',e=>{
   const mode=e.target.closest('[data-sleep-mode]');
   if(mode){SLP.mode=mode.dataset.sleepMode==='fixed'?'fixed':'daily';saveSL();drawSono();return}
+  const woke=e.target.closest('[data-sleep-now]');
+  if(woke){const r=sleepRow().slice(),now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0');r[3]=hh+':'+mm;
+    const validStart=[1,2].every(k=>/^\\d{2}:\\d{2}$/.test(String(r[k]||'')));
+    if(!validStart){r[5]='planejado';saveSleepRow(r);drawSono();toast('Horário de acordar salvo. Informe também quando deitou e quando adormeceu para avaliar a noite.');return}
+    if(df(r[1],r[2])>df(r[1],r[3])||df(r[1],r[3])===0){toast('Confira os horários de deitar e dormir antes de registrar o despertar.');return}
+    r[5]='realizado';SLP.daily[SLP.date]=r;saveSL();drawSono();toast('Despertar às '+r[3]+' registrado! Sua noite entrou no histórico e nas médias.');return}
   const finish=e.target.closest('[data-sleep-finish]');
-  if(finish){const r=sleepRow().slice(),valid=[1,2,3].every(k=>/^\d{2}:\d{2}$/.test(String(r[k]||'')));if(!valid){toast('Preencha deitar, dormir e acordar antes de confirmar');return}if(df(r[1],r[2])>df(r[1],r[3])||df(r[1],r[3])===0){toast('Confira a ordem dos horários');return}r[5]='realizado';SLP.daily[SLP.date]=r;saveSL();drawSono();toast('Noite registrada no histórico!');return}
+  if(finish){const r=sleepRow().slice(),valid=[1,2,3].every(k=>/^\\d{2}:\\d{2}$/.test(String(r[k]||'')));if(!valid){toast('Preencha deitar, dormir e acordar antes de confirmar');return}if(df(r[1],r[2])>df(r[1],r[3])||df(r[1],r[3])===0){toast('Confira a ordem dos horários');return}r[5]='realizado';SLP.daily[SLP.date]=r;saveSL();drawSono();toast('Noite registrada no histórico!');return}
   const p=e.target.closest('[data-dp]');
   if(p){const r=sleepRow().slice();r[4]=Math.min(9,Math.max(0,(Number.isInteger(r[4])?r[4]:0)+Number(p.dataset.dp)));r[5]='planejado';SLP.daily[SLP.date]=r;saveSL();drawSono();return}
   const t=e.target.closest('[data-tp]');if(t)openTP(+t.dataset.tp);
