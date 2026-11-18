@@ -548,7 +548,8 @@ $("evc").addEventListener("click",function(e){
  EV.sel=+k;evSel();panel();
 });
 
-window.addEventListener("message",function(event){if(event.origin!==location.origin||!event.data||event.data.type!=="eu-vs-plataforma-period")return;var z=event.data;EV.mode=z.mode==="w"||z.mode==="y"?z.mode:"m";EV.ref=z.ref?new Date(z.ref):new Date();EV.daily={};(Array.isArray(z.daily)?z.daily:[]).forEach(function(x){if(x&&/^\\d{4}-\\d{2}-\\d{2}$/.test(x.date))EV.daily[x.date]=Math.max(0,Math.round(+x.minutes||0))});evBuild()});\n/* ---------- navegação ---------- */
+window.addEventListener("message",function(event){if(event.origin!==location.origin||!event.data||event.data.type!=="eu-vs-plataforma-period")return;var z=event.data;EV.mode=z.mode==="w"||z.mode==="y"?z.mode:"m";EV.ref=z.ref?new Date(z.ref):new Date();EV.daily={};(Array.isArray(z.daily)?z.daily:[]).forEach(function(x){if(x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date))EV.daily[x.date]=Math.max(0,Math.round(+x.minutes||0))});evBuild()});
+/* ---------- navegação ---------- */
 var navB=document.querySelectorAll("nav button"),secs=document.querySelectorAll(".sec");
 [].forEach.call(navB,function(b){
  b.onclick=function(){
