@@ -390,11 +390,12 @@ async function syncEuVsPlatformFrame(){
     });
    }
    if(!cloudSessions.error&&Array.isArray(cloudSessions.data)&&cloudSessions.data.length){
-    Object.keys(sessionMap).forEach(k=>delete sessionMap[k]);
+    // Mescla a nuvem sem apagar sessões locais recém-salvas pelo cronômetro.
     cloudSessions.data.forEach(row=>{
      if(!row||!row.started_at)return;
      const stamp=new Date(row.started_at);if(!Number.isFinite(stamp.getTime()))return;
      const source=String(row.source_id||""),entry=entryById[source]||null;
+     if(entry&&entry.startedAt)return;
      const date=entry?String(entry.date):stamp.getFullYear()+"-"+String(stamp.getMonth()+1).padStart(2,"0")+"-"+String(stamp.getDate()).padStart(2,"0");
      const key=source||("cloud:"+String(row.started_at));
      sessionMap[key]={date,startedAt:String(row.started_at),subj:String(entry&&entry.subj||"Estudo"),top:String(entry&&entry.top||""),minutes:Math.max(0,Math.round(Number(row.minutes)||0))};
