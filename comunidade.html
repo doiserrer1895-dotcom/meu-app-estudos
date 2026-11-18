@@ -237,8 +237,8 @@ input,select,textarea{background:rgba(255,255,255,.055);border-color:var(--line)
 .top{display:none!important}
 body>nav{display:none!important;height:0!important;visibility:hidden!important;pointer-events:none!important}/* Eu vs Plataforma: componente reaproveitado dentro de Desempenho > Disciplinas. */
 #evtool{display:none}
-body.embed-ev{margin:0!important;padding:0!important;background:transparent!important}
-body.embed-ev .app{width:100%!important;max-width:720px!important;margin:0 auto!important;padding:8px!important}
+body.embed-ev{margin:0!important;padding:0!important;background:transparent!important;overflow:hidden!important}
+body.embed-ev .app{width:100%!important;max-width:720px!important;margin:0 auto!important;padding:8px 8px 0!important;overflow:visible!important}
 body.embed-ev #rank{display:block!important}
 body.embed-ev #evtool{display:block!important;margin:0!important}
 body.embed-ev #rank>.stt,body.embed-ev #rank>.me,body.embed-ev #rank>.seg,body.embed-ev #rank>.podium,body.embed-ev #rank>.list,body.embed-ev #rank>.note,body.embed-ev #rank>.box.cmp{display:none!important}
@@ -1010,6 +1010,13 @@ function communitySafeAction(fn){return async function(){try{return await fn.app
 /* ---------- init ---------- */
 communityInit().catch(function(e){console.error("Falha na integração da Comunidade:",e);clock(true);D=montar();segBuild();initChart();view();renderAmigos();evBuild();evFx();toast("A Comunidade precisa da configuração do Supabase. Confira o arquivo SQL.");});
 })();
+
+// No modo incorporado, informa a altura real ao Estudos para eliminar a rolagem interna do iframe.
+if(new URLSearchParams(location.search).get("embed")==="eu-vs-plataforma"){
+ const sendEmbedHeight=()=>{const h=Math.ceil(Math.max(document.body.scrollHeight,document.documentElement.scrollHeight));window.parent.postMessage({type:"eu-vs-plataforma-height",height:h},"*")};
+ const observer=new ResizeObserver(sendEmbedHeight);observer.observe(document.body);observer.observe(document.documentElement);
+ window.addEventListener("load",sendEmbedHeight);requestAnimationFrame(sendEmbedHeight);
+}
 </script>
 </body>
 </html>
