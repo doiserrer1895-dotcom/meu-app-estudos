@@ -606,11 +606,12 @@ function evBuild(){
  if(!tot)bi=-1;
  EV.D7=D7;EV.bi=bi;EV.sel=6;EV.avg=avg;EV.day=now.toDateString();
  EV.wins=D7.filter(function(x,k){return x.m>PLAT[k]}).length;
- var worst=D7.reduce(function(a,x){return x.m<a.m?x:a},D7[0]),prevDay=D7[5].m,lastDay=D7[6].m,change=prevDay?Math.round((lastDay/prevDay-1)*100):null;
- var changeLabel=change===null?(lastDay>0?"sem estudo no dia anterior":"sem dados do dia anterior"):(Math.abs(change)+"% "+(change>=0?"mais":"menos")+" que ontem");
+ var worst=D7.reduce(function(a,x){return x.m<a.m?x:a},D7[0]),prevDay=D7[5].m,lastDay=D7[6].m,change=prevDay?Math.round((lastDay/prevDay-1)*100):null,delta=lastDay-prevDay;
+ var changeValue=prevDay?(change>0?"+":"")+change+"%":(delta>0?"+"+ft(delta):delta===0?"0m":ft(delta));
+ var changeLabel=prevDay?(Math.abs(change)+"% "+(change>=0?"mais":"menos")+" que ontem"):(delta>0?ft(delta)+" a mais que ontem":delta===0?"mesmo tempo de ontem":"a menos que ontem");
  var K=[
   ["Média por dia",IC.clk,'<b data-to="'+avg+'" data-f="m">0m</b>',"tempo total ÷ 7 dias","#f0883e","rgba(240,136,62,.16)"],
-  ["Evolução semanal",IC.trd,'<b class="'+(change===null?"":change>=0?"up":"dn")+'">'+(change===null?"—":(change>0?"+":"")+change+"%")+'</b>',changeLabel,"#f0883e","rgba(240,136,62,.16)"],
+  ["Evolução semanal",IC.trd,'<b class="'+(delta>=0?"up":"dn")+'">'+changeValue+'</b>',changeLabel,"#f0883e","rgba(240,136,62,.16)"],
   ["Pior dia",IC.tro,'<b>'+(tot?wd(worst.d):"—")+'</b>',tot?ft(worst.m)+" estudados":"sem estudos ainda","#e3b94a","rgba(227,185,74,.14)"],
   ["Melhor dia",IC.cal,'<b>'+(tot?wd(bd.d):"—")+'</b>',tot?ft(bd.m)+" · "+bd.n+(bd.n===1?" sessão":" sessões"):"sem estudos ainda","#a78bdb","rgba(167,139,219,.16)"]];
  $("evk").innerHTML=K.map(function(k){return '<div style="--c:'+k[4]+';--g:'+k[5]+'"><small><svg viewBox="0 0 24 24">'+k[1]+'</svg>'+k[0]+'</small>'+k[2]+'<em>'+k[3]+'</em></div>'}).join("");
