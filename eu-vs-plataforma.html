@@ -601,6 +601,11 @@ function evBuild(){
  SESS.forEach(function(x){var o=D7[6-x[0]],h=+x[1].slice(0,2),p=h<6?0:h<12?1:h<18?2:3;o.m+=x[2];o.n++;o.s.push([x[1],x[2],p]);per[p]+=x[2];});
  D7.forEach(function(x){x.s.sort(function(a,b){return a[0]<b[0]?-1:1});var hv=HORAS[dk(x.d)];if(hv!==undefined)x.m=hv});
  WEEK_BEFORE=D7.map(function(x){var d=new Date(x.d);d.setDate(d.getDate()-7);return Math.max(0,Math.round(Number(HORAS[dk(d)])||0));});
+  PPER=[0,0,0,0];
+  var prevPeriods=[0,0,0,0],prevTotal=0,prevDates={};
+  if(EV.D7&&EV.D7.length===7)EV.D7.forEach(function(day){var pd=new Date(day.d);pd.setDate(pd.getDate()-7);prevDates[dk(pd)]=true;});
+  LOG.forEach(function(session){var sd=new Date(session.i);if(!prevDates[dk(sd)])return;var hour=sd.getHours(),bucket=hour<6?0:hour<12?1:hour<18?2:3,mins=Math.max(0,Number(session.m)||0);prevPeriods[bucket]+=mins;prevTotal+=mins;});
+  if(prevTotal)PPER=prevPeriods.map(function(v){return Math.round(v*100/prevTotal)});
  var psum=per.reduce(function(a,b){return a+b},0),tot=D7.reduce(function(a,x){return a+x.m},0),avg=Math.round(tot/7),pav=Math.round(WEEK_BEFORE.reduce(function(a,b){return a+b},0)/7),df=pav?Math.round((avg/pav-1)*100):null,bi=0;
  D7.forEach(function(x,k){if(x.m>D7[bi].m)bi=k});
  var bd=D7[bi],pc=per.map(function(v){return Math.round(100*v/(psum||1))}),tp=psum?pc.indexOf(Math.max.apply(null,pc)):-1;
@@ -761,11 +766,7 @@ function atualizarSemana(o){
  /* A RPC do Supabase retorna days/periods; aceita também os nomes antigos em português. */
  var days=Array.isArray(o.days)?o.days:o.dias,periods=Array.isArray(o.periods)?o.periods:o.periodos;
   /* A distribuição roxa de horários é calculada pelas sessões pessoais da semana anterior. */
-  PPER=[0,0,0,0];
-  var prevPeriods=[0,0,0,0],prevTotal=0,prevDates={};
-  if(EV.D7&&EV.D7.length===7)EV.D7.forEach(function(day){var pd=new Date(day.d);pd.setDate(pd.getDate()-7);prevDates[dk(pd)]=true;});
-  LOG.forEach(function(session){var sd=new Date(session.i);if(!prevDates[dk(sd)])return;var hour=sd.getHours(),bucket=hour<6?0:hour<12?1:hour<18?2:3,mins=Math.max(0,Number(session.m)||0);prevPeriods[bucket]+=mins;prevTotal+=mins;});
-  if(prevTotal)PPER=prevPeriods.map(function(v){return Math.round(v*100/prevTotal)});
+
  evBuild();evFx();
 }
 var SCK="comunidade:v1:"+ck(ME)+":concurso";
