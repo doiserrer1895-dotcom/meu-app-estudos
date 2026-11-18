@@ -835,6 +835,11 @@ const switchBtn=document.getElementById('auth-switch');
 const intro=document.getElementById('auth-intro');
 const pass=document.getElementById('auth-password');
 let creating=false,client=null,activeUid=null,saveTimer=null,ready=false;
+/* Disponibiliza ao Painel geral uma leitura somente-leitura do mesmo estado carregado nesta aba. */
+window.__getPerformanceStudyData=function(){
+ if(!ready||!S||!Array.isArray(S.entries))return null;
+ return {entries:S.entries,sim:Array.isArray(S.sim)?S.sim:[]};
+};
 function message(t,kind){msg.textContent=t||'';msg.className='message'+(kind?' '+kind:'')}
 function showApp(email){
  layer.remove();
