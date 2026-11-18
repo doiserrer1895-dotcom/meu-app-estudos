@@ -527,7 +527,7 @@ var wd=function(d){return cap(d.toLocaleDateString("pt-BR",{weekday:"short"}).re
 var wl=function(d){return cap(d.toLocaleDateString("pt-BR",{weekday:"long"}))};
 var dm=function(d){return p2(d.getDate())+"/"+p2(d.getMonth()+1)};
 var hm=function(t,add){var p=t.split(":"),m=(+p[0]*60+ +p[1]+add)%1440;return p2(Math.floor(m/60))+":"+p2(m%60)};
-var EV={sel:0,mode:"w",ref:new Date(),daily:{},sessions:[],activeFocus:null,D7:[],previous:[],labels:[],bi:-1};
+var EV={sel:0,mode:"w",ref:new Date(),daily:{},sessions:[],activeFocus:null,D7:[],previous:[],labels:[],bi:-1,parentDataReceived:false};
 var AC="#f0883e",GOLD="#e3b94a";
 function cnt(el){cancelAnimationFrame(el._r);var to=+el.dataset.to,f=FMT[el.dataset.f],t0=performance.now();function st(now){var k=RM?1:Math.min(1,(now-t0)/900);el.textContent=f(Math.round(to*(1-Math.pow(1-k,3))));if(k<1)el._r=requestAnimationFrame(st)}el._r=requestAnimationFrame(st)}
 function evRange(){var d=new Date(EV.ref),a,b,pa,pb,n,L=[];d.setHours(0,0,0,0);if(EV.mode==="w"){a=new Date(d);a.setDate(a.getDate()-(a.getDay()+6)%7);b=new Date(a);b.setDate(a.getDate()+6);pa=new Date(a);pa.setDate(pa.getDate()-7);pb=new Date(b);pb.setDate(pb.getDate()-7);n=7;for(var i=0;i<7;i++){var x=new Date(a);x.setDate(a.getDate()+i);L.push(wd(x).slice(0,3))}}else if(EV.mode==="m"){a=new Date(d.getFullYear(),d.getMonth(),1);b=new Date(d.getFullYear(),d.getMonth()+1,0);pa=new Date(d.getFullYear(),d.getMonth()-1,1);pb=new Date(d.getFullYear(),d.getMonth(),0);n=b.getDate();for(var j=1;j<=n;j++)L.push(String(j))}else{a=new Date(d.getFullYear(),0,1);b=new Date(d.getFullYear(),11,31);pa=new Date(d.getFullYear()-1,0,1);pb=new Date(d.getFullYear()-1,11,31);n=12;L=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]}return{a:a,pa:pa,pb:pb,n:n,L:L}}
@@ -677,6 +677,9 @@ $("evc").addEventListener("click",function(e){
 window.addEventListener("message",function(event){
  if(event.origin!==location.origin||!event.data||event.data.type!=="eu-vs-plataforma-period")return;
  var z=event.data;
+ // Quando a tela Estudos envia o estado atual do Foco, ele é mais recente que uma leitura paralela da nuvem.
+ // Marca essa fonte como prioritária para impedir que uma consulta atrasada sobrescreva os dados reais com zeros.
+ EV.parentDataReceived=true;
  EV.mode=z.mode==="w"||z.mode==="y"?z.mode:"m";
  var incomingRef=z.ref?new Date(z.ref):new Date();
  EV.ref=isFinite(incomingRef.getTime())?incomingRef:new Date();
@@ -688,11 +691,8 @@ window.addEventListener("message",function(event){
  EV.sessions=Array.isArray(z.sessions)?z.sessions:[];
  EV.activeFocus=z.activeFocus||null;
  evBuild();evFx();
- // A nuvem continua sendo a fonte de recuperação dos registros do Foco.
- // A atualização assíncrona não pode impedir a troca de Semana/Mês/Ano.
- if(EV.directCloudLoaded){
-  evLoadSavedStudies().catch(function(error){console.warn("Não foi possível atualizar os dados do Foco.",error)});
- }
+ // A mensagem da tela Estudos já contém os registros atuais do Foco.
+ // Não refazemos a leitura da nuvem aqui: ela pode estar atrasada e apagar os dados recém-recebidos.
 });
 /* ---------- navegação ---------- */
 var navB=document.querySelectorAll("nav button"),secs=document.querySelectorAll(".sec");
@@ -1120,6 +1120,11 @@ async function evLoadSavedStudies(){
    var source=String(row.source_id||""),entry=entryById[source],key=source||String(row.started_at);
    sessionMap[key]={date:entry&&entry.date?String(entry.date):localDate(stamp),startedAt:String(row.started_at),subj:String(entry&&entry.subj||"Estudo"),top:String(entry&&entry.top||""),minutes:Math.max(0,Number(row.minutes)||0)};
   });
+ }
+ // Se a tela Estudos já enviou os dados atuais, não deixe esta consulta assíncrona (possivelmente defasada)
+ // substituir o estado mais recente por uma resposta antiga ou vazia do Supabase.
+ if(EV.parentDataReceived){
+  return{dailyDays:Object.keys(EV.daily).filter(function(k){return EV.daily[k]>0}).length,totalMinutes:Object.keys(EV.daily).reduce(function(a,k){return a+EV.daily[k]},0),sessions:EV.sessions.length,source:"tela Estudos / Foco"};
  }
  // Se os totais diários não estiverem disponíveis, reconstrói os dias pela soma das sessões.
  if(!hasDailyRows&&!Object.keys(daily).length){
