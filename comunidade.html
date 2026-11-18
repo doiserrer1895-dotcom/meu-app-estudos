@@ -677,22 +677,22 @@ $("evc").addEventListener("click",function(e){
 window.addEventListener("message",function(event){
  if(event.origin!==location.origin||!event.data||event.data.type!=="eu-vs-plataforma-period")return;
  var z=event.data;
- // Quando a tela Estudos envia o estado atual do Foco, ele é mais recente que uma leitura paralela da nuvem.
- // Marca essa fonte como prioritária para impedir que uma consulta atrasada sobrescreva os dados reais com zeros.
- EV.parentDataReceived=true;
  EV.mode=z.mode==="w"||z.mode==="y"?z.mode:"m";
  var incomingRef=z.ref?new Date(z.ref):new Date();
  EV.ref=isFinite(incomingRef.getTime())?incomingRef:new Date();
- // Sempre redesenha imediatamente com o período recebido do seletor da tela Estudos.
- // Antes, quando a leitura direta da nuvem já havia terminado, a mensagem era descartada
- // e o gráfico ficava preso no eixo/período anterior.
- EV.daily={};
- (Array.isArray(z.daily)?z.daily:[]).forEach(function(x){if(x&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||"")))EV.daily[x.date]=Math.max(0,Math.round(+x.minutes||0))});
- EV.sessions=Array.isArray(z.sessions)?z.sessions:[];
- EV.activeFocus=z.activeFocus||null;
+ var incomingDaily={};
+ (Array.isArray(z.daily)?z.daily:[]).forEach(function(x){if(x&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||"")))incomingDaily[x.date]=Math.max(0,Math.round(+x.minutes||0))});
+ var incomingSessions=Array.isArray(z.sessions)?z.sessions:[];
+ var hasRealParentData=Object.keys(incomingDaily).some(function(k){return incomingDaily[k]>0})||incomingSessions.some(function(x){return x&&Number(x.minutes)>0});
+ // Uma mensagem vazia pode chegar antes da leitura do Supabase. Nunca a trate como fonte prioritária.
+ // Só substitui a nuvem quando a tela Estudos realmente enviou registros de Foco.
+ if(hasRealParentData){
+  EV.parentDataReceived=true;
+  EV.daily=incomingDaily;
+  EV.sessions=incomingSessions;
+ }
+ EV.activeFocus=z.activeFocus||EV.activeFocus||null;
  evBuild();evFx();
- // A mensagem da tela Estudos já contém os registros atuais do Foco.
- // Não refazemos a leitura da nuvem aqui: ela pode estar atrasada e apagar os dados recém-recebidos.
 });
 /* ---------- navegação ---------- */
 var navB=document.querySelectorAll("nav button"),secs=document.querySelectorAll(".sec");
@@ -1103,22 +1103,15 @@ async function evLoadSavedStudies(){
  if(sessionsResult.error)console.warn("Eu versus Plataforma: falha ao ler sessões.",sessionsResult.error);
  if(totalsResult.error&&sessionsResult.error)throw new Error("Não foi possível ler os totais nem as sessões do Foco.");
  function localDate(d){return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())}
- var daily=Object.assign({},fallbackDaily),hasDailyRows=!totalsResult.error&&Array.isArray(totalsResult.data)&&totalsResult.data.length>0;
- if(hasDailyRows){
-  daily={};
+ // A tabela agregada pode conter linhas antigas zeradas. Quando o JSON principal do Foco
+ // possui registros, ele é a fonte primária; os totais agregados só servem como fallback.
+ var hasFallbackDaily=Object.keys(fallbackDaily).length>0;
+ var daily=hasFallbackDaily?Object.assign({},fallbackDaily):{},hasDailyRows=!totalsResult.error&&Array.isArray(totalsResult.data)&&totalsResult.data.length>0;
+ if(!hasFallbackDaily&&hasDailyRows){
   totalsResult.data.forEach(function(row){
    if(row&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.study_date||""))){
     daily[String(row.study_date)]=Math.max(0,Number(row.minutes)||0);
    }
-  });
- }
- var sessionMap={};
- if(!sessionsResult.error&&Array.isArray(sessionsResult.data)){
-  sessionsResult.data.forEach(function(row){
-   if(!row||!row.started_at)return;
-   var stamp=new Date(row.started_at);if(!isFinite(stamp.getTime()))return;
-   var source=String(row.source_id||""),entry=entryById[source],key=source||String(row.started_at);
-   sessionMap[key]={date:entry&&entry.date?String(entry.date):localDate(stamp),startedAt:String(row.started_at),subj:String(entry&&entry.subj||"Estudo"),top:String(entry&&entry.top||""),minutes:Math.max(0,Number(row.minutes)||0)};
   });
  }
  // Se a tela Estudos já enviou os dados atuais, não deixe esta consulta assíncrona (possivelmente defasada)
