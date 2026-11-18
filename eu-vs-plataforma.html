@@ -1033,7 +1033,7 @@ function axisRender(){axisBuild();var d=AXIS_POINTS,n=d.length,mx=60;d.forEach(f
  for(var v=30;v<mx;v+=30){var y=Y(v);s+='<line x1="40" y1="'+y+'" x2="336" y2="'+y+'" stroke="#2f2f33" stroke-dasharray="3 5"/><text x="32" y="'+(y+3)+'" fill="#8b8b92" font-size="9" text-anchor="end">'+ft(v)+'</text>';}
  s+='<line x1="40" y1="158" x2="336" y2="158" stroke="#37373b"/><path d="'+path+' L'+X(n-1)+',158 L'+X(0)+',158Z" fill="url(#axisfill)"/><path d="'+path+'" fill="none" stroke="'+AC+'" stroke-width="3.2" stroke-linecap="round"/>';
  d.forEach(function(x,i){s+='<circle cx="'+X(i)+'" cy="'+Y(x.m)+'" r="'+(AXIS_MODE==="m"?2.3:4)+'" fill="'+AC+'"/><text x="'+X(i)+'" y="178" text-anchor="middle" fill="#c8c8cc" font-size="'+(AXIS_MODE==="m"?7:10)+'">'+x.label.toUpperCase()+'</text><rect class="hit" data-axis-k="'+i+'" x="'+(X(i)-(n>15?5:18))+'" y="0" width="'+(n>15?10:36)+'" height="200"/>');});
- $("evc").innerHTML=s;$("evc").setAttribute("aria-label",AXIS_MODE==="w"?"Segunda a domingo":AXIS_MODE==="m"?"Dias do mês":"Meses do ano");axisPanel(AXIS_SELECTED);}
+ $("evc").innerHTML=s;$("evc").setAttribute("aria-label",AXIS_MODE==="w"?"Segunda a domingo":AXIS_MODE==="m"?"Dias do mês":"Meses do ano");var legend=document.querySelector(".leg");if(legend)legend.innerHTML='<span><b style="background:var(--ac)"></b>Você</span>';axisPanel(AXIS_SELECTED);}
 
 /* Ponte com a tela Estudos: atualiza os mesmos totais e sessões usados pelo cronômetro. */
 window.addEventListener("message",function(event){
