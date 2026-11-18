@@ -348,7 +348,17 @@ function period(){const y=ref.getFullYear(),m=ref.getMonth();
 function shift(k){if(mode==='w')ref.setDate(ref.getDate()+7*k);else if(mode==='m'){ref.setDate(1);ref.setMonth(ref.getMonth()+k)}else{ref.setDate(1);ref.setFullYear(ref.getFullYear()+k)}render()}
 function setMode(m){mode=m;ref=new Date();render()}
 
-function syncEuVsPlatformFrame(){const frame=document.querySelector('iframe[src*="comunidade.html?embed=eu-vs-plataforma"]');if(!frame)return;const map={};[].concat(Array.isArray(S.entries)?S.entries:[],Array.isArray(S.sim)?S.sim:[]).forEach(e=>{if(!e||!/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||"")))return;map[e.date]=(map[e.date]||0)+Math.max(0,Number(e.h||0)-Number(e.p||0)/60)*60});const daily=Object.keys(map).map(date=>({date:date,minutes:Math.round(map[date])}));const send=()=>{try{if(frame.contentWindow)frame.contentWindow.postMessage({type:"eu-vs-plataforma-period",mode:mode==="w"?"w":mode==="y"?"y":"m",ref:ref.toISOString(),daily:daily},location.origin)}catch(e){}};frame.addEventListener("load",send,{once:true});[0,250,800,1600].forEach(ms=>setTimeout(send,ms))}
+function syncEuVsPlatformFrame(){
+ const frame=document.querySelector('iframe[src*="comunidade.html?embed=eu-vs-plataforma"]');if(!frame)return;
+ const records=[].concat(Array.isArray(S.entries)?S.entries:[],Array.isArray(S.sim)?S.sim:[]).filter(e=>e&&/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||""))).map(e=>({id:String(e.id||""),date:String(e.date),subj:String(e.subj||""),top:String(e.top||""),h:Number(e.h||0),p:Number(e.p||0),q:Number(e.q||0),a:Number(e.a||0),source:String(e.source||""),sessionId:String(e.sessionId||""),startedAt:e.startedAt?String(e.startedAt):""}));
+ const map={},groups={};
+ records.forEach(e=>{map[e.date]=(map[e.date]||0)+Math.max(0,e.h-e.p/60)*60;const key=e.sessionId||(e.startedAt&&e.id?"entry:"+e.id:"");if(!key)return;const x=groups[key]||(groups[key]={date:e.date,startedAt:e.startedAt||"",subj:e.subj,top:e.top,minutes:0,questions:0,correct:0});if(!x.startedAt&&e.startedAt)x.startedAt=e.startedAt;if(!x.subj&&e.subj)x.subj=e.subj;if(!x.top&&e.top)x.top=e.top;x.minutes+=Math.max(0,e.h-e.p/60)*60;x.questions+=e.q;x.correct+=e.a});
+ const daily=Object.keys(map).map(date=>({date:date,minutes:Math.round(map[date])}));
+ const sessions=Object.keys(groups).map(k=>groups[k]).filter(x=>x.startedAt).map(x=>({date:x.date,startedAt:x.startedAt,subj:x.subj,top:x.top,minutes:Math.round(x.minutes),questions:Math.round(x.questions),correct:Math.round(x.correct)}));
+ const T=S.timer||{},activeFocus=T.sessionStartedAt?{date:String(T.sessionStartedAt).slice(0,10),startedAt:String(T.sessionStartedAt),subj:String(T.subj||""),top:String(T.top||""),status:T.run?"Em andamento":"Em pausa",minutes:Math.max(0,Math.floor((Number(T.acc||0)+(T.run?Date.now()-Number(T.st||Date.now()):0))/60000))}:null;
+ const send=()=>{try{if(frame.contentWindow)frame.contentWindow.postMessage({type:"eu-vs-plataforma-period",mode:mode==="w"?"w":mode==="y"?"y":"m",ref:ref.toISOString(),daily:daily,sessions:sessions,activeFocus:activeFocus},location.origin)}catch(e){}};
+ frame.addEventListener("load",send,{once:true});[0,250,800,1600].forEach(ms=>setTimeout(send,ms))
+}
 function parkCloudControls(){const box=$('#cloud-user');['cloud-email','cloud-status','cloud-backup','cloud-save-snapshot','cloud-cloud-backup','cloud-restore','cloud-import-button','cloud-retry','cloud-logout','cloud-import-file'].forEach(id=>{const el=document.getElementById(id);if(el&&el.parentElement!==box)box.appendChild(el)})}
 function settingsPanel(){
  let cs='Aguardando sincronização da Constância.',cc='var(--gr)';
