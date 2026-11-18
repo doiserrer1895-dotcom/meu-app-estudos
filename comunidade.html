@@ -272,8 +272,9 @@ body:not(.embed-ev) nav button[data-t="missoes"]{display:inline-flex!important}
       <p class="cap">Comparação dos seus próprios registros com o período anterior.</p>
       <div class="pr">
         <div class="chd"><h2>Resumo do período</h2><span>atual × anterior</span></div>
-        <div id="evp" hidden></div>
-        <p class="cap">Selecione um ponto para consultar o detalhe daquele dia ou mês.</p>
+        <div id="evp"></div>
+        <p class="cap">Distribuição do tempo de início das suas sessões concluídas. Toque em um ponto do gráfico acima para consultar os registros daquele dia ou mês.</p>
+        <div class="leg" id="evp-leg"><span><b style="background:var(--ac)"></b>Período atual</span><span><b style="background:var(--mu)"></b>Período anterior</span></div>
         
       </div>
     </div>
@@ -590,7 +591,49 @@ function panel(){
  if(active){var at=new Date(active.startedAt);details+='<div class="cap"><b>Foco '+active.status.toLowerCase()+'</b><div style="margin-top:7px">'+p2(at.getHours())+':'+p2(at.getMinutes())+' · '+esc(active.subj||"Estudo")+(active.top?' — '+esc(active.top):'')+' · '+ft(active.minutes)+'</div></div>'}
  $("evt").innerHTML='<div class="h"><b>'+nm+'</b><span class="'+(d>=0?"up":"dn")+'">'+(p?(d>=0?"+":"")+d+"% vs período anterior":"sem registro anterior")+'</span></div><div class="ms"><div><small>Tempo atual</small><b>'+ft(x.m)+'</b></div><div><small>Período anterior</small><b>'+ft(p)+'</b></div><div><small>Diferença</small><b>'+(x.m>=p?"+":"-")+ft(Math.abs(x.m-p))+'</b></div></div><div class="cb"><span>Atual</span><div class="bar"><i style="width:'+(100*x.m/Math.max(x.m,p,1))+'%;background:var(--ac)"></i></div><em>'+ft(x.m)+'</em></div><div class="cb"><span>Anterior</span><div class="bar"><i style="width:'+(100*p/Math.max(x.m,p,1))+'%;background:'+PU+'"></i></div><em>'+ft(p)+'</em></div>'+details
 }
-function evBuild(){var r=evRange(),cur=[],prev=[];for(var i=0;i<r.n;i++){var d=new Date(r.a);if(EV.mode==="y")d.setMonth(i);else d.setDate(d.getDate()+i);cur.push({d:d,m:Math.max(0,Math.round(+EV.daily[dk(d)]||0))});var pd=new Date(r.pa);if(EV.mode==="y")pd.setMonth(i);else if(EV.mode==="m")pd.setDate(Math.min(i+1,r.pb.getDate()));else pd.setDate(pd.getDate()+i);prev.push(Math.max(0,Math.round(+EV.daily[dk(pd)]||0)))}EV.D7=cur;EV.previous=prev;EV.labels=r.L;EV.bi=-1;var total=0;cur.forEach(function(x,k){total+=x.m;if(x.m>0&&(EV.bi<0||x.m>cur[EV.bi].m))EV.bi=k});EV.sel=Math.min(EV.sel,r.n-1);var sumPrev=prev.reduce(function(a,b){return a+b},0),diff=sumPrev?Math.round((total/sumPrev-1)*100):0,best=EV.bi<0?"—":r.L[EV.bi];$("evk").innerHTML=[["Período atual",ft(total),"seus registros"],["Período anterior",ft(sumPrev),"comparação pessoal"],["Variação",sumPrev?(diff>=0?"+":"")+diff+"%":"—","atual × anterior"],[EV.mode==="y"?"Melhor mês":"Melhor dia",best,EV.bi<0?"sem registros":ft(cur[EV.bi].m)]].map(function(x){return'<div><small>'+x[0]+'</small><b>'+x[1]+'</b><em>'+x[2]+'</em></div>'}).join("");$("evi").innerHTML='<svg viewBox="0 0 24 24">'+IC.bulb+'</svg><div>Comparação dos seus próprios registros com o período anterior. O destaque indica seu melhor '+(EV.mode==="y"?"mês":"dia")+'.</div>';$("evtool").querySelector(".chd span").textContent=(EV.mode==="w"?"Semana":EV.mode==="m"?"Mês":"Ano")+" atual";$("evtool").querySelector(".leg").innerHTML='<span><b style="background:var(--ac)"></b>Período atual</span><span><b style="background:'+PU+'"></b>Período anterior</span>';var cap=$("evtool").querySelector(".cap");if(cap)cap.textContent="Somente seus registros de estudo. A comparação acompanha o seletor Semana, Mês e Ano.";evDraw();panel()}
+function evStudyPeriods(r){
+ var totals=[0,0,0,0],previous=[0,0,0,0],ranges=[[r.a,r.b],[r.pa,r.pb]];
+ (EV.sessions||[]).forEach(function(s){
+  if(!s||!s.date||!s.startedAt)return;
+  var date=String(s.date),mins=Math.max(0,Math.round(+s.minutes||0));
+  if(!mins)return;
+  var t=new Date(s.startedAt);if(!isFinite(t.getTime()))return;
+  var hour=t.getHours(),bucket=hour<6?0:hour<12?1:hour<18?2:3;
+  if(date>=dk(ranges[0][0])&&date<=dk(ranges[0][1]))totals[bucket]+=mins;
+  else if(date>=dk(ranges[1][0])&&date<=dk(ranges[1][1]))previous[bucket]+=mins;
+ });
+ return{current:totals,previous:previous};
+}
+function evBuild(){
+ var r=evRange(),cur=[],prev=[];
+ for(var i=0;i<r.n;i++){
+  var d=new Date(r.a);if(EV.mode==="y")d.setMonth(i);else d.setDate(d.getDate()+i);
+  cur.push({d:d,m:Math.max(0,Math.round(+EV.daily[dk(d)]||0))});
+  var pd=new Date(r.pa);
+  if(EV.mode==="y")pd.setMonth(i);else if(EV.mode==="m")pd.setDate(Math.min(i+1,r.pb.getDate()));else pd.setDate(pd.getDate()+i);
+  prev.push(Math.max(0,Math.round(+EV.daily[dk(pd)]||0)));
+ }
+ EV.D7=cur;EV.previous=prev;EV.labels=r.L;EV.bi=-1;
+ var total=0;
+ cur.forEach(function(x,k){total+=x.m;if(x.m>0&&(EV.bi<0||x.m>cur[EV.bi].m))EV.bi=k});
+ EV.sel=Math.min(EV.sel,r.n-1);
+ var sumPrev=prev.reduce(function(a,b){return a+b},0),diff=sumPrev?Math.round((total/sumPrev-1)*100):0,best=EV.bi<0?"—":r.L[EV.bi];
+ var periods=evStudyPeriods(r),sumNow=periods.current.reduce(function(a,b){return a+b},0),sumBefore=periods.previous.reduce(function(a,b){return a+b},0);
+ var pc=periods.current.map(function(v){return Math.round(100*v/(sumNow||1))}),pp=periods.previous.map(function(v){return Math.round(100*v/(sumBefore||1))}),peak=sumNow?pc.indexOf(Math.max.apply(null,pc)):-1;
+ EV.periodBuckets=periods;
+ $("evk").innerHTML=[["Período atual",ft(total),"seus registros"],["Período anterior",ft(sumPrev),"comparação pessoal"],["Variação",sumPrev?(diff>=0?"+":"")+diff+"%":"—","atual × anterior"],[EV.mode==="y"?"Melhor mês":"Melhor dia",best,EV.bi<0?"sem registros":ft(cur[EV.bi].m)]].map(function(x){return'<div><small>'+x[0]+'</small><b>'+x[1]+'</b><em>'+x[2]+'</em></div>'}).join("");
+ $("evi").innerHTML='<svg viewBox="0 0 24 24">'+IC.bulb+'</svg><div>Comparação dos seus próprios registros com o período anterior. '+(peak>=0?'Você concentra mais estudos no período da <b>'+PN[peak][0].toLowerCase()+'</b> ('+pc[peak]+'% das sessões com horário registrado).':'Ainda não há sessões com horário de início suficiente para identificar seu período mais frequente.')+' O destaque do gráfico indica seu melhor '+(EV.mode==="y"?"mês":"dia")+'.</div>';
+ $("evtool").querySelector(".chd span").textContent=(EV.mode==="w"?"Semana":EV.mode==="m"?"Mês":"Ano")+" atual";
+ $("evtool").querySelector(".leg").innerHTML='<span><b style="background:var(--ac)"></b>Período atual</span><span><b style="background:'+PU+'"></b>Período anterior</span>';
+ var cap=$("evtool").querySelector(".cap");if(cap)cap.textContent="Somente seus registros. A comparação acompanha o seletor Semana, Mês e Ano.";
+ var pm=Math.max(1,Math.max.apply(null,pc.concat(pp))),h="";
+ PN.forEach(function(n,k){
+  var dd=pc[k]-pp[k];
+  h+='<div class="prow"><div class="ph"><span style="color:'+n[1]+'"><svg viewBox="0 0 24 24">'+n[2]+'</svg><u>'+n[0]+'</u><small>'+PR[k]+'</small>'+(k===peak?'<span class="pk">PICO</span>':'')+'</span><em><b style="color:var(--ac)">'+pc[k]+'%</b> <span style="color:var(--mu)">·</span> <b style="color:'+PU+'">'+pp[k]+'%</b>'+(dd?'<span class="dl '+(dd>0?"up":"dn")+'">('+(dd>0?"+":"")+dd+'%)</span>':'')+'</em></div><div class="pt"><i class="pl" data-w="'+(100*pp[k]/pm)+'"></i><i class="me2" data-w="'+(100*pc[k]/pm)+'"></i></div></div>';
+ });
+ $("evp").innerHTML=h;
+ evDraw();panel();fillBars();
+}
 function fillBars(){
  var bars=document.querySelectorAll("#evp i");
  [].forEach.call(bars,function(i){i.style.transition="none";i.style.width="0"});
