@@ -326,7 +326,10 @@ function ensureSubjectColors(){
 }
 function subjectColor(n){return S.subjectColors&&S.subjectColors[n]||COL[0]}
 
-S.seeded=1;const save=()=>{try{const key=window.__activeUserId?K+':'+window.__activeUserId:K;localStorage.setItem(key,JSON.stringify(S))}catch(e){};if(window.__cloudSave)window.__cloudSave(S);if(view==='f'&&typeof syncEuVsPlatformFrame==='function')syncEuVsPlatformFrame()};
+function notifyPerformanceDashboard(){
+ try{window.parent.postMessage({type:'study-performance-updated'},location.origin)}catch(e){}
+}
+S.seeded=1;const save=()=>{try{const key=window.__activeUserId?K+':'+window.__activeUserId:K;localStorage.setItem(key,JSON.stringify(S))}catch(e){};if(window.__cloudSave)window.__cloudSave(S);notifyPerformanceDashboard();if(view==='f'&&typeof syncEuVsPlatformFrame==='function')syncEuVsPlatformFrame()};
 let view=new URLSearchParams(location.search).get('page')||'d',mode='m',ref=new Date(),open={},inStudies=new URLSearchParams(location.search).get('embedded')==='1';
 const pad=n=>String(n).padStart(2,'0');
 const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -926,6 +929,7 @@ async function activate(user){
   window.__activeUserId=user.id;
   localStorage.setItem(cacheKey,JSON.stringify(S));
   ready=true;
+  notifyPerformanceDashboard();
   if(queuedState){setCloudStatus('Recuperando alterações...');clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,50)}
   else setCloudStatus('Sincronizado');
   if(typeof render==='function')render();
@@ -1127,7 +1131,7 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register(
-        "/meu-app-estudos/service-worker.js?v=52",
+        "/meu-app-estudos/service-worker.js?v=53",
         { scope: "/meu-app-estudos/", updateViaCache: "none" }
       );
       await registration.update();
