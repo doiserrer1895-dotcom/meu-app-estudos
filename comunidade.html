@@ -1073,10 +1073,13 @@ function communitySafeAction(fn){return async function(){try{return await fn.app
 async function evLoadSavedStudies(){
  if(!window.supabase||!window.supabase.createClient)throw new Error("Biblioteca Supabase indisponível.");
  var client=window.supabase.createClient(COMMUNITY_URL,COMMUNITY_KEY);
- var auth=await client.auth.getUser();
+ // A aplicação principal mantém a sessão Supabase no localStorage compartilhado entre os iframes.
+ // getSession() recupera essa sessão diretamente, como já é feito no painel principal do app.
+ var auth=await client.auth.getSession();
  if(auth.error)throw auth.error;
- var user=auth.data&&auth.data.user;
- if(!user)throw new Error("Usuário não autenticado no quadro Eu versus Plataforma.");
+ var session=auth.data&&auth.data.session;
+ var user=session&&session.user;
+ if(!user)throw new Error("Sessão Supabase não encontrada no quadro Eu versus Plataforma.");
 
  // Fonte principal: os mesmos registros de horas líquidas gravados pela ferramenta Foco.
  var studyState={};
