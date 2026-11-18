@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#222224">
-<title>Eu versus Plataforma</title>
+<title>Eu versus Semana</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -236,7 +236,7 @@ input,select,textarea{background:rgba(255,255,255,.055);border-color:var(--line)
 /* A saudação e a data ficam fora da Comunidade; preserva os elementos internos para o relógio não quebrar. */
 .top{display:none!important}
 body>nav{display:none!important;height:0!important;visibility:hidden!important;pointer-events:none!important}
-/* Modo incorporado: mantém somente o componente histórico Eu vs Plataforma. */
+/* Modo incorporado: mantém somente o componente histórico Eu versus semana. */
 body.embed-ev{margin:0!important;padding:0!important;background:transparent!important}
 body.embed-ev .app{width:100%!important;max-width:720px!important;margin:0 auto!important;padding:8px 8px 16px!important;overflow:visible!important}
 body.embed-ev .top,body.embed-ev>nav,body.embed-ev #amigos,body.embed-ev #missoes{display:none!important}
@@ -262,18 +262,18 @@ html:has(body.embed-ev)::-webkit-scrollbar,body.embed-ev::-webkit-scrollbar{disp
 
   <section class="sec on" id="rank">
     <div class="card" id="evtool">
-      <div class="chd"><h2><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Eu vs Plataforma</h2><span>últimos 7 dias</span></div>
+      <div class="chd"><h2><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Eu versus semana</h2><span>últimos 7 dias</span></div>
       <div class="kp" id="evk"></div>
       <div class="ins" id="evi"></div>
-      <svg id="evc" viewBox="0 0 340 202" width="100%" role="img" aria-label="Tempo de estudo dos últimos 7 dias comparado à plataforma"></svg>
+      <svg id="evc" viewBox="0 0 340 202" width="100%" role="img" aria-label="Tempo de estudo dos últimos 7 dias"></svg>
       <div class="dtip" id="evt"></div>
-      <div class="leg"><span><b style="background:var(--ac)"></b>Você</span><span><b style="background:#a78bdb"></b>Semana passada</span><span><b style="background:none;border-top:2px dotted var(--ac);height:0;border-radius:0;margin-bottom:3px"></b>Sua média</span></div>
-      <p class="cap">Plataforma = média de todos os usuários do aplicativo, calculada no servidor. Seus estudos entram automaticamente quando você aperta Finalizar no cronômetro da aba Foco.</p>
+      <div class="leg"><span><b style="background:var(--ac)"></b>Você</span><span><b style="background:#a78bdb"></b>Semana</span><span><b style="background:none;border-top:2px dotted var(--ac);height:0;border-radius:0;margin-bottom:3px"></b>Sua média</span></div>
+      <p class="cap">Seus estudos entram automaticamente quando você aperta Finalizar no cronômetro da aba Foco.</p>
       <div class="pr">
         <div class="chd"><h2>Quando eu estudo</h2><span>últimos 7 dias</span></div>
         <div id="evp"></div>
         <p class="cap">Detectado automaticamente pelo horário em que cada sessão começa. O percentual é a parte do seu tempo de estudo da semana.</p>
-        <div class="leg"><span><b style="background:var(--ac)"></b>Você</span><span><b style="background:#a78bdb"></b>Plataforma</span></div>
+        <div class="leg"><span><b style="background:var(--ac)"></b>Você</span><span><b style="background:#a78bdb"></b>Semana</span></div>
       </div>
     </div>
     <div class="stt"><h2>Ranking</h2><span>amigos e geral</span></div>
@@ -508,7 +508,7 @@ function upd(){
 }
 function play(){CH.cur=[0,0,0,0];draw();go();}
 
-/* ---------- eu vs plataforma ---------- */
+/* ---------- eu vs semana ---------- */
 var PU="#a78bdb",PLAT=[0,0,0,0,0,0,0],PPER=[0,0,0,0];
 /* sessões: [dias atrás, horário de início HH:MM, minutos] -> trocar pelos registros reais */
 var SESS=[];
@@ -584,10 +584,10 @@ function evSel(){
 function panel(){
  var k=EV.sel,x=EV.D7[k],pf=PLAT[k],dd=pf?Math.round((x.m/pf-1)*100):0,mxv=Math.max(x.m,pf,1),h,
   nm=k===6?"Hoje":k===5?"Ontem":wl(x.d);
- h='<div class="h"><b>'+nm+' · '+dm(x.d)+'</b><span class="'+(dd>=0?"up":"dn")+'">'+(pf?(dd>=0?"+":"")+dd+'% vs plataforma':'sem dados da plataforma')+'</span></div>';
+ h='<div class="h"><b>'+nm+' · '+dm(x.d)+'</b><span class="'+(dd>=0?"up":"dn")+'">'+(pf?(dd>=0?"+":"")+dd+'% vs semana':'sem dados da plataforma')+'</span></div>';
  h+='<div class="ms"><div><small>Tempo total</small><b>'+ft(x.m)+'</b></div><div><small>Sessões</small><b>'+x.n+'</b></div><div><small>Por sessão</small><b>'+(x.n?ft(Math.round(x.m/x.n)):"—")+'</b></div></div>';
- h+='<div class="cb"><span>Você</span><div class="bar"><i style="width:'+(100*x.m/mxv)+'%;background:var(--ac)"></i></div><em>'+ft(x.m)+'</em></div><div class="cb"><span>Plataforma</span><div class="bar"><i style="width:'+(100*pf/mxv)+'%;background:'+PU+'"></i></div><em>'+ft(pf)+'</em></div>';
- h+='<p class="ex">'+(x.n?'Neste dia você estudou <b>'+ft(x.m)+'</b>, '+(dd===0?'o mesmo que':'<b class="'+(dd>=0?"up":"dn")+'">'+Math.abs(dd)+'% '+(dd>0?"mais":"menos")+'</b> que')+' a média da plataforma ('+ft(pf)+'). ':'Você não estudou neste dia'+(pf?'; a média da plataforma foi '+ft(pf):'')+'. ')+(pf?'Na semana, você passou a média da plataforma em <b>'+EV.wins+' de 7</b> dias.':'')+(k===6?' O dia de hoje ainda está em andamento.':'')+'</p>';
+ h+='<div class="cb"><span>Você</span><div class="bar"><i style="width:'+(100*x.m/mxv)+'%;background:var(--ac)"></i></div><em>'+ft(x.m)+'</em></div><div class="cb"><span>Semana</span><div class="bar"><i style="width:'+(100*pf/mxv)+'%;background:'+PU+'"></i></div><em>'+ft(pf)+'</em></div>';
+ h+='<p class="ex">'+(x.n?'Neste dia você estudou <b>'+ft(x.m)+'</b>, '+(dd===0?'o mesmo que':'<b class="'+(dd>=0?"up":"dn")+'">'+Math.abs(dd)+'% '+(dd>0?"mais":"menos")+'</b> que')+' a referência semanal ('+ft(pf)+'). ':'Você não estudou neste dia'+(pf?'; a referência semanal foi '+ft(pf):'')+'. ')+(pf?'Na semana, você passou a referência semanal em <b>'+EV.wins+' de 7</b> dias.':'')+(k===6?' O dia de hoje ainda está em andamento.':'')+'</p>';
  if(x.n){
   h+='<div class="sh">Sessões do dia <span>o período vem da hora em que você começou</span></div>';
   x.s.forEach(function(q){h+='<div class="sr"><i style="background:'+PN[q[2]][1]+'"></i><b>'+q[0]+' → '+hm(q[0],q[1])+'</b><span>'+PN[q[2]][0]+'</span><em>'+ft(q[1])+'</em></div>'});
@@ -606,13 +606,15 @@ function evBuild(){
  if(!tot)bi=-1;
  EV.D7=D7;EV.bi=bi;EV.sel=6;EV.avg=avg;EV.day=now.toDateString();
  EV.wins=D7.filter(function(x,k){return x.m>PLAT[k]}).length;
+ var worst=D7.reduce(function(a,x){return x.m<a.m?x:a},D7[0]),prevDay=D7[5].m,lastDay=D7[6].m,change=prevDay?Math.round((lastDay/prevDay-1)*100):null;
+ var changeLabel=change===null?(lastDay>0?"sem estudo no dia anterior":"sem dados do dia anterior"):(Math.abs(change)+"% "+(change>=0?"mais":"menos")+" que ontem");
  var K=[
   ["Média por dia",IC.clk,'<b data-to="'+avg+'" data-f="m">0m</b>',"tempo total ÷ 7 dias","#f0883e","rgba(240,136,62,.16)"],
-  ["Vs plataforma",IC.trd,'<b data-to="'+df+'" data-f="p" class="'+(df>=0?"up":"dn")+'">0%</b>',(pav?"plataforma faz "+ft(pav)+" por dia":"sem dados da plataforma ainda"),df>=0?"#f0883e":"#e5707a",df>=0?"rgba(240,136,62,.16)":"rgba(229,112,122,.16)"],
-  ["Ranking semanal",IC.tro,'<b data-to="'+rankOf("Estudos")+'" data-f="r">#1</b>',"entre amigos e geral","#e3b94a","rgba(227,185,74,.14)"],
+  ["Evolução semanal",IC.trd,'<b class="'+(change===null?"":change>=0?"up":"dn")+'">'+(change===null?"—":(change>0?"+":"")+change+"%")+'</b>',changeLabel,"#f0883e","rgba(240,136,62,.16)"],
+  ["Pior dia",IC.tro,'<b>'+(tot?wd(worst.d):"—")+'</b>',tot?ft(worst.m)+" estudados":"sem estudos ainda","#e3b94a","rgba(227,185,74,.14)"],
   ["Melhor dia",IC.cal,'<b>'+(tot?wd(bd.d):"—")+'</b>',tot?ft(bd.m)+" · "+bd.n+(bd.n===1?" sessão":" sessões"):"sem estudos ainda","#a78bdb","rgba(167,139,219,.16)"]];
  $("evk").innerHTML=K.map(function(k){return '<div style="--c:'+k[4]+';--g:'+k[5]+'"><small><svg viewBox="0 0 24 24">'+k[1]+'</svg>'+k[0]+'</small>'+k[2]+'<em>'+k[3]+'</em></div>'}).join("");
- $("evi").innerHTML=!tot?'<svg viewBox="0 0 24 24">'+IC.bulb+'</svg><div>Você ainda não tem estudos registrados. Quando começar, o app mostra aqui o seu ritmo e compara com a plataforma. Cada sessão que você finaliza no cronômetro entra aqui na hora.</div>':'<svg viewBox="0 0 24 24">'+IC.bulb+'</svg><div>Você estuda mais de <b>'+PN[tp][0].toLowerCase()+'</b> ('+pc[tp]+'% do seu tempo) e está <b class="'+(df>=0?"up":"dn")+'">'+Math.abs(df)+'% '+(df>=0?"acima":"abaixo")+'</b> da média da plataforma. Toque em um dia do gráfico para ver o que aconteceu nele.</div>';
+ $("evi").innerHTML=!tot?'<svg viewBox="0 0 24 24">'+IC.bulb+'</svg><div>Você ainda não tem estudos registrados. Quando começar, o app mostra aqui o seu ritmo e acompanha sua evolução semanal. Cada sessão que você finaliza no cronômetro entra aqui na hora.</div>':'<svg viewBox="0 0 24 24">'+IC.bulb+'</svg><div>Você estuda mais de <b>'+PN[tp][0].toLowerCase()+'</b> ('+pc[tp]+'% do seu tempo) e está <b class="'+(df>=0?"up":"dn")+'">'+Math.abs(df)+'% '+(df>=0?"acima":"abaixo")+'</b> da referência semanal. Toque em um dia do gráfico para ver o que aconteceu nele.</div>';
  evDraw();panel();
  var pm=Math.max(Math.max.apply(null,pc),Math.max.apply(null,PPER))||1,h="";
  PN.forEach(function(n,k){
@@ -705,12 +707,12 @@ function salvar(){try{localStorage.setItem(SK,JSON.stringify({am:FR.am,rec:FR.re
         Comunidade.registrarSessao({inicio: dataDeInicio, fim: new Date()})
       (ou {inicio, minutos}). A data e a hora de início ficam salvas, dia a dia (segunda, terça...).
    2) Daí o app calcula sozinho: tempo total por dia, média por dia (últimos 7 dias, total ÷ 7),
-      sessões e "Quando eu estudo". Isso alimenta Eu vs Plataforma, o Ranking e a aba Amigos.
+      sessões e "Quando eu estudo". Isso alimenta Eu versus semana, o Ranking e a aba Amigos.
    2b) Se a aba Desempenho (Horas líquidas) já tem o total de cada dia, ela manda por
       Comunidade.atualizarHoras({"2026-11-10":95, ...}) (data → minutos) e esse total vale para o gráfico.
    3) Cada sessão também sai por Comunidade.on.sessao({inicio, minutos}) para o servidor guardar.
    4) A PLATAFORMA é o desempenho de todos os usuários juntos, calculado no servidor com as sessões
-      de todo mundo. O servidor devolve por Comunidade.atualizarPlataforma({dias:[7 números em minutos,
+      de todo mundo. O servidor devolve por Comunidade.atualizarSemana({dias:[7 números em minutos,
       do mais antigo até hoje], periodos:[4 porcentagens: madrugada, manhã, tarde, noite]}). */
 var SLK="comunidade:v1:"+ck(ME)+":sessoes",LOG=[];
 try{var rr=JSON.parse(localStorage.getItem(SLK)||"[]");if(Array.isArray(rr))LOG=rr.filter(function(x){return x&&isFinite(x.i)&&x.m>0})}catch(e){}
@@ -752,7 +754,7 @@ function registrarSessao(o){
  refazer();
  return x;
 }
-function atualizarPlataforma(o){
+function atualizarSemana(o){
  o=o||{};
  /* A RPC do Supabase retorna days/periods; aceita também os nomes antigos em português. */
  var days=Array.isArray(o.days)?o.days:o.dias,periods=Array.isArray(o.periods)?o.periods:o.periodos;
@@ -770,7 +772,7 @@ function definirConcurso(nome){
 }
 try{var cc=localStorage.getItem(SCK);if(cc&&achar(ME))achar(ME).c=cc}catch(e){}
 recalcSess();
-window.Comunidade={definirConcurso:definirConcurso,siglaConcurso:siglaConcurso,registrarSessao:registrarSessao,atualizarPlataforma:atualizarPlataforma,atualizarHoras:atualizarHoras,registrar:registrar,atualizarNoite:atualizarNoite,on:ON,receberPedido:function(o){if(!temAmigo(o.nome)&&!FR.rec.some(function(r){return r.n===o.nome})){FR.rec.push({n:o.nome,c:o.concurso||"",pt:o.patente||"Recruta"});renderAmigos()}},confirmarAmizade:function(nome,o){var era=FR.env.some(function(n){return ck(n)===ck(nome)});FR.env=FR.env.filter(function(n){return ck(n)!==ck(nome)});if(era&&FR.nt.indexOf(nome)<0)FR.nt.push(nome);virarAmigo(nome,o);if(era&&$("amigos").classList.contains("on"))toast(nome+" aceitou seu pedido!")}};
+window.Comunidade={definirConcurso:definirConcurso,siglaConcurso:siglaConcurso,registrarSessao:registrarSessao,atualizarSemana:atualizarSemana,atualizarHoras:atualizarHoras,registrar:registrar,atualizarNoite:atualizarNoite,on:ON,receberPedido:function(o){if(!temAmigo(o.nome)&&!FR.rec.some(function(r){return r.n===o.nome})){FR.rec.push({n:o.nome,c:o.concurso||"",pt:o.patente||"Recruta"});renderAmigos()}},confirmarAmizade:function(nome,o){var era=FR.env.some(function(n){return ck(n)===ck(nome)});FR.env=FR.env.filter(function(n){return ck(n)!==ck(nome)});if(era&&FR.nt.indexOf(nome)<0)FR.nt.push(nome);virarAmigo(nome,o);if(era&&$("amigos").classList.contains("on"))toast(nome+" aceitou seu pedido!")}};
 
 /* ---------- amigos ----------
    Estado vazio de verdade: sem amigos de exemplo. Os ganchos ficam em Comunidade (ligar no backend). */
@@ -991,11 +993,11 @@ async function communityInit(){
  HORAS=sm.daily;recalcSess();clock(true);$("user-name").textContent=ME.split(" ")[0];
  await communityRefreshLists();
  D=montar();segBuild();initChart();
- /* Renderiza os dados pessoais imediatamente; a média da plataforma não pode bloquear o gráfico do usuário. */
+ /* Renderiza os dados pessoais imediatamente; a referência semanal não pode bloquear o gráfico do usuário. */
  evBuild();evFx();view();renderAmigos();
  var platform=await db.rpc("community_platform_stats");
- if(platform.error){console.warn("Média da plataforma indisponível; mantendo o gráfico pessoal:",platform.error);atualizarPlataforma({});}
- else atualizarPlataforma(platform.data||{});
+ if(platform.error){console.warn("Média da plataforma indisponível; mantendo o gráfico pessoal:",platform.error);atualizarSemana({});}
+ else atualizarSemana(platform.data||{});
  return true;
 }
 function communityFindProfile(name){return communityFindByName(name)||Object.keys(PROFILE_BY_ID).map(function(k){return PROFILE_BY_ID[k]}).find(function(p){return ck(p.invite_code)===ck(name)})||null}
@@ -1006,7 +1008,7 @@ ON.recusar=async function(name){var p=communityFindProfile(name);if(!p)return;va
 ON.cancelar=async function(name){var p=communityFindProfile(name);if(!p)return;var r=await db.from("community_friend_requests").delete().eq("sender_id",AUTH_USER.id).eq("receiver_id",p.user_id);if(r.error)throw r.error;await communityRefreshLists();refazer()};
 ON.remover=async function(name){var p=communityFindProfile(name);if(!p)return;var r=await db.rpc("community_remove_friend",{p_friend_id:p.user_id});if(r.error)throw r.error;await communityRefreshLists();refazer()};
 ON.incentivo=async function(name){var p=communityFindProfile(name);if(!p)return;var r=await db.rpc("community_send_cheer",{p_friend_id:p.user_id});if(r.error)throw r.error;toast("Incentivo enviado para "+name+"!")};
-ON.sessao=async function(o){var ini=new Date(o.inicio),mins=Math.max(1,Math.min(1440,Math.round(+o.minutos||0)));var r=await db.from("community_sessions").upsert({user_id:AUTH_USER.id,source_id:"manual:"+ini.getTime()+":"+mins,started_at:ini.toISOString(),minutes:mins},{onConflict:"user_id,source_id"});if(r.error)throw r.error;var p=await db.rpc("community_platform_stats");if(!p.error)atualizarPlataforma(p.data||{})};
+ON.sessao=async function(o){var ini=new Date(o.inicio),mins=Math.max(1,Math.min(1440,Math.round(+o.minutos||0)));var r=await db.from("community_sessions").upsert({user_id:AUTH_USER.id,source_id:"manual:"+ini.getTime()+":"+mins,started_at:ini.toISOString(),minutes:mins},{onConflict:"user_id,source_id"});if(r.error)throw r.error;var p=await db.rpc("community_platform_stats");if(!p.error)atualizarSemana(p.data||{})};
 ON.lerAvisos=async function(name){var p=communityFindProfile(name);if(!p)return;var r=await db.from("community_notifications").update({read_at:new Date().toISOString()}).eq("recipient_id",AUTH_USER.id).eq("sender_id",p.user_id).eq("kind","friend_accepted");if(r.error)throw r.error};
 function communitySafeAction(fn){return async function(){try{return await fn.apply(null,arguments)}catch(e){toast("Não foi possível concluir: "+(e.message||e));try{await communityRefreshLists();refazer()}catch(x){console.error(x)}return null}}}
 ["pedido","aceitar","recusar","cancelar","remover","incentivo","sessao","lerAvisos"].forEach(function(k){ON[k]=communitySafeAction(ON[k])});
