@@ -611,7 +611,7 @@ function evBuild(){
  var changeLabel=prevDay?(Math.abs(change)+"% "+(change>=0?"mais":"menos")+" que ontem"):(delta>0?ft(delta)+" a mais que ontem":delta===0?"mesmo tempo de ontem":"a menos que ontem");
  var K=[
   ["Média por dia",IC.clk,'<b data-to="'+avg+'" data-f="m">0m</b>',"tempo total ÷ 7 dias","#f0883e","rgba(240,136,62,.16)"],
-  ["Evolução semanal",IC.trd,'<b class="'+(delta>=0?"up":"dn")+'">'+changeValue+'</b>',changeLabel,"#f0883e","rgba(240,136,62,.16)"],
+  ["Evolução diária",IC.trd,'<b class="'+(delta>=0?"up":"dn")+'">'+changeValue+'</b>',changeLabel,"#f0883e","rgba(240,136,62,.16)"],
   ["Pior dia",IC.tro,'<b>'+(tot?wd(worst.d):"—")+'</b>',tot?ft(worst.m)+" estudados":"sem estudos ainda","#e3b94a","rgba(227,185,74,.14)"],
   ["Melhor dia",IC.cal,'<b>'+(tot?wd(bd.d):"—")+'</b>',tot?ft(bd.m)+" · "+bd.n+(bd.n===1?" sessão":" sessões"):"sem estudos ainda","#a78bdb","rgba(167,139,219,.16)"]];
  $("evk").innerHTML=K.map(function(k){return '<div style="--c:'+k[4]+';--g:'+k[5]+'"><small><svg viewBox="0 0 24 24">'+k[1]+'</svg>'+k[0]+'</small>'+k[2]+'<em>'+k[3]+'</em></div>'}).join("");
