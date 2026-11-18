@@ -145,5 +145,11 @@ function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-th
 (function(){let t=localStorage.getItem('app-theme-evolucao')||localStorage.getItem('previewTheme')||'dark';applyTheme(t)})();
 updateWelcome();setInterval(updateWelcome,15000);scheduleSidebarWeather();
 window.addEventListener('message',event=>{const frames=['appframe','studyframe'].map(id=>document.getElementById(id));if(!frames.some(f=>f&&event.source===f.contentWindow)||!event.data||event.data.type!=='app-theme-change')return;applyTheme(event.data.theme)});
+window.addEventListener('message',event=>{
+ const studyFrame=document.getElementById('studyframe');
+ if(event.origin!==location.origin||!studyFrame||event.source!==studyFrame.contentWindow||!event.data||event.data.type!=='study-performance-updated')return;
+ const dashboard=document.getElementById('dashboardFrameMain');
+ try{if(dashboard&&dashboard.contentWindow)dashboard.contentWindow.postMessage({type:'study-performance-updated'},location.origin)}catch(e){}
+});
 function prepareAppFrame(f,isStudy){f.addEventListener('load',()=>{updateWelcome();try{const d=f.contentDocument;if(!d)return;const t=localStorage.getItem('app-theme-evolucao')||document.documentElement.getAttribute('data-theme')||'dark';d.documentElement.setAttribute('data-theme',t);let s=d.getElementById('central-shell-integration');if(!s){s=d.createElement('style');s.id='central-shell-integration';d.head.appendChild(s)}s.textContent=integrationCss(t,isStudy?false:(f.src.includes('nutricao.html')?'nutrition':f.src.includes('constancia.html')?'constancy':f.src.includes('comunidade.html')?'community':false));if(isStudy||f.src.includes('estudos-area.html?embedded=1')){const spans=d.querySelectorAll('#nav button span');const keys=['d','p','s','c','f'];spans.forEach((sp,i)=>{const target=document.querySelector('[data-icon="'+keys[i]+'"]');if(target&&sp.innerHTML.trim())target.innerHTML=sp.innerHTML})}}catch(e){}})}
 prepareAppFrame(document.getElementById('appframe'),false);prepareAppFrame(document.getElementById('studyframe'),true);document.getElementById('studyframe').addEventListener('load',()=>{if(!pendingStudyPage)return;const page=pendingStudyPage;pendingStudyPage=null;try{document.getElementById('studyframe').contentWindow.go(page)}catch(e){pendingStudyPage=page}});</script></body></html>
