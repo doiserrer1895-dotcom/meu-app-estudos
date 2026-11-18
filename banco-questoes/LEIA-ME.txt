@@ -1,0 +1,11 @@
+PACOTE DO BANCO COMPLETO DE QUESTÕES EEAR
+
+Nesta pasta ficam:
+- questoes-banco-01.gz até questoes-banco-09.gz: partes consecutivas do mesmo fluxo GZIP.
+- manifest.json: contagens, tamanhos e hashes de referência.
+- SHA256SUMS.txt: somas de verificação dos nove pacotes.
+
+O carregador questoes.html fica na raiz e busca os nove pacotes nesta pasta.
+Não renomeie, separe, abra, edite nem recomprima os arquivos .gz.
+
+As imagens auxiliares e bt_questoes.json ficam em assets/banco-questoes/.

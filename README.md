@@ -2,55 +2,48 @@
 
 Aplicativo web pessoal para organizar estudos, acompanhar desempenho e acessar áreas complementares.
 
-## Abrir o aplicativo
-
-- **Versão publicada:** https://doiserrer1895-dotcom.github.io/meu-app-estudos/
+- **Aplicativo:** https://doiserrer1895-dotcom.github.io/meu-app-estudos/
 - **Repositório:** https://github.com/doiserrer1895-dotcom/meu-app-estudos
 
-## Mapa rápido dos arquivos
+## Mapa das pastas
 
-| Caminho | O que faz |
+| Local | O que tem |
 |---|---|
-| `index.html` | Tela principal: estudos, disciplinas, cronograma, registros, desempenho, temporizador, conta e sincronização com a nuvem. |
-| `nutricao.html` | Área de Nutrição. |
-| `constancia.html` | Área de Constância: missões, habilidades, atributos, evolução, calendário e perfil. |
-| `comunidade.html` | Comunidade: perfil, ranking, amizades, notificações e comparativos. |
-| `service-worker.js` | Cache e funcionamento offline/PWA. |
-| `manifest.webmanifest` | Nome, ícone e configurações de instalação do aplicativo. |
-| `supabase-comunidade.sql` | Estrutura e permissões do banco usadas pela Comunidade e Constância. |
-| `supabase-constancia.sql` | Migração pontual para sincronizar os dados da Constância por usuário. |
-| `corrigir-permissoes-comunidade.sql` | Correção pontual das políticas de leitura/gravação dos totais diários. |
-| `supabase-seguranca.sql` | Políticas e cópias de segurança privadas dos dados de estudo. |
-| `assets/` | Imagens e recursos visuais usados pelas telas. |
-| `icons/` | Ícones do aplicativo instalado. |
-| `backups/` | Cópias antigas de arquivos principais preservadas no próprio repositório. |
-| `.github/backups/` | Cópias adicionais históricas, separadas dos arquivos publicados. |
-| `.github/` | Configurações e automações do GitHub, incluindo publicação do site. |
-| `docs/` | Guias de manutenção, estrutura, segurança e relatórios técnicos. |
+| Arquivos HTML na raiz | Páginas principais. Ficam na raiz para preservar os endereços e o GitHub Pages. |
+| `assets/` | Imagens e recursos visuais; imagens auxiliares do banco em `assets/banco-questoes/`. |
+| `banco-questoes/` | Nove pacotes GZIP do banco, manifesto e instruções. |
+| `database/` | Scripts SQL do Supabase. |
+| `docs/` | Manuais, recuperação e relatórios técnicos. |
+| `ferramentas/` | Ferramentas auxiliares de diagnóstico. |
+| `icons/` | Ícones do aplicativo. |
+| `backups/`, `.github/backups/` | Cópias históricas. |
+| `.github/` | Configurações e automações do GitHub. |
 
-## Regras para não perder o aplicativo
+## Páginas principais
 
-1. Não apagar nem renomear os arquivos HTML da raiz sem atualizar todos os links e o cache do PWA.
-2. Não mover `index.html`, `nutricao.html`, `constancia.html` ou `comunidade.html` para subpastas: os caminhos atuais são usados pela navegação e pelo Service Worker.
-3. Antes de uma alteração grande, criar uma branch de backup a partir do commit atual da `main`.
-4. Não substituir arquivos inteiros sem comparar a versão atual e preservar as funcionalidades existentes.
-5. Nunca publicar chave `service_role`, senha ou segredo administrativo. A chave publishable do Supabase pode ficar no cliente; as permissões reais devem ser garantidas por RLS.
-6. Depois de cada publicação, conferir o resultado do GitHub Pages e testar login, gravação, recarga e navegação no celular.
+- `index.html`: entrada do aplicativo.
+- `dashboard-inicio.html`: painel inicial.
+- `estudos-area.html`: Estudos e Foco.
+- `nutricao.html`: Nutrição.
+- `constancia.html`: Constância.
+- `comunidade.html`: Comunidade e comparativos.
+- `questoes.html`: carregador do Banco de Questões.
+- `service-worker.js` e `manifest.webmanifest`: cache e instalação.
 
-## Backups importantes
+**Importante:** as páginas principais continuam na raiz porque os links atuais, o PWA e o GitHub Pages dependem desses caminhos. A organização foi feita nos materiais, scripts, documentação e ferramentas, sem deslocar as páginas usadas pelo app.
 
-- `backup-versao-2.0-2026-11-11`: versão 2.0 preservada.
-- `backup-versao-3.0-banco-instantaneo-2026-11-15`: versão atual com o Banco de Questões persistente.
-- `backup-versao-2.1-2026-11-12`: backup anterior da versão 2.1.
-- `backup-checkup-2026-11-12`: fotografia integral da `main` antes da organização e documentação deste check-up.
+## Manutenção e segurança
 
-## Documentação complementar
+1. Não mover nem renomear as páginas HTML da raiz sem revisar os links e o cache.
+2. Não renomear, separar ou recomprimir os nove arquivos GZIP.
+3. Preservar branches de backup antes de mudanças grandes.
+4. Nunca publicar senha, chave `service_role` ou segredo administrativo.
+5. Só considerar uma publicação concluída após o GitHub Pages terminar com sucesso e os fluxos principais serem verificados.
 
-Consulte [docs/RECUPERAR-APP.md](docs/RECUPERAR-APP.md) para baixar o pacote completo e recuperar a publicação e os dados.
+## Documentação
 
-Consulte [docs/README-ESTRUTURA.md](docs/README-ESTRUTURA.md) para entender cada área e [docs/CHECKUP-2026-11-12.md](docs/CHECKUP-2026-11-12.md) para ver o estado, os riscos e os testes pendentes.
+- [Guia da estrutura](docs/README-ESTRUTURA.md)
+- [Como recuperar o aplicativo](docs/RECUPERAR-APP.md)
+- [Relatório de check-up](docs/CHECKUP-2026-11-12.md)
 
-
-## Sincronização da Constância — ação necessária no Supabase
-
-A aplicação agora lê e grava a Constância na tabela privada `constancia_data`, separada por usuário. **Antes de a sincronização na nuvem funcionar, execute uma vez o arquivo [supabase-constancia.sql](supabase-constancia.sql) no SQL Editor do Supabase.** Depois, abra a área Constância com a conta correta para migrar os dados antigos deste navegador. A migração pergunta antes de importar os dados locais e não apaga a cópia antiga.
+Os scripts SQL ficam em `database/`. A versão 2.0 continua preservada na branch `backup-versao-2.0-2026-11-11`.
