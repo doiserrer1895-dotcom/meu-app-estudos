@@ -1078,20 +1078,21 @@ async function evLoadSavedStudies(){
  var user=auth.data&&auth.data.user;
  if(!user)throw new Error("Usuário não autenticado no quadro Eu versus Plataforma.");
 
- // As tabelas do Foco são fontes independentes. Uma falha ao ler "estudos"
- // não pode interromper a leitura de community_daily_totals/community_sessions.
+ // Fonte principal: os mesmos registros de horas líquidas gravados pela ferramenta Foco.
  var studyState={};
  var studyResult=await client.from("estudos").select("dados").eq("id",user.id).maybeSingle();
  if(!studyResult.error&&studyResult.data&&studyResult.data.dados&&typeof studyResult.data.dados==="object"){
   studyState=studyResult.data.dados;
  }else if(studyResult.error){
-  console.warn("Eu versus Plataforma: leitura auxiliar de estudos indisponível; continuando pelas tabelas do Foco.",studyResult.error);
+  console.warn("Eu versus Plataforma: leitura de estudos indisponível; usando os registros auxiliares do Foco.",studyResult.error);
  }
- var entries=[].concat(Array.isArray(studyState.entries)?studyState.entries:[],Array.isArray(studyState.sim)?studyState.sim:[]),entryById={},fallbackDaily={};
+ var entries=[].concat(Array.isArray(studyState.entries)?studyState.entries:[],Array.isArray(studyState.sim)?studyState.sim:[]);
+ var entryById={},fallbackDaily={},sessionMap={};
  entries.forEach(function(e){
-  if(!e)return;if(e.id)entryById[String(e.id)]=e;
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||"")))return;
-  var mins=Math.max(0,Number(e.h||0)-Number(e.p||0)/60)*60;
+  if(!e)return;
+  if(e.id)entryById[String(e.id)]=e;
+  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(e.date||"")))return;
+  var mins=Math.max(0,(Number(e.h)||0)-(Number(e.p)||0)/60)*60;
   if(isFinite(mins)&&mins>0)fallbackDaily[e.date]=(fallbackDaily[e.date]||0)+mins;
  });
  var results=await Promise.all([
@@ -1101,39 +1102,63 @@ async function evLoadSavedStudies(){
  var totalsResult=results[0],sessionsResult=results[1];
  if(totalsResult.error)console.warn("Eu versus Plataforma: falha ao ler totais diários.",totalsResult.error);
  if(sessionsResult.error)console.warn("Eu versus Plataforma: falha ao ler sessões.",sessionsResult.error);
- if(totalsResult.error&&sessionsResult.error)throw new Error("Não foi possível ler os totais nem as sessões do Foco.");
+ if(totalsResult.error&&sessionsResult.error&&!Object.keys(fallbackDaily).length)throw new Error("Não foi possível ler os registros de horas do Foco.");
  function localDate(d){return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())}
- // A tabela agregada pode conter linhas antigas zeradas. Quando o JSON principal do Foco
- // possui registros, ele é a fonte primária; os totais agregados só servem como fallback.
+
+ // Reconstrói as sessões a partir da tabela auxiliar e vincula disciplina/tópico ao registro original.
+ (Array.isArray(sessionsResult.data)?sessionsResult.data:[]).forEach(function(row){
+  if(!row||!row.started_at)return;
+  var stamp=new Date(row.started_at);if(!isFinite(stamp.getTime()))return;
+  var source=String(row.source_id||""),entry=entryById[source]||null;
+  var key=source||("cloud:"+String(row.started_at));
+  sessionMap[key]={
+   date:entry&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(entry.date||""))?String(entry.date):localDate(stamp),
+   startedAt:String(row.started_at),
+   subj:String(entry&&entry.subj||"Estudo"),
+   top:String(entry&&entry.top||""),
+   minutes:Math.max(0,Math.round(Number(row.minutes)||0))
+  };
+ });
+
+ // Uma mensagem com dados reais da tela Estudos tem prioridade sobre qualquer leitura antiga da nuvem.
+ if(EV.parentDataReceived){
+  return{dailyDays:Object.keys(EV.daily).filter(function(k){return EV.daily[k]>0}).length,totalMinutes:Object.keys(EV.daily).reduce(function(a,k){return a+EV.daily[k]},0),sessions:EV.sessions.length,source:"tela Estudos / Foco"};
+ }
+
  var hasFallbackDaily=Object.keys(fallbackDaily).length>0;
- var daily=hasFallbackDaily?Object.assign({},fallbackDaily):{},hasDailyRows=!totalsResult.error&&Array.isArray(totalsResult.data)&&totalsResult.data.length>0;
- if(!hasFallbackDaily&&hasDailyRows){
-  totalsResult.data.forEach(function(row){
-   if(row&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.study_date||""))){
+ var daily=hasFallbackDaily?Object.assign({},fallbackDaily):{};
+ var rows=Array.isArray(totalsResult.data)?totalsResult.data:[];
+ var hasPositiveDailyRows=rows.some(function(row){return row&&Number(row.minutes)>0});
+ if(!hasFallbackDaily&&hasPositiveDailyRows){
+  rows.forEach(function(row){
+   if(row&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(row.study_date||""))){
     daily[String(row.study_date)]=Math.max(0,Number(row.minutes)||0);
    }
   });
  }
- // Se a tela Estudos já enviou os dados atuais, não deixe esta consulta assíncrona (possivelmente defasada)
- // substituir o estado mais recente por uma resposta antiga ou vazia do Supabase.
- if(EV.parentDataReceived){
-  return{dailyDays:Object.keys(EV.daily).filter(function(k){return EV.daily[k]>0}).length,totalMinutes:Object.keys(EV.daily).reduce(function(a,k){return a+EV.daily[k]},0),sessions:EV.sessions.length,source:"tela Estudos / Foco"};
- }
- // Se os totais diários não estiverem disponíveis, reconstrói os dias pela soma das sessões.
- if(!hasDailyRows&&!Object.keys(daily).length){
+ // Se os totais agregados estiverem vazios/zerados, soma as sessões reais em vez de desenhar uma semana zerada.
+ if(!hasFallbackDaily&&!hasPositiveDailyRows){
   Object.keys(sessionMap).forEach(function(key){
    var q=sessionMap[key];daily[q.date]=(daily[q.date]||0)+q.minutes;
   });
  }
+ // Completa detalhes de sessão com os registros do Foco que têm horário de início.
  entries.forEach(function(e){
   if(!e||!e.startedAt)return;
   var stamp=new Date(e.startedAt);if(!isFinite(stamp.getTime()))return;
-  var key=String(e.id||e.sessionId||e.startedAt);if(sessionMap[key])return;
-  sessionMap[key]={date:String(e.date||localDate(stamp)),startedAt:String(e.startedAt),subj:String(e.subj||"Estudo"),top:String(e.top||""),minutes:Math.max(0,Math.round((Number(e.h||0)-Number(e.p||0)/60)*60))};
+  var key=String(e.id||e.sessionId||e.startedAt);
+  if(sessionMap[key])return;
+  sessionMap[key]={
+   date:String(e.date||localDate(stamp)),
+   startedAt:String(e.startedAt),
+   subj:String(e.subj||"Estudo"),
+   top:String(e.top||""),
+   minutes:Math.max(0,Math.round((Number(e.h||0)-(Number(e.p)||0)/60)*60))
+  };
  });
  EV.daily={};
  Object.keys(daily).forEach(function(date){
-  if(/^\d{4}-\d{2}-\d{2}$/.test(date))EV.daily[date]=Math.round(Math.max(0,Number(daily[date])||0));
+  if(/^\\d{4}-\\d{2}-\\d{2}$/.test(date))EV.daily[date]=Math.round(Math.max(0,Number(daily[date])||0));
  });
  EV.sessions=Object.keys(sessionMap).map(function(key){return sessionMap[key]}).filter(function(x){return x.minutes>0});
  var timer=studyState.timer||{},active=null;
@@ -1143,7 +1168,7 @@ async function evLoadSavedStudies(){
  }
  EV.activeFocus=active;EV.directCloudLoaded=true;evBuild();evFx();
  var total=Object.keys(EV.daily).reduce(function(a,k){return a+EV.daily[k]},0);
- console.info("Eu versus Plataforma: dados reais do Foco carregados.",{dailyDays:Object.keys(EV.daily).filter(function(k){return EV.daily[k]>0}).length,totalMinutes:total,sessions:EV.sessions.length,source:hasDailyRows?"community_daily_totals":"community_sessions/estudos"});
+ console.info("Eu versus Plataforma: registros reais do Foco carregados.",{dailyDays:Object.keys(EV.daily).filter(function(k){return EV.daily[k]>0}).length,totalMinutes:total,sessions:EV.sessions.length,source:hasFallbackDaily?"estudos.dados":hasPositiveDailyRows?"community_daily_totals":"community_sessions"});
  return{dailyDays:Object.keys(EV.daily).filter(function(k){return EV.daily[k]>0}).length,totalMinutes:total,sessions:EV.sessions.length};
 }
 var EMBED_EU_VS_ESTUDOS=new URLSearchParams(location.search).get("embed")==="eu-vs-plataforma";
