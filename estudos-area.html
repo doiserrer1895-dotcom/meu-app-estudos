@@ -348,12 +348,13 @@ function period(){const y=ref.getFullYear(),m=ref.getMonth();
 function shift(k){if(mode==='w')ref.setDate(ref.getDate()+7*k);else if(mode==='m'){ref.setDate(1);ref.setMonth(ref.getMonth()+k)}else{ref.setDate(1);ref.setFullYear(ref.getFullYear()+k)}render()}
 function setMode(m){mode=m;ref=new Date();render()}
 
-function syncEuVsPlatformFrame(){
+async function syncEuVsPlatformFrame(){
  const frame=document.querySelector('iframe[title="Eu vs Plataforma"]');if(!frame)return;
- // Fonte única: os mesmos registros líquidos usados pela ferramenta Foco (Horas por período e Horas líquidas acumuladas).
- const entries=[].concat(Array.isArray(S.entries)?S.entries:[],Array.isArray(S.sim)?S.sim:[]).filter(e=>e&&/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||"")));
- const dailyMap={},sessionMap={};
+ // Primeiro prepara os registros locais já carregados da conta.
+ const entries=[].concat(Array.isArray(S.entries)?S.entries:[],Array.isArray(S.sim)?S.sim:[]).filter(e=>e&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(e.date||"")));
+ const entryById={},dailyMap={},sessionMap={};
  entries.forEach(e=>{
+  if(e.id)entryById[String(e.id)]=e;
   const minutes=Math.max(0,Number(e.h||0)-Number(e.p||0)/60)*60;
   if(!Number.isFinite(minutes)||!minutes)return;
   const date=String(e.date);
@@ -362,9 +363,44 @@ function syncEuVsPlatformFrame(){
   const key=String(e.sessionId||("entry:"+String(e.id||date+":"+e.startedAt)));
   const x=sessionMap[key]||(sessionMap[key]={date,startedAt:String(e.startedAt),subj:String(e.subj||""),top:String(e.top||""),minutes:0});
   x.minutes+=minutes;
-  if(!x.subj&&e.subj)x.subj=String(e.subj);
-  if(!x.top&&e.top)x.top=String(e.top);
  });
+ // Usa o mesmo cliente autenticado da tela Estudos para ler os totais persistidos.
+ // Assim a busca não depende de uma segunda autenticação dentro do iframe.
+ const db=window.__estudosSupabaseClient,uid=window.__activeUserId;
+ if(db&&uid){
+  try{
+   const results=await Promise.all([
+    db.from("community_daily_totals").select("study_date,minutes").eq("user_id",uid).order("study_date",{ascending:true}),
+    db.from("community_sessions").select("started_at,minutes,source_id").eq("user_id",uid).order("started_at",{ascending:true})
+   ]);
+   const totals=results[0],cloudSessions=results[1];
+   if(totals.error)throw totals.error;
+   const rows=Array.isArray(totals.data)?totals.data:[];
+   if(rows.some(row=>row&&Number(row.minutes)>0)){
+    Object.keys(dailyMap).forEach(k=>delete dailyMap[k]);
+    rows.forEach(row=>{
+     if(row&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(row.study_date||""))){
+      dailyMap[String(row.study_date)]=Math.max(0,Number(row.minutes)||0);
+     }
+    });
+   }
+   if(!cloudSessions.error&&Array.isArray(cloudSessions.data)&&cloudSessions.data.length){
+    Object.keys(sessionMap).forEach(k=>delete sessionMap[k]);
+    cloudSessions.data.forEach(row=>{
+     if(!row||!row.started_at)return;
+     const stamp=new Date(row.started_at);if(!Number.isFinite(stamp.getTime()))return;
+     const source=String(row.source_id||""),entry=entryById[source]||null;
+     const date=entry?String(entry.date):stamp.getFullYear()+"-"+String(stamp.getMonth()+1).padStart(2,"0")+"-"+String(stamp.getDate()).padStart(2,"0");
+     const key=source||("cloud:"+String(row.started_at));
+     sessionMap[key]={date,startedAt:String(row.started_at),subj:String(entry&&entry.subj||"Estudo"),top:String(entry&&entry.top||""),minutes:Math.max(0,Math.round(Number(row.minutes)||0))};
+    });
+   }else if(cloudSessions.error){
+    console.warn("Eu versus Plataforma: não foi possível recuperar as sessões salvas.",cloudSessions.error);
+   }
+  }catch(error){
+   console.warn("Eu versus Plataforma: falha ao recuperar os dados persistidos; mantendo os registros locais.",error);
+  }
+ }
  const daily=Object.keys(dailyMap).sort().map(date=>({date,minutes:Math.round(dailyMap[date])}));
  const sessions=Object.keys(sessionMap).map(k=>sessionMap[k]).filter(x=>x.minutes>0);
  const T=S.timer||{},activeFocus=T.sessionStartedAt?{date:iso(new Date(T.sessionStartedAt)),startedAt:String(T.sessionStartedAt),subj:String(T.subj||""),top:String(T.top||""),status:T.run?"Em andamento":"Em pausa",minutes:Math.max(0,Math.floor((Number(T.acc||0)+(T.run?Date.now()-Number(T.st||Date.now()):0))/60000))}:null;
@@ -905,6 +941,7 @@ async function init(){
  try{
   if(!window.supabase||!window.supabase.createClient)throw new Error('A biblioteca de conexão não carregou. Atualize a página e tente novamente.');
   client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  window.__estudosSupabaseClient=client;
   client.auth.onAuthStateChange((event)=>{
    if(event==='SIGNED_OUT'){
     activeUid=null;window.__activeUserId=null;ready=false;queuedState=null;clearTimeout(saveTimer);
