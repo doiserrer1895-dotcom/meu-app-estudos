@@ -660,7 +660,7 @@ function hbars(B,P){const W=340,H=170,L=30,Bt=24,T=10,mx=Math.max(1,...B.map(b=>
 function vF(){const P=period(),es=S.entries.filter(e=>{const d=parse(e.date);return d>=P.a&&d<=P.b}),T=agg(es),hes=[...S.entries,...S.sim].filter(e=>{const d=parse(e.date);return d>=P.a&&d<=P.b}),HT=dt==='h'?agg(hes):T,data=dt==='h'?hes:es;
  const B=Array.from({length:P.n},()=>({h:0,q:0,a:0}));data.forEach(e=>{const i=P.idx(parse(e.date)),b=B[i];if(!b)return;b.h+=net(e);b.q+=Number(e.q)||0;b.a+=Number(e.a)||0});
  const body=dt==='q'?fQ(es,T,B,P):dt==='h'?fH(hes,HT,B,P):dt==='c'?fC():fG(es);
- return`<div class="top" style="margin-bottom:8px">Desempenho</div><div class="seg">${[['q','Acertos/Erros'],['h','Horas']].map(x=>`<button class="${dt===x[0]?'on':''}" onclick="dt='${x[0]}';render()">${x[1]}</button>`).join('')}</div>`+pHead()+body}
+ return`<div class="top" style="margin-bottom:8px">Desempenho</div><div class="seg">${[['q','Acertos/Erros'],['h','Horas'],['g','Disciplinas']].map(x=>`<button class="${dt===x[0]?'on':''}" onclick="dt='${x[0]}';render()">${x[1]}</button>`).join('')}</div>`+pHead()+body}
 function fQ(es,T,B,P){
  const subs=[...new Set([...S.edital.map(m=>m.name),...S.entries.map(e=>e.subj)])].filter(Boolean);
  qs=Array.isArray(qs)?qs.filter(n=>subs.includes(n)):[];
