@@ -1012,10 +1012,34 @@ function communitySafeAction(fn){return async function(){try{return await fn.app
 ["pedido","aceitar","recusar","cancelar","remover","incentivo","sessao","lerAvisos"].forEach(function(k){ON[k]=communitySafeAction(ON[k])});
 
 
+
+/* O seletor controla somente a escala temporal do gráfico. */
+var AXIS_MODE="w",AXIS_REF=new Date(),AXIS_POINTS=[],AXIS_SELECTED=0;
+function axisKey(d){return dk(d);}
+function axisBuild(){
+ var r=new Date(AXIS_REF),a,n;
+ if(AXIS_MODE==="w"){a=new Date(r);a.setDate(r.getDate()-(r.getDay()+6)%7);n=7;}
+ else if(AXIS_MODE==="m"){a=new Date(r.getFullYear(),r.getMonth(),1);n=new Date(r.getFullYear(),r.getMonth()+1,0).getDate();}
+ else{a=new Date(r.getFullYear(),0,1);n=12;}
+ AXIS_POINTS=[];
+ for(var i=0;i<n;i++){var d=AXIS_MODE==="y"?new Date(a.getFullYear(),i,1):new Date(a.getFullYear(),a.getMonth(),a.getDate()+i),m=0;
+ if(AXIS_MODE==="y")Object.keys(HORAS).forEach(function(k){if(k.slice(0,4)===String(d.getFullYear())&&+k.slice(5,7)===i+1)m+=Math.max(0,+HORAS[k]||0);});
+ else m=Math.max(0,+HORAS[axisKey(d)]||0);
+ AXIS_POINTS.push({d:d,m:m,label:AXIS_MODE==="w"?["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"][i]:AXIS_MODE==="m"?String(i+1):["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][i]});
+ }
+}
+function axisPanel(i){var x=AXIS_POINTS[i];if(!x)return;var title=AXIS_MODE==="y"?x.label+" "+x.d.getFullYear():AXIS_MODE==="m"?"Dia "+x.label+" · "+dm(x.d):wl(x.d)+" · "+dm(x.d);$("evt").innerHTML='<div class="h"><b>'+title+'</b><span>Seu registro</span></div><div class="ms"><div><small>Tempo estudado</small><b>'+ft(x.m)+'</b></div></div>';}
+function axisRender(){axisBuild();var d=AXIS_POINTS,n=d.length,mx=60;d.forEach(function(x){mx=Math.max(mx,x.m)});mx=Math.ceil(mx*1.15/30)*30;var X=function(i){return n===1?188:42+i*294/(n-1)},Y=function(v){return 158-v/mx*126},p=d.map(function(x,i){return[X(i),Y(x.m)]}),path=sm(p),s='<defs><linearGradient id="axisfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+AC+'" stop-opacity=".35"/><stop offset="1" stop-color="'+AC+'" stop-opacity="0"/></linearGradient></defs>';
+ for(var v=30;v<mx;v+=30){var y=Y(v);s+='<line x1="40" y1="'+y+'" x2="336" y2="'+y+'" stroke="#2f2f33" stroke-dasharray="3 5"/><text x="32" y="'+(y+3)+'" fill="#8b8b92" font-size="9" text-anchor="end">'+ft(v)+'</text>';}
+ s+='<line x1="40" y1="158" x2="336" y2="158" stroke="#37373b"/><path d="'+path+' L'+X(n-1)+',158 L'+X(0)+',158Z" fill="url(#axisfill)"/><path d="'+path+'" fill="none" stroke="'+AC+'" stroke-width="3.2" stroke-linecap="round"/>';
+ d.forEach(function(x,i){s+='<circle cx="'+X(i)+'" cy="'+Y(x.m)+'" r="'+(AXIS_MODE==="m"?2.3:4)+'" fill="'+AC+'"/><text x="'+X(i)+'" y="178" text-anchor="middle" fill="#c8c8cc" font-size="'+(AXIS_MODE==="m"?7:10)+'">'+x.label.toUpperCase()+'</text><rect class="hit" data-axis-k="'+i+'" x="'+(X(i)-(n>15?5:18))+'" y="0" width="'+(n>15?10:36)+'" height="200"/>';});
+ $("evc").innerHTML=s;$("evc").setAttribute("aria-label",AXIS_MODE==="w"?"Segunda a domingo":AXIS_MODE==="m"?"Dias do mês":"Meses do ano");var legend=document.querySelector(".leg");if(legend)legend.innerHTML='<span><b style="background:var(--ac)"></b>Você</span>';axisPanel(AXIS_SELECTED);}
+
 /* Ponte com a tela Estudos: atualiza os mesmos totais e sessões usados pelo cronômetro. */
 window.addEventListener("message",function(event){
  if(event.origin!==location.origin||!event.data||event.data.type!=="eu-vs-plataforma-period")return;
  var payload=event.data;
+ AXIS_MODE=payload.mode==="m"||payload.mode==="y"?payload.mode:"w";AXIS_REF=payload.ref?new Date(payload.ref):new Date();if(!isFinite(AXIS_REF.getTime()))AXIS_REF=new Date();AXIS_SELECTED=0;
  if(Array.isArray(payload.daily)){
   HORAS={};
   payload.daily.forEach(function(x){
@@ -1036,7 +1060,7 @@ window.addEventListener("message",function(event){
   LOG=Object.keys(fresh).map(function(k){return fresh[k]});
   salvarLog();
  }
- recalcSess();evBuild();evFx();
+ recalcSess();evBuild();axisRender();evFx();
 });
 function evEmbedHeight(){
  if(!document.body.classList.contains("embed-ev"))return;
