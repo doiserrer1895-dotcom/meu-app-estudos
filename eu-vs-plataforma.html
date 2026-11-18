@@ -244,6 +244,9 @@ body.embed-ev #rank{display:block!important;margin:0!important}
 body.embed-ev #rank>#evtool{display:block!important;margin:0!important}
 body.embed-ev #rank>*:not(#evtool){display:none!important}
 body.embed-ev #evtool{width:100%!important}
+/* Oculta a barra lateral do iframe; a altura é ajustada pelo documento pai. */
+html:has(body.embed-ev),body.embed-ev{overflow:hidden!important;scrollbar-width:none!important;-ms-overflow-style:none!important}
+html:has(body.embed-ev)::-webkit-scrollbar,body.embed-ev::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
 </style>
 </head>
 <body class="embed-ev">
