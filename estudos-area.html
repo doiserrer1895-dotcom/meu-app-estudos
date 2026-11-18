@@ -354,7 +354,7 @@ function setMode(m){mode=m;ref=new Date();render()}
 async function syncEuVsPlatformFrame(){
  const frame=document.querySelector('iframe[title="Eu vs Plataforma"]');if(!frame)return;
  // Primeiro prepara os registros locais já carregados da conta.
- const entries=[].concat(Array.isArray(S.entries)?S.entries:[],Array.isArray(S.sim)?S.sim:[]).filter(e=>e&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(e.date||"")));
+ const entries=[].concat(Array.isArray(S.entries)?S.entries:[],Array.isArray(S.sim)?S.sim:[]).filter(e=>e&&/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||"")));
  const entryById={},dailyMap={},sessionMap={};
  entries.forEach(e=>{
   if(e.id)entryById[String(e.id)]=e;
@@ -380,10 +380,12 @@ async function syncEuVsPlatformFrame(){
    if(totals.error)throw totals.error;
    const rows=Array.isArray(totals.data)?totals.data:[];
    if(rows.some(row=>row&&Number(row.minutes)>0)){
-    Object.keys(dailyMap).forEach(k=>delete dailyMap[k]);
+    // Mantém os registros locais recém-lançados e completa o histórico com a nuvem.
+    // Para cada dia vale o maior valor, assim um registro novo nunca é apagado por um total salvo desatualizado.
     rows.forEach(row=>{
-     if(row&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(row.study_date||""))){
-      dailyMap[String(row.study_date)]=Math.max(0,Number(row.minutes)||0);
+     if(row&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.study_date||""))){
+      const day=String(row.study_date),cloudMinutes=Math.max(0,Number(row.minutes)||0);
+      dailyMap[day]=Math.max(dailyMap[day]||0,cloudMinutes);
      }
     });
    }
