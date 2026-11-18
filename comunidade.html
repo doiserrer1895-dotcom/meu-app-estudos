@@ -1091,7 +1091,7 @@ async function evLoadSavedStudies(){
  entries.forEach(function(e){
   if(!e)return;
   if(e.id)entryById[String(e.id)]=e;
-  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(e.date||"")))return;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||"")))return;
   var mins=Math.max(0,(Number(e.h)||0)-(Number(e.p)||0)/60)*60;
   if(isFinite(mins)&&mins>0)fallbackDaily[e.date]=(fallbackDaily[e.date]||0)+mins;
  });
@@ -1112,7 +1112,7 @@ async function evLoadSavedStudies(){
   var source=String(row.source_id||""),entry=entryById[source]||null;
   var key=source||("cloud:"+String(row.started_at));
   sessionMap[key]={
-   date:entry&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(entry.date||""))?String(entry.date):localDate(stamp),
+   date:entry&&/^\d{4}-\d{2}-\d{2}$/.test(String(entry.date||""))?String(entry.date):localDate(stamp),
    startedAt:String(row.started_at),
    subj:String(entry&&entry.subj||"Estudo"),
    top:String(entry&&entry.top||""),
@@ -1131,7 +1131,7 @@ async function evLoadSavedStudies(){
  var hasPositiveDailyRows=rows.some(function(row){return row&&Number(row.minutes)>0});
  if(!hasFallbackDaily&&hasPositiveDailyRows){
   rows.forEach(function(row){
-   if(row&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(row.study_date||""))){
+   if(row&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.study_date||""))){
     daily[String(row.study_date)]=Math.max(0,Number(row.minutes)||0);
    }
   });
@@ -1158,7 +1158,7 @@ async function evLoadSavedStudies(){
  });
  EV.daily={};
  Object.keys(daily).forEach(function(date){
-  if(/^\\d{4}-\\d{2}-\\d{2}$/.test(date))EV.daily[date]=Math.round(Math.max(0,Number(daily[date])||0));
+  if(/^\d{4}-\d{2}-\d{2}$/.test(date))EV.daily[date]=Math.round(Math.max(0,Number(daily[date])||0));
  });
  EV.sessions=Object.keys(sessionMap).map(function(key){return sessionMap[key]}).filter(function(x){return x.minutes>0});
  var timer=studyState.timer||{},active=null;
