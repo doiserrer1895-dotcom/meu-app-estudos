@@ -376,6 +376,13 @@ window.addEventListener("message",function(event){
  if(event.origin!==location.origin||!event.data||event.data.type!=="eu-vs-plataforma-ready")return;
  syncEuVsPlatformFrame();
 });
+window.addEventListener("message",function(event){
+ if(event.origin!==location.origin||!event.data||event.data.type!=="eu-vs-plataforma-height")return;
+ const frame=document.querySelector('iframe[src*="comunidade.html?embed=eu-vs-plataforma"]');
+ if(!frame)return;
+ const height=Math.max(1050,Math.min(2400,Math.ceil(Number(event.data.height)||0)+16));
+ frame.style.height=height+"px";
+});
 function parkCloudControls(){const box=$('#cloud-user');['cloud-email','cloud-status','cloud-backup','cloud-save-snapshot','cloud-cloud-backup','cloud-restore','cloud-import-button','cloud-retry','cloud-logout','cloud-import-file'].forEach(id=>{const el=document.getElementById(id);if(el&&el.parentElement!==box)box.appendChild(el)})}
 function settingsPanel(){
  let cs='Aguardando sincronização da Constância.',cc='var(--gr)';
