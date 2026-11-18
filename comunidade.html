@@ -679,6 +679,10 @@ window.addEventListener("message",function(event){
  var z=event.data;
  EV.mode=z.mode==="w"||z.mode==="y"?z.mode:"m";
  EV.ref=z.ref?new Date(z.ref):new Date();
+ if(EV.directCloudLoaded){
+  evLoadSavedStudies().catch(function(error){console.warn("Não foi possível atualizar os dados do Foco.",error)});
+  return;
+ }
  EV.daily={};
  (Array.isArray(z.daily)?z.daily:[]).forEach(function(x){if(x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date))EV.daily[x.date]=Math.max(0,Math.round(+x.minutes||0))});
  EV.sessions=Array.isArray(z.sessions)?z.sessions:[];
@@ -1100,7 +1104,7 @@ async function evLoadSavedStudies(){
  EV.sessions=Object.keys(sessionMap).map(function(key){return sessionMap[key]}).filter(function(x){return x.minutes>0});
  var timer=state.timer||{},active=null;
  if(timer.sessionStartedAt){var ts=new Date(timer.sessionStartedAt);if(isFinite(ts.getTime()))active={date:localDate(ts),startedAt:String(timer.sessionStartedAt),subj:String(timer.subj||""),top:String(timer.top||""),status:timer.run?"Em andamento":"Em pausa",minutes:Math.max(0,Math.floor((Number(timer.acc||0)+(timer.run?Date.now()-Number(timer.st||Date.now()):0))/60000))}}
- EV.activeFocus=active;evBuild();evFx();
+ EV.activeFocus=active;EV.directCloudLoaded=true;evBuild();evFx();
  return{dailyDays:Object.keys(EV.daily).filter(function(k){return EV.daily[k]>0}).length,totalMinutes:Object.keys(EV.daily).reduce(function(a,k){return a+EV.daily[k]},0),sessions:EV.sessions.length,source:"community_daily_totals + community_sessions"};
 }
 var EMBED_EU_VS_ESTUDOS=new URLSearchParams(location.search).get("embed")==="eu-vs-plataforma";
