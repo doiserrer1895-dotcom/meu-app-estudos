@@ -1062,5 +1062,13 @@ if ("serviceWorker" in navigator) {
     }
   });
 }
+
+// Ajusta a altura do componente Eu vs Plataforma ao conteúdo, deixando a rolagem somente na página.
+window.addEventListener("message",function(event){
+ if(event.origin!==window.location.origin||!event.data||event.data.type!=="eu-vs-plataforma-height")return;
+ document.querySelectorAll('iframe[src*="comunidade.html?embed=eu-vs-plataforma"]').forEach(function(frame){
+  if(frame.contentWindow===event.source&&Number.isFinite(event.data.height))frame.style.height=Math.max(320,event.data.height)+"px";
+ });
+});
 </script>
 </body></html>
