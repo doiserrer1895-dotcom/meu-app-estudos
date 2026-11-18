@@ -1530,11 +1530,33 @@ $('#tgo').onclick=()=>{
 $('#treset').onclick=()=>{stop();left=total;drawT()};
 drawT();
 
-/* ---------- Desempenho ---------- */
-(function(){
-  const v=[3.2,4.1,2.8,5.0,3.4,4.6,1.6],n=['S','T','Q','Q','S','S','D'],max=5.2,today=5;
-  $('#chart').innerHTML=v.map((x,i)=>`<div class="${i===3?'hi':''}"><span>${x}h</span><i style="height:${x/max*100}%"></i><span>${n[i]}</span></div>`).join('');
-})();
+/* ---------- Desempenho: dados reais de Estudos ---------- */
+function drawPerformanceChart(){
+  const box=$('#chart');if(!box)return;
+  let S=null;
+  if(typeof DASH_STUDY_STATE!=='undefined'&&DASH_STUDY_STATE&&Array.isArray(DASH_STUDY_STATE.entries))S=DASH_STUDY_STATE;
+  if(!S){
+    const keys=[];
+    try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k==='estudos-v1'||k&&k.startsWith('estudos-v1:'))keys.push(k)}}catch(e){}
+    for(const k of keys){try{const v=JSON.parse(localStorage.getItem(k)||'null');if(v&&Array.isArray(v.entries)){S=v;break}}catch(e){}}
+  }
+  const now=new Date();now.setHours(0,0,0,0);
+  const start=new Date(now);start.setDate(now.getDate()-(now.getDay()+6)%7);
+  const labels=['S','T','Q','Q','S','S','D'],daily=Array(7).fill(0);
+  if(S){
+    const all=[...(Array.isArray(S.entries)?S.entries:[]),...(Array.isArray(S.sim)?S.sim:[])];
+    const key=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    all.forEach(e=>{
+      if(!e||typeof e.date!=='string')return;
+      const idx=Math.round((new Date(e.date+'T00:00:00')-start)/86400000);
+      if(idx<0||idx>6||key(new Date(start.getTime()+idx*86400000))!==e.date)return;
+      const hours=Math.max(0,(Number(e.h)||0)-(Number(e.p)||0)/60);
+      daily[idx]+=hours;
+    });
+  }
+  const max=Math.max(1,...daily),todayIndex=(now.getDay()+6)%7;
+  box.innerHTML=daily.map((hours,i)=>'<div class="'+(i===todayIndex?'hi':'')+'"><span>'+hours.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'h</span><i style="height:'+(hours/max*100)+'%"></i><span>'+labels[i]+'</span></div>').join('');
+}
 
 /* ---------- Água ---------- */
 let cups=6;
@@ -1900,6 +1922,7 @@ async function refreshDashboardCommunity(){
     try{const raw=localStorage.getItem('estudos-v1:'+user.id);if(raw){const parsed=JSON.parse(raw);if(parsed&&Array.isArray(parsed.entries)&&Array.isArray(parsed.edital))localStudy=parsed}}catch(e){}
     const cloudStudy=!studyResult.error&&studyResult.data&&studyResult.data.dados&&Array.isArray(studyResult.data.dados.entries)&&Array.isArray(studyResult.data.dados.edital)?studyResult.data.dados:null;
     DASH_STUDY_STATE=localStudy||cloudStudy;
+    drawPerformanceChart();
     if(!cResult.error&&cResult.data&&cResult.data.data)DASH_CONSTANCIA_STATE=cResult.data.data;
     else DASH_CONSTANCIA_STATE=readConstanciaLocal();
     if(pResult.error)throw pResult.error;
@@ -2120,11 +2143,11 @@ function applyName(){
 $('#nameIn').value=NAME;
 $('#nameIn').addEventListener('input',e=>{NAME=e.target.value.trim()||'Rafael';try{localStorage.setItem('evo-name',NAME)}catch(x){}applyName()});
 $('#nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('#dinfo').hidden=true});
-applyName();drawGeral();scheduleDashboardWeather();
+applyName();drawGeral();drawPerformanceChart();scheduleDashboardWeather();
 refreshDashboardCommunity();
 window.addEventListener('focus',refreshDashboardCommunity);
 setInterval(refreshDashboardCommunity,60000);
-window.addEventListener('storage',e=>{if(e.key==='estudos-v1'||(e.key&&e.key.startsWith('estudos-v1:'))||e.key==='nutri-v1'||e.key===null){if(e.key&&e.key.startsWith('estudos-v1:')){try{const parsed=JSON.parse(e.newValue||'null');DASH_STUDY_STATE=parsed&&Array.isArray(parsed.entries)&&Array.isArray(parsed.edital)?parsed:null}catch(x){DASH_STUDY_STATE=null}}drawGeral()}if(e.key==='constancia-v1:'+DASH_USER_ID&&e.newValue){try{DASH_CONSTANCIA_STATE=JSON.parse(e.newValue)}catch(x){}drawGeral()}if(e.key==='constancia-v1'&&!DASH_USER_ID&&e.newValue){try{DASH_CONSTANCIA_STATE=JSON.parse(e.newValue)}catch(x){}drawGeral()}});
+window.addEventListener('storage',e=>{if(e.key==='estudos-v1'||(e.key&&e.key.startsWith('estudos-v1:'))||e.key==='nutri-v1'||e.key===null){if(e.key&&e.key.startsWith('estudos-v1:')){try{const parsed=JSON.parse(e.newValue||'null');DASH_STUDY_STATE=parsed&&Array.isArray(parsed.entries)&&Array.isArray(parsed.edital)?parsed:null}catch(x){DASH_STUDY_STATE=null}}drawGeral();drawPerformanceChart()}if(e.key==='constancia-v1:'+DASH_USER_ID&&e.newValue){try{DASH_CONSTANCIA_STATE=JSON.parse(e.newValue)}catch(x){}drawGeral()}if(e.key==='constancia-v1'&&!DASH_USER_ID&&e.newValue){try{DASH_CONSTANCIA_STATE=JSON.parse(e.newValue)}catch(x){}drawGeral()}});
 /* ---------- Constância: Campo (stats) + Perfil ---------- */
 function renderCampoStats(){
   const bx=document.getElementById('cfStats');if(!bx)return;
