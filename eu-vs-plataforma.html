@@ -594,7 +594,40 @@ function panel(){
  }
  $("evt").innerHTML=h;
 }
+
+/* Gráfico por período: compara os registros do usuário com o período anterior. */
+var PERIOD_MODE="w",PERIOD_REF=new Date(),PERIOD_DATA=[],PERIOD_SESSIONS=[],PERIOD_VIEW=[];
+function pBounds(mode,ref,off){var a,b,y=ref.getFullYear(),m=ref.getMonth();if(mode==="w"){a=new Date(y,m,ref.getDate());a.setDate(a.getDate()-(a.getDay()+6)%7+7*off);a.setHours(0,0,0,0);b=new Date(a);b.setDate(a.getDate()+6);}else if(mode==="m"){a=new Date(y,m+off,1);b=new Date(y,m+off+1,0);}else{a=new Date(y+off,0,1);b=new Date(y+off,11,31);}b.setHours(23,59,59,999);return{a:a,b:b};}
+function pDate(d){return dk(d);}
+function pBuild(){var mode=PERIOD_MODE,cur=pBounds(mode,PERIOD_REF,0),prev=pBounds(mode,PERIOD_REF,-1),n=mode==="w"?7:mode==="m"?cur.b.getDate():12,out=[],map={};
+ PERIOD_DATA.forEach(function(x){if(x&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||"")))map[x.date]=Math.max(0,Number(x.minutes)||0);});
+ for(var i=0;i<n;i++){var d=mode==="w"?new Date(cur.a.getFullYear(),cur.a.getMonth(),cur.a.getDate()+i):mode==="m"?new Date(cur.a.getFullYear(),cur.a.getMonth(),i+1):new Date(cur.a.getFullYear(),i,1),pd=mode==="w"?new Date(prev.a.getFullYear(),prev.a.getMonth(),prev.a.getDate()+i):mode==="m"?new Date(prev.a.getFullYear(),prev.a.getMonth(),i+1):new Date(prev.a.getFullYear(),i,1),label=mode==="w"?["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"][i]:mode==="m"?String(i+1):["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][i],key=pDate(d),pkey=pDate(pd);
+ out.push({d:d,label:label,m:map[key]||0,prev:map[pkey]||0,n:0,s:[]});}
+ PERIOD_SESSIONS.forEach(function(s){if(!s)return;var date=String(s.date||""),d=new Date(date+"T12:00:00");if(!isFinite(d.getTime())||d<cur.a||d>cur.b)return;var idx=mode==="w"?Math.round((dia0(d)-dia0(cur.a))/864e5):mode==="m"?d.getDate()-1:d.getMonth(),x=out[idx],st=new Date(s.startedAt||s.started_at),h=isFinite(st.getTime())?st.getHours():12;x.n++;x.s.push({time:isFinite(st.getTime())?p2(st.getHours())+":"+p2(st.getMinutes()):"—",minutes:Math.max(0,Math.round(Number(s.minutes)||0)),period:h<6?0:h<12?1:h<18?2:3});});
+ out.forEach(function(x){x.s.sort(function(a,b){return a.time<b.time?-1:1});});return out;
+}
+function pPanel(i){var x=PERIOD_VIEW[i];if(!x)return;var diff=x.prev?Math.round((x.m/x.prev-1)*100):0,h='<div class="h"><b>'+x.label+' · '+dm(x.d)+'</b><span class="'+(diff>=0?"up":"dn")+'">'+(x.prev?(diff>=0?"+":"")+diff+"% vs período anterior":"sem registro anterior")+'</span></div>';
+ h+='<div class="ms"><div><small>Você</small><b>'+ft(x.m)+'</b></div><div><small>Período anterior</small><b>'+ft(x.prev)+'</b></div><div><small>Sessões</small><b>'+x.n+'</b></div></div>';
+ h+='<div class="cb"><span>Atual</span><div class="bar"><i style="width:'+(100*x.m/Math.max(x.m,x.prev,1))+'%;background:var(--ac)"></i></div><em>'+ft(x.m)+'</em></div><div class="cb"><span>Anterior</span><div class="bar"><i style="width:'+(100*x.prev/Math.max(x.m,x.prev,1))+'%;background:'+PU+'"></i></div><em>'+ft(x.prev)+'</em></div>';
+ if(x.s.length){h+='<div class="sh">Sessões</div>';x.s.forEach(function(s){h+='<div class="sr"><i style="background:'+PN[s.period][1]+'"></i><b>'+s.time+'</b><span>'+PN[s.period][0]+'</span><em>'+ft(s.minutes)+'</em></div>';});}$("evt").innerHTML=h;}
+function pRender(){var data=pBuild(),n=data.length,total=0,old=0,per=[0,0,0,0],best=0;data.forEach(function(x,i){total+=x.m;old+=x.prev;if(x.m>data[best].m)best=i;x.s.forEach(function(s){per[s.period]+=s.minutes;});});PERIOD_VIEW=data;
+ var avg=Math.round(total/n),oldAvg=Math.round(old/n),diff=oldAvg?Math.round((avg/oldAvg-1)*100):0,period=PERIOD_MODE==="w"?"semana":PERIOD_MODE==="m"?"mês":"ano",avgLabel=PERIOD_MODE==="y"?"média por mês":"média por dia",bestLabel=PERIOD_MODE==="y"?"melhor mês":"melhor dia";
+ var cards=[["Total no período",IC.clk,"<b>"+ft(total)+"</b>","tempo estudado"],[avgLabel,IC.trd,"<b>"+ft(avg)+"</b>","anterior: "+ft(oldAvg)],["Variação",IC.tro,'<b class="'+(diff>=0?"up":"dn")+'">'+(oldAvg?(diff>=0?"+":"")+diff+"%":"—")+"</b>","contra o "+period+" anterior],[bestLabel,IC.cal,"<b>"+(total?data[best].label:"—")+"</b>",total?ft(data[best].m):"sem estudos"]];
+ $("evk").innerHTML=cards.map(function(x){return'<div><small><svg viewBox="0 0 24 24">'+x[1]+'</svg>'+x[0]+'</small>'+x[2]+'<em>'+x[3]+'</em></div>';}).join("");
+ $("evi").innerHTML='<svg viewBox="0 0 24 24">'+IC.bulb+'</svg><div>Comparação entre seus registros do '+period+" atual e do "+period+" anterior. Toque em um ponto do gráfico para ver os detalhes.</div>";
+ var leg=document.querySelector(".leg");if(leg)leg.innerHTML='<span><b style="background:var(--ac)"></b>Você</span><span><b style="background:'+PU+'"></b>'+(PERIOD_MODE==="w"?"Semana passada":PERIOD_MODE==="m"?"Mês passado":"Ano passado")+"</span>";
+ var max=60;data.forEach(function(x){max=Math.max(max,x.m,x.prev)});max=Math.ceil(max*1.18/30)*30||30;
+ var xx=function(i){return n===1?186:42+i*286/(n-1)},yy=function(v){return 158-v/max*126},path=function(key){return data.map(function(x,i){return(i?"L":"M")+xx(i).toFixed(1)+","+yy(x[key]).toFixed(1)}).join(" ");};
+ var svg='<defs><linearGradient id="pfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+AC+'" stop-opacity=".3"/><stop offset="1" stop-color="'+AC+'" stop-opacity="0"/></linearGradient></defs>';
+ for(var v=30;v<max;v+=30){var gy=yy(v);svg+='<line x1="40" y1="'+gy+'" x2="336" y2="'+gy+'" stroke="#37373b" stroke-dasharray="3 5"/><text x="32" y="'+(gy+3)+'" fill="#8b8b92" font-size="9" text-anchor="end">'+ft(v)+'</text>';}
+ svg+='<line x1="40" y1="158" x2="336" y2="158" stroke="#37373b"/><path d="'+path("prev")+'" fill="none" stroke="'+PU+'" stroke-width="2.5" stroke-dasharray="5 5"/><path d="'+path("m")+'" fill="none" stroke="'+AC+'" stroke-width="3" stroke-linecap="round"/>';
+ data.forEach(function(x,i){var w=n>15?8:34;svg+='<circle cx="'+xx(i)+'" cy="'+yy(x.prev)+'" r="'+(n>15?1.8:2.8)+'" fill="'+PU+'"/><circle cx="'+xx(i)+'" cy="'+yy(x.m)+'" r="'+(n>15?2:4)+'" fill="'+AC+'"/><text x="'+xx(i)+'" y="178" fill="#c8c8cc" font-size="'+(n>15?8:10)+'" text-anchor="middle">'+x.label+'</text><rect data-pidx="'+i+'" x="'+(xx(i)-w/2)+'" y="0" width="'+w+'" height="190" fill="transparent"/></svg>';});
+ $("evc").innerHTML=svg;pPanel(n-1);
+ var sum=per.reduce(function(a,b){return a+b},0),mx=Math.max(1,Math.max.apply(null,per));var html="";PN.forEach(function(x,i){var pct=Math.round(100*per[i]/(sum||1));html+='<div class="prow"><div class="ph"><span style="color:'+x[1]+'">'+x[0]+'</span><em>'+pct+'%</em></div><div class="pt"><i class="me2" style="width:'+(100*per[i]/mx)+'%"></i></div></div>';});$("evp").innerHTML=html;
+}
+
 function evBuild(){
+ if(document.body.classList.contains('embed-ev')){pRender();return;}
  recalcSess();
  var now=new Date(),D7=[],per=[0,0,0,0],i;
  for(i=6;i>=0;i--){var d=new Date(now);d.setDate(now.getDate()-i);D7.push({d:d,m:0,n:0,s:[]});}
