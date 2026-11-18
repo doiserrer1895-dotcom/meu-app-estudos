@@ -678,16 +678,21 @@ window.addEventListener("message",function(event){
  if(event.origin!==location.origin||!event.data||event.data.type!=="eu-vs-plataforma-period")return;
  var z=event.data;
  EV.mode=z.mode==="w"||z.mode==="y"?z.mode:"m";
- EV.ref=z.ref?new Date(z.ref):new Date();
- if(EV.directCloudLoaded){
-  evLoadSavedStudies().catch(function(error){console.warn("Não foi possível atualizar os dados do Foco.",error)});
-  return;
- }
+ var incomingRef=z.ref?new Date(z.ref):new Date();
+ EV.ref=isFinite(incomingRef.getTime())?incomingRef:new Date();
+ // Sempre redesenha imediatamente com o período recebido do seletor da tela Estudos.
+ // Antes, quando a leitura direta da nuvem já havia terminado, a mensagem era descartada
+ // e o gráfico ficava preso no eixo/período anterior.
  EV.daily={};
- (Array.isArray(z.daily)?z.daily:[]).forEach(function(x){if(x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date))EV.daily[x.date]=Math.max(0,Math.round(+x.minutes||0))});
+ (Array.isArray(z.daily)?z.daily:[]).forEach(function(x){if(x&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||"")))EV.daily[x.date]=Math.max(0,Math.round(+x.minutes||0))});
  EV.sessions=Array.isArray(z.sessions)?z.sessions:[];
  EV.activeFocus=z.activeFocus||null;
- evBuild();
+ evBuild();evFx();
+ // A nuvem continua sendo a fonte de recuperação dos registros do Foco.
+ // A atualização assíncrona não pode impedir a troca de Semana/Mês/Ano.
+ if(EV.directCloudLoaded){
+  evLoadSavedStudies().catch(function(error){console.warn("Não foi possível atualizar os dados do Foco.",error)});
+ }
 });
 /* ---------- navegação ---------- */
 var navB=document.querySelectorAll("nav button"),secs=document.querySelectorAll(".sec");
