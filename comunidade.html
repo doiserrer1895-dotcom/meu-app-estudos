@@ -235,7 +235,14 @@ input,select,textarea{background:rgba(255,255,255,.055);border-color:var(--line)
 
 /* A saudação e a data ficam fora da Comunidade; preserva os elementos internos para o relógio não quebrar. */
 .top{display:none!important}
-body>nav{display:none!important;height:0!important;visibility:hidden!important;pointer-events:none!important}</style>
+body>nav{display:none!important;height:0!important;visibility:hidden!important;pointer-events:none!important}/* Eu vs Plataforma: componente reaproveitado dentro de Desempenho > Disciplinas. */
+#evtool{display:none}
+body.embed-ev{margin:0!important;padding:0!important;background:transparent!important}
+body.embed-ev .app{width:100%!important;max-width:720px!important;margin:0 auto!important;padding:8px!important}
+body.embed-ev #rank{display:block!important}
+body.embed-ev #evtool{display:block!important;margin:0!important}
+body.embed-ev #rank>.stt,body.embed-ev #rank>.me,body.embed-ev #rank>.seg,body.embed-ev #rank>.podium,body.embed-ev #rank>.list,body.embed-ev #rank>.note,body.embed-ev #rank>.box.cmp{display:none!important}
+</style>
 </head>
 <body>
 <div class="app">
@@ -249,7 +256,7 @@ body>nav{display:none!important;height:0!important;visibility:hidden!important;p
   </div>
 
   <section class="sec on" id="rank">
-    <div class="card">
+    <div class="card" id="evtool">
       <div class="chd"><h2><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Eu vs Plataforma</h2><span>últimos 7 dias</span></div>
       <div class="kp" id="evk"></div>
       <div class="ins" id="evi"></div>
@@ -332,6 +339,7 @@ var p2=function(n){return String(n).padStart(2,"0")};
 var ESC={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"};
 var esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return ESC[c]})};
 var root=document.documentElement;
+if(new URLSearchParams(location.search).get("embed")==="eu-vs-plataforma")document.body.classList.add("embed-ev");
 
 /* ---------- relógio (só mexe no DOM quando o minuto muda; pausa com a aba oculta) ---------- */
 var clkT=0,lastC="",lastD="";
