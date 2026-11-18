@@ -352,7 +352,7 @@ function shift(k){if(mode==='w')ref.setDate(ref.getDate()+7*k);else if(mode==='m
 function setMode(m){mode=m;ref=new Date();render()}
 
 async function syncEuVsPlatformFrame(){
- const frame=document.querySelector('iframe[title="Eu vs Plataforma"]');if(!frame)return;
+ const frame=document.querySelector('iframe[title="Eu versus semana"]');if(!frame)return;
  // Primeiro prepara os registros locais já carregados da conta.
  const entries=[].concat(Array.isArray(S.entries)?S.entries:[],Array.isArray(S.sim)?S.sim:[]).filter(e=>e&&/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||"")));
  const entryById={},dailyMap={},sessionMap={};
@@ -780,7 +780,7 @@ function fC(){const y=cm.getFullYear(),m=cm.getMonth(),n=new Date(y,m+1,0).getDa
  <div class="card"><h2>Disciplinas</h2>${Object.entries(bySubject).sort((a,b)=>b[1]-a[1]).map(([name,h])=>`<div class="row"><div class="g"><b><i class="dot" style="background:${subjectColor(name)}"></i>${esc(name)}</b></div><b>${f1(h)}h</b></div>`).join('')||'<div class="empty">Nenhuma hora registrada neste período geral</div>'}</div>
  ${cs?`<div class="card"><h2>${br(cs)}</h2>${L.map(e=>`<div class="row"><div class="g"><b><i class="dot" style="background:${subjectColor(e.subj)}"></i>${esc(e.subj||'Simulado')}${e.top?' · '+esc(e.top):''}</b><small>${f1(net(e))}h líquidas · ${e.a||0}/${e.q||0} acertos</small></div></div>`).join('')||'<div class="empty">Nenhum estudo registrado nesta data</div>'}</div>`:''}`}
 function fG(es){const m={};es.forEach(e=>{const n=String(e.subj||'').trim();if(!n)return;const o=m[n]||(m[n]={q:0,a:0,h:0});o.q+=Number(e.q)||0;o.a+=Number(e.a)||0;o.h+=net(e)});
- const L=Object.entries(m).filter(x=>x[1].q>0||x[1].h>0).sort((a,b)=>b[1].q-a[1].q||b[1].h-a[1].h);if(!L.length)return'<div class="card"><h2>Disciplinas: desempenho × questões</h2><div class="empty">Nenhum registro de estudo por disciplina neste período</div></div><iframe title="Eu vs Plataforma" src="/meu-app-estudos/eu-vs-plataforma.html?embed=eu-vs-plataforma&chart=20261118m" loading="eager" style="display:block;width:100%;height:1050px;border:0;border-radius:18px;background:transparent;margin:0 0 12px" referrerpolicy="same-origin" onload="syncEuVsPlatformFrame()"></iframe>';
+ const L=Object.entries(m).filter(x=>x[1].q>0||x[1].h>0).sort((a,b)=>b[1].q-a[1].q||b[1].h-a[1].h);if(!L.length)return'<div class="card"><h2>Disciplinas: desempenho × questões</h2><div class="empty">Nenhum registro de estudo por disciplina neste período</div></div><iframe title="Eu vs Plataforma" src="/meu-app-estudos/eu-vs-plataforma.html?embed=eu-vs-plataforma&chart=20261118n" loading="eager" style="display:block;width:100%;height:1050px;border:0;border-radius:18px;background:transparent;margin:0 0 12px" referrerpolicy="same-origin" onload="syncEuVsPlatformFrame()"></iframe>';
  const W=340,H=310,Lm=34,Rm=10,Tm=10,Bm=34,ym=Math.max(100,Math.ceil(Math.max(...L.map(x=>x[1].q))/10)*10),X=p=>Lm+(W-Lm-Rm)*p/100,Y=q=>Tm+(H-Tm-Bm)*(1-q/ym);
  let s='';[0,25,50,75,100].forEach(p=>s+=`<line x1="${X(p)}" x2="${X(p)}" y1="${Tm}" y2="${H-Bm}" stroke="var(--bd)" stroke-dasharray="3 4"/><text x="${X(p)}" y="${H-Bm+14}" text-anchor="middle" fill="var(--mu)" font-size="10">${p}%</text>`);
  [0,.25,.5,.75,1].forEach(k=>{const q=ym*k;s+=`<line x1="${Lm}" x2="${W-Rm}" y1="${Y(q)}" y2="${Y(q)}" stroke="var(--bd)" stroke-dasharray="3 4"/><text x="${Lm-5}" y="${Y(q)+3}" text-anchor="end" fill="var(--mu)" font-size="10">${Math.round(q)}</text>`});
