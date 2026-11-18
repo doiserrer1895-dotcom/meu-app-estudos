@@ -1751,7 +1751,7 @@ const ql=(s,desp=0)=>{
   const tips=[];
   if(dur<420)tips.push('faltaram '+(420-dur)+' min para alcançar 7 horas de sono');
   if(lat>30)tips.push('você levou '+lat+' min para adormecer');
-  if(ef<85)tips.push('a eficiência ficou em '+c1(ef)+'%');
+  if(ef<85)tips.push('a eficiência ficou em '+Math.round(ef)+'%');
   if(aw>2)tips.push('houve '+aw+' despertares');
   return [title+' · '+score+'/100',tips.length?tips.join('; ')+'.':'Boa continuidade: duração, eficiência e despertares ficaram em bons níveis.'];
 };
