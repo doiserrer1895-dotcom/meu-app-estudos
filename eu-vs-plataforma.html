@@ -666,6 +666,7 @@ function evFx(){
  fillBars();
 }
 $("evc").addEventListener("click",function(e){
+ if(e.target&&e.target.hasAttribute&&e.target.hasAttribute("data-pidx")){pPanel(+e.target.getAttribute("data-pidx"));return;}
  var k=e.target.getAttribute&&e.target.getAttribute("data-k");
  if(k===null||+k===EV.sel)return;
  EV.sel=+k;evSel();panel();
@@ -1049,6 +1050,9 @@ function communitySafeAction(fn){return async function(){try{return await fn.app
 window.addEventListener("message",function(event){
  if(event.origin!==location.origin||!event.data||event.data.type!=="eu-vs-plataforma-period")return;
  var payload=event.data;
+ PERIOD_MODE=payload.mode==="m"||payload.mode==="y"?payload.mode:"w";
+ PERIOD_REF=payload.ref?new Date(payload.ref):new Date();if(!isFinite(PERIOD_REF.getTime()))PERIOD_REF=new Date();
+ PERIOD_DATA=Array.isArray(payload.daily)?payload.daily.slice():[];
  if(Array.isArray(payload.daily)){
   HORAS={};
   payload.daily.forEach(function(x){
@@ -1058,6 +1062,7 @@ window.addEventListener("message",function(event){
   });
  }
  if(Array.isArray(payload.sessions)){
+  PERIOD_SESSIONS=payload.sessions.slice();
   var fresh={};
   payload.sessions.forEach(function(x){
    if(!x)return;
