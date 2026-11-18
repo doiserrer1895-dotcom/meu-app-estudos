@@ -586,7 +586,7 @@ function evSel(){
 function panel(){
  var x=EV.D7[EV.sel],p=EV.previous[EV.sel]||0,d=p?Math.round((x.m/p-1)*100):0,nm=EV.mode==="w"?wl(x.d):EV.mode==="m"?"Dia "+x.d.getDate():EV.labels[EV.sel],key=dk(x.d);
  var sessions=EV.sessions.filter(function(s){return s.date===key}),details="";
- if(sessions.length)details='<div class="cap"><b>Focos registrados</b>'+sessions.map(function(s){var t=new Date(s.startedAt);return '<div style="margin-top:7px">'+p2(t.getHours())+':'+p2(t.getMinutes())+' · '+esc(s.subj||"Estudo")+(s.top?' — '+esc(s.top):'')+' · '+ft(s.minutes)+(s.questions?' · '+s.correct+'/'+s.questions+' questões':'')+'</div>'}).join("")+'</div>';
+ if(sessions.length)details='<div class="cap"><b>Focos registrados</b>'+sessions.map(function(s){var t=new Date(s.startedAt);return '<div style="margin-top:7px">'+p2(t.getHours())+':'+p2(t.getMinutes())+' · '+esc(s.subj||"Estudo")+(s.top?' — '+esc(s.top):'')+' · '+ft(s.minutes)+'</div>'}).join("")+'</div>';
  var active=EV.activeFocus&&EV.activeFocus.date===key?EV.activeFocus:null;
  if(active){var at=new Date(active.startedAt);details+='<div class="cap"><b>Foco '+active.status.toLowerCase()+'</b><div style="margin-top:7px">'+p2(at.getHours())+':'+p2(at.getMinutes())+' · '+esc(active.subj||"Estudo")+(active.top?' — '+esc(active.top):'')+' · '+ft(active.minutes)+'</div></div>'}
  $("evt").innerHTML='<div class="h"><b>'+nm+'</b><span class="'+(d>=0?"up":"dn")+'">'+(p?(d>=0?"+":"")+d+"% vs período anterior":"sem registro anterior")+'</span></div><div class="ms"><div><small>Tempo atual</small><b>'+ft(x.m)+'</b></div><div><small>Período anterior</small><b>'+ft(p)+'</b></div><div><small>Diferença</small><b>'+(x.m>=p?"+":"-")+ft(Math.abs(x.m-p))+'</b></div></div><div class="cb"><span>Atual</span><div class="bar"><i style="width:'+(100*x.m/Math.max(x.m,p,1))+'%;background:var(--ac)"></i></div><em>'+ft(x.m)+'</em></div><div class="cb"><span>Anterior</span><div class="bar"><i style="width:'+(100*p/Math.max(x.m,p,1))+'%;background:'+PU+'"></i></div><em>'+ft(p)+'</em></div>'+details
@@ -650,7 +650,17 @@ $("evc").addEventListener("click",function(e){
  EV.sel=+k;evSel();panel();
 });
 
-window.addEventListener("message",function(event){if(event.origin!==location.origin||!event.data||event.data.type!=="eu-vs-plataforma-period")return;var z=event.data;EV.mode=z.mode==="w"||z.mode==="y"?z.mode:"m";EV.ref=z.ref?new Date(z.ref):new Date();EV.daily={};(Array.isArray(z.daily)?z.daily:[]).forEach(function(x){if(x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date))EV.daily[x.date]=Math.max(0,Math.round(+x.minutes||0))});EV.sessions=Array.isArray(z.sessions)?z.sessions:[];EV.activeFocus=z.activeFocus||null;evBuild()});
+window.addEventListener("message",function(event){
+ if(event.origin!==location.origin||!event.data||event.data.type!=="eu-vs-plataforma-period")return;
+ var z=event.data;
+ EV.mode=z.mode==="w"||z.mode==="y"?z.mode:"m";
+ EV.ref=z.ref?new Date(z.ref):new Date();
+ EV.daily={};
+ (Array.isArray(z.daily)?z.daily:[]).forEach(function(x){if(x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date))EV.daily[x.date]=Math.max(0,Math.round(+x.minutes||0))});
+ EV.sessions=Array.isArray(z.sessions)?z.sessions:[];
+ EV.activeFocus=z.activeFocus||null;
+ evBuild();
+});
 /* ---------- navegação ---------- */
 var navB=document.querySelectorAll("nav button"),secs=document.querySelectorAll(".sec");
 [].forEach.call(navB,function(b){
@@ -1027,7 +1037,7 @@ function communitySafeAction(fn){return async function(){try{return await fn.app
 /* ---------- init ---------- */
 /* No modo incorporado em Estudos, o gráfico usa exclusivamente os dados enviados pela própria aba Estudos. Não depende da inicialização da Comunidade, do ranking, de amigos ou de consultas ao Supabase. Desenha imediatamente com o período atual e atualiza ao receber os registros do pai. */
 var EMBED_EU_VS_ESTUDOS=new URLSearchParams(location.search).get("embed")==="eu-vs-plataforma";
-if(EMBED_EU_VS_ESTUDOS){evBuild();evFx();}
+if(EMBED_EU_VS_ESTUDOS){evBuild();evFx();window.parent.postMessage({type:"eu-vs-plataforma-ready"},location.origin);}
 else communityInit().catch(function(e){console.error("Falha na integração da Comunidade:",e);clock(true);D=montar();segBuild();initChart();view();renderAmigos();evBuild();evFx();toast("A Comunidade precisa da configuração do Supabase. Confira o arquivo SQL.");});
 })();
 
