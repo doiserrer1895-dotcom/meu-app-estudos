@@ -1042,10 +1042,59 @@ ON.lerAvisos=async function(name){var p=communityFindProfile(name);if(!p)return;
 function communitySafeAction(fn){return async function(){try{return await fn.apply(null,arguments)}catch(e){toast("Não foi possível concluir: "+(e.message||e));try{await communityRefreshLists();refazer()}catch(x){console.error(x)}return null}}}
 ["pedido","aceitar","recusar","cancelar","remover","incentivo","sessao","lerAvisos"].forEach(function(k){ON[k]=communitySafeAction(ON[k])});
 
-/* ---------- init ---------- */
-/* No modo incorporado em Estudos, o gráfico usa exclusivamente os dados enviados pela própria aba Estudos. Não depende da inicialização da Comunidade, do ranking, de amigos ou de consultas ao Supabase. Desenha imediatamente com o período atual e atualiza ao receber os registros do pai. */
+/* No modo incorporado, o gráfico busca a fonte primária na própria conta autenticada do Supabase.
+   O envio da tela Estudos continua ativo como atualização imediata; esta leitura direta é a
+   garantia de recuperação quando a mensagem do iframe chega antes/depois da sincronização local. */
+async function evLoadSavedStudies(){
+ if(!window.supabase||!window.supabase.createClient)throw new Error("Biblioteca Supabase indisponível.");
+ var client=window.supabase.createClient(COMMUNITY_URL,COMMUNITY_KEY);
+ var auth=await client.auth.getUser();
+ if(auth.error)throw auth.error;
+ var user=auth.data&&auth.data.user;
+ if(!user)return false;
+ var result=await client.from("estudos").select("dados").eq("id",user.id).maybeSingle();
+ if(result.error)throw result.error;
+ var state=result.data&&result.data.dados&&typeof result.data.dados==="object"?result.data.dados:{};
+ var entries=[].concat(Array.isArray(state.entries)?state.entries:[],Array.isArray(state.sim)?state.sim:[]);
+ var daily={},sessionMap={};
+ entries.forEach(function(e){
+  if(!e||!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(e.date||"")))return;
+  var minutes=Math.max(0,Number(e.h||0)-Number(e.p||0)/60)*60;
+  if(!isFinite(minutes)||minutes<=0)return;
+  var date=String(e.date);
+  daily[date]=(daily[date]||0)+minutes;
+  if(!e.startedAt)return;
+  var started=String(e.startedAt),stamp=new Date(started);
+  if(!isFinite(stamp.getTime()))return;
+  var key=String(e.sessionId||("entry:"+String(e.id||date+":"+started)));
+  var session=sessionMap[key]||(sessionMap[key]={date:date,startedAt:started,subj:String(e.subj||""),top:String(e.top||""),minutes:0});
+  session.minutes+=minutes;
+  if(!session.subj&&e.subj)session.subj=String(e.subj);
+  if(!session.top&&e.top)session.top=String(e.top);
+ });
+ EV.daily={};
+ Object.keys(daily).forEach(function(date){EV.daily[date]=Math.round(daily[date])});
+ EV.sessions=Object.keys(sessionMap).map(function(key){return sessionMap[key]}).filter(function(x){return x.minutes>0});
+ var timer=state.timer||{},active=null;
+ if(timer.sessionStartedAt){
+  var start=new Date(timer.sessionStartedAt);
+  if(isFinite(start.getTime())){
+   var date=start.getFullYear()+"-"+p2(start.getMonth()+1)+"-"+p2(start.getDate());
+   active={date:date,startedAt:String(timer.sessionStartedAt),subj:String(timer.subj||""),top:String(timer.top||""),status:timer.run?"Em andamento":"Em pausa",minutes:Math.max(0,Math.floor((Number(timer.acc||0)+(timer.run?Date.now()-Number(timer.st||Date.now()):0))/60000))};
+  }
+ }
+ EV.activeFocus=active;
+ evBuild();
+ return{entries:entries.length,days:Object.keys(EV.daily).length,sessions:EV.sessions.length};
+}
 var EMBED_EU_VS_ESTUDOS=new URLSearchParams(location.search).get("embed")==="eu-vs-plataforma";
-if(EMBED_EU_VS_ESTUDOS){evBuild();evFx();window.parent.postMessage({type:"eu-vs-plataforma-ready"},location.origin);}
+if(EMBED_EU_VS_ESTUDOS){
+ evBuild();evFx();
+ window.parent.postMessage({type:"eu-vs-plataforma-ready"},location.origin);
+ evLoadSavedStudies().then(function(result){
+  if(result)console.info("Eu versus plataforma: dados recuperados da nuvem.",result);
+ }).catch(function(error){console.warn("Leitura direta dos estudos indisponível; aguardando dados da tela Estudos.",error)});
+}
 else communityInit().catch(function(e){console.error("Falha na integração da Comunidade:",e);clock(true);D=montar();segBuild();initChart();view();renderAmigos();evBuild();evFx();toast("A Comunidade precisa da configuração do Supabase. Confira o arquivo SQL.");});
 })();
 
