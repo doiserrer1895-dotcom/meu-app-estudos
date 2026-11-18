@@ -1148,16 +1148,16 @@ async function evLoadSavedStudies(){
  // Fonte oficial do gráfico diário: community_daily_totals. Não descarte esses totais
  // só porque existe algum registro em estudos; a lista de entries pode estar incompleta.
  var daily={};
- if(hasPositiveDailyRows){
-  rows.forEach(function(row){
-   if(row&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.study_date||""))){
-    daily[String(row.study_date)]=Math.max(0,Number(row.minutes)||0);
-   }
-  });
- }else if(hasFallbackDaily){
-  daily=Object.assign({},fallbackDaily);
- }else{
-  // Último recurso: reconstruir os totais a partir das sessões com horário salvo.
+ // Mescla histórico consolidado e sessões novas ainda não sincronizadas.
+ rows.forEach(function(row){
+  if(row&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.study_date||""))){
+   daily[String(row.study_date)]=Math.max(0,Number(row.minutes)||0);
+  }
+ });
+ Object.keys(fallbackDaily).forEach(function(date){
+  daily[date]=Math.max(daily[date]||0,fallbackDaily[date]||0);
+ });
+ if(!Object.keys(daily).length){
   Object.keys(sessionMap).forEach(function(key){
    var q=sessionMap[key];daily[q.date]=(daily[q.date]||0)+q.minutes;
   });
@@ -1194,7 +1194,14 @@ async function evLoadSavedStudies(){
   var ts=new Date(timer.sessionStartedAt);
   if(isFinite(ts.getTime()))active={date:localDate(ts),startedAt:String(timer.sessionStartedAt),subj:String(timer.subj||""),top:String(timer.top||""),status:timer.run?"Em andamento":"Em pausa",minutes:Math.max(0,Math.floor((Number(timer.acc||0)+(timer.run?Date.now()-Number(timer.st||Date.now()):0))/60000))};
  }
- EV.activeFocus=active;EV.directCloudLoaded=true;evBuild();evFx();
+ EV.activeFocus=active;EV.directCloudLoaded=true;
+ // Salva a consolidação diária na nuvem para manter o mesmo histórico entre acessos.
+ var persistRows=Object.keys(EV.daily).map(function(date){return{user_id:user.id,study_date:date,minutes:EV.daily[date]}});
+ if(persistRows.length){
+  var persistResult=await client.from("community_daily_totals").upsert(persistRows,{onConflict:"user_id,study_date"});
+  if(persistResult.error)console.warn("Eu versus Plataforma: consolidação na nuvem pendente.",persistResult.error);
+ }
+ evBuild();evFx();
  var total=Object.keys(EV.daily).reduce(function(a,k){return a+EV.daily[k]},0);
  console.info("Eu versus Plataforma: registros reais do Foco carregados.",{dailyDays:Object.keys(EV.daily).filter(function(k){return EV.daily[k]>0}).length,totalMinutes:total,sessions:EV.sessions.length,source:hasFallbackDaily?"estudos.dados":hasPositiveDailyRows?"community_daily_totals":"community_sessions"});
  return{dailyDays:Object.keys(EV.daily).filter(function(k){return EV.daily[k]>0}).length,totalMinutes:total,sessions:EV.sessions.length};
