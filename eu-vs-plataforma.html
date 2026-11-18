@@ -272,7 +272,7 @@ html:has(body.embed-ev)::-webkit-scrollbar,body.embed-ev::-webkit-scrollbar{disp
       <div class="pr">
         <div class="chd"><h2>Quando eu estudo</h2><span>últimos 7 dias</span></div>
         <div id="evp"></div>
-        <p class="cap">Detectado automaticamente pelo horário em que cada sessão começa. O percentual é a parte do seu tempo de estudo da semana.</p>
+        <p class="cap" id="evp-note">Detectado automaticamente pelo horário em que cada sessão começa. O percentual é a parte do seu tempo de estudo da semana.</p>
           <div class="leg"><span><b style="background:var(--ac)"></b>Você</span><span><b style="background:#a78bdb"></b>Semana anterior</span></div>
       </div>
     </div>
@@ -603,9 +603,15 @@ function evBuild(){
  WEEK_BEFORE=D7.map(function(x){var d=new Date(x.d);d.setDate(d.getDate()-7);return Math.max(0,Math.round(Number(HORAS[dk(d)])||0));});
   PPER=[0,0,0,0];
   var prevPeriods=[0,0,0,0],prevTotal=0,prevDates={};
-  if(EV.D7&&EV.D7.length===7)EV.D7.forEach(function(day){var pd=new Date(day.d);pd.setDate(pd.getDate()-7);prevDates[dk(pd)]=true;});
+  // Usa as datas que estão sendo montadas AGORA; EV.D7 só é atualizado mais abaixo.
+  D7.forEach(function(day){var pd=new Date(day.d);pd.setDate(pd.getDate()-7);prevDates[dk(pd)]=true;});
   LOG.forEach(function(session){var sd=new Date(session.i);if(!prevDates[dk(sd)])return;var hour=sd.getHours(),bucket=hour<6?0:hour<12?1:hour<18?2:3,mins=Math.max(0,Number(session.m)||0);prevPeriods[bucket]+=mins;prevTotal+=mins;});
   if(prevTotal)PPER=prevPeriods.map(function(v){return Math.round(v*100/prevTotal)});
+  var prevDailyTotal=WEEK_BEFORE.reduce(function(a,b){return a+b},0),prevUntimed=Math.max(0,prevDailyTotal-prevTotal);
+  var note=$("evp-note");
+  if(note)note.textContent=prevUntimed>0
+   ?"Semana anterior: "+ft(prevTotal)+" com horário identificado; "+ft(prevUntimed)+" do total não têm horário de início salvo e não podem ser classificados."
+   :"Detectado automaticamente pelo horário em que cada sessão começa. O percentual é a parte do seu tempo de estudo da semana.";
  var psum=per.reduce(function(a,b){return a+b},0),tot=D7.reduce(function(a,x){return a+x.m},0),avg=Math.round(tot/7),pav=Math.round(WEEK_BEFORE.reduce(function(a,b){return a+b},0)/7),df=pav?Math.round((avg/pav-1)*100):null,bi=0;
  D7.forEach(function(x,k){if(x.m>D7[bi].m)bi=k});
  var bd=D7[bi],pc=per.map(function(v){return Math.round(100*v/(psum||1))}),tp=psum?pc.indexOf(Math.max.apply(null,pc)):-1;
