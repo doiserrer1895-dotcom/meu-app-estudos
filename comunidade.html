@@ -1068,44 +1068,80 @@ function communitySafeAction(fn){return async function(){try{return await fn.app
 async function evLoadSavedStudies(){
  if(!window.supabase||!window.supabase.createClient)throw new Error("Biblioteca Supabase indisponível.");
  var client=window.supabase.createClient(COMMUNITY_URL,COMMUNITY_KEY);
- var auth=await client.auth.getUser();if(auth.error)throw auth.error;
- var user=auth.data&&auth.data.user;if(!user)return false;
+ var auth=await client.auth.getUser();
+ if(auth.error)throw auth.error;
+ var user=auth.data&&auth.data.user;
+ if(!user)throw new Error("Usuário não autenticado no quadro Eu versus Plataforma.");
+
+ // As tabelas do Foco são fontes independentes. Uma falha ao ler "estudos"
+ // não pode interromper a leitura de community_daily_totals/community_sessions.
+ var studyState={};
  var studyResult=await client.from("estudos").select("dados").eq("id",user.id).maybeSingle();
- if(studyResult.error)throw studyResult.error;
- var state=studyResult.data&&studyResult.data.dados&&typeof studyResult.data.dados==="object"?studyResult.data.dados:{};
- var entries=[].concat(Array.isArray(state.entries)?state.entries:[],Array.isArray(state.sim)?state.sim:[]),entryById={},fallbackDaily={};
+ if(!studyResult.error&&studyResult.data&&studyResult.data.dados&&typeof studyResult.data.dados==="object"){
+  studyState=studyResult.data.dados;
+ }else if(studyResult.error){
+  console.warn("Eu versus Plataforma: leitura auxiliar de estudos indisponível; continuando pelas tabelas do Foco.",studyResult.error);
+ }
+ var entries=[].concat(Array.isArray(studyState.entries)?studyState.entries:[],Array.isArray(studyState.sim)?studyState.sim:[]),entryById={},fallbackDaily={};
  entries.forEach(function(e){
   if(!e)return;if(e.id)entryById[String(e.id)]=e;
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||"")))return;
+  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(e.date||"")))return;
   var mins=Math.max(0,Number(e.h||0)-Number(e.p||0)/60)*60;
   if(isFinite(mins)&&mins>0)fallbackDaily[e.date]=(fallbackDaily[e.date]||0)+mins;
  });
- var totalsResult=await client.from("community_daily_totals").select("study_date,minutes").eq("user_id",user.id);
- var sessionsResult=await client.from("community_sessions").select("started_at,minutes,source_id").eq("user_id",user.id).order("started_at",{ascending:true});
- var daily=Object.assign({},fallbackDaily);
- if(!totalsResult.error&&Array.isArray(totalsResult.data)&&totalsResult.data.length){
-  daily={};totalsResult.data.forEach(function(row){if(row&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.study_date||"")))daily[row.study_date]=Math.max(0,Number(row.minutes)||0)});
- }
+ var results=await Promise.all([
+  client.from("community_daily_totals").select("study_date,minutes").eq("user_id",user.id).order("study_date",{ascending:true}),
+  client.from("community_sessions").select("started_at,minutes,source_id").eq("user_id",user.id).order("started_at",{ascending:true})
+ ]);
+ var totalsResult=results[0],sessionsResult=results[1];
+ if(totalsResult.error)console.warn("Eu versus Plataforma: falha ao ler totais diários.",totalsResult.error);
+ if(sessionsResult.error)console.warn("Eu versus Plataforma: falha ao ler sessões.",sessionsResult.error);
+ if(totalsResult.error&&sessionsResult.error)throw new Error("Não foi possível ler os totais nem as sessões do Foco.");
  function localDate(d){return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())}
+ var daily=Object.assign({},fallbackDaily),hasDailyRows=!totalsResult.error&&Array.isArray(totalsResult.data)&&totalsResult.data.length>0;
+ if(hasDailyRows){
+  daily={};
+  totalsResult.data.forEach(function(row){
+   if(row&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(row.study_date||""))){
+    daily[String(row.study_date)]=Math.max(0,Number(row.minutes)||0);
+   }
+  });
+ }
  var sessionMap={};
  if(!sessionsResult.error&&Array.isArray(sessionsResult.data)){
   sessionsResult.data.forEach(function(row){
-   if(!row||!row.started_at)return;var stamp=new Date(row.started_at);if(!isFinite(stamp.getTime()))return;
+   if(!row||!row.started_at)return;
+   var stamp=new Date(row.started_at);if(!isFinite(stamp.getTime()))return;
    var source=String(row.source_id||""),entry=entryById[source],key=source||String(row.started_at);
    sessionMap[key]={date:entry&&entry.date?String(entry.date):localDate(stamp),startedAt:String(row.started_at),subj:String(entry&&entry.subj||"Estudo"),top:String(entry&&entry.top||""),minutes:Math.max(0,Number(row.minutes)||0)};
   });
  }
+ // Se os totais diários não estiverem disponíveis, reconstrói os dias pela soma das sessões.
+ if(!hasDailyRows&&!Object.keys(daily).length){
+  Object.keys(sessionMap).forEach(function(key){
+   var q=sessionMap[key];daily[q.date]=(daily[q.date]||0)+q.minutes;
+  });
+ }
  entries.forEach(function(e){
-  if(!e||!e.startedAt)return;var stamp=new Date(e.startedAt);if(!isFinite(stamp.getTime()))return;
+  if(!e||!e.startedAt)return;
+  var stamp=new Date(e.startedAt);if(!isFinite(stamp.getTime()))return;
   var key=String(e.id||e.sessionId||e.startedAt);if(sessionMap[key])return;
   sessionMap[key]={date:String(e.date||localDate(stamp)),startedAt:String(e.startedAt),subj:String(e.subj||"Estudo"),top:String(e.top||""),minutes:Math.max(0,Math.round((Number(e.h||0)-Number(e.p||0)/60)*60))};
  });
- EV.daily={};Object.keys(daily).forEach(function(date){EV.daily[date]=Math.round(Math.max(0,Number(daily[date])||0))});
+ EV.daily={};
+ Object.keys(daily).forEach(function(date){
+  if(/^\\d{4}-\\d{2}-\\d{2}$/.test(date))EV.daily[date]=Math.round(Math.max(0,Number(daily[date])||0));
+ });
  EV.sessions=Object.keys(sessionMap).map(function(key){return sessionMap[key]}).filter(function(x){return x.minutes>0});
- var timer=state.timer||{},active=null;
- if(timer.sessionStartedAt){var ts=new Date(timer.sessionStartedAt);if(isFinite(ts.getTime()))active={date:localDate(ts),startedAt:String(timer.sessionStartedAt),subj:String(timer.subj||""),top:String(timer.top||""),status:timer.run?"Em andamento":"Em pausa",minutes:Math.max(0,Math.floor((Number(timer.acc||0)+(timer.run?Date.now()-Number(timer.st||Date.now()):0))/60000))}}
+ var timer=studyState.timer||{},active=null;
+ if(timer.sessionStartedAt){
+  var ts=new Date(timer.sessionStartedAt);
+  if(isFinite(ts.getTime()))active={date:localDate(ts),startedAt:String(timer.sessionStartedAt),subj:String(timer.subj||""),top:String(timer.top||""),status:timer.run?"Em andamento":"Em pausa",minutes:Math.max(0,Math.floor((Number(timer.acc||0)+(timer.run?Date.now()-Number(timer.st||Date.now()):0))/60000))};
+ }
  EV.activeFocus=active;EV.directCloudLoaded=true;evBuild();evFx();
- return{dailyDays:Object.keys(EV.daily).filter(function(k){return EV.daily[k]>0}).length,totalMinutes:Object.keys(EV.daily).reduce(function(a,k){return a+EV.daily[k]},0),sessions:EV.sessions.length,source:"community_daily_totals + community_sessions"};
+ var total=Object.keys(EV.daily).reduce(function(a,k){return a+EV.daily[k]},0);
+ console.info("Eu versus Plataforma: dados reais do Foco carregados.",{dailyDays:Object.keys(EV.daily).filter(function(k){return EV.daily[k]>0}).length,totalMinutes:total,sessions:EV.sessions.length,source:hasDailyRows?"community_daily_totals":"community_sessions/estudos"});
+ return{dailyDays:Object.keys(EV.daily).filter(function(k){return EV.daily[k]>0}).length,totalMinutes:total,sessions:EV.sessions.length};
 }
 var EMBED_EU_VS_ESTUDOS=new URLSearchParams(location.search).get("embed")==="eu-vs-plataforma";
 if(EMBED_EU_VS_ESTUDOS){
