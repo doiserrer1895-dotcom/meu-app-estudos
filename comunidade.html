@@ -266,7 +266,7 @@ body:not(.embed-ev) nav button[data-t="missoes"]{display:inline-flex!important}
       <div class="chd"><h2><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Eu vs Plataforma</h2><span>Semana atual · 7 dias</span></div>
       <div class="kp" id="evk"></div>
       <div class="ins" id="evi"></div>
-      <svg id="evc" viewBox="0 0 340 202" width="100%" role="img" aria-label="Tempo de estudo dos últimos 7 dias comparado à plataforma"></svg>
+      <svg id="evc" viewBox="0 0 340 202" width="100%" role="img" aria-label="Gráfico interativo de comparação do período atual com o período anterior"></svg>
       <div class="dtip" id="evt"></div>
       <div class="leg"><span><b style="background:var(--ac)"></b>Período atual</span><span><b style="background:#a78bdb"></b>Período anterior</span></div>
       <p class="cap">Comparação dos seus próprios registros com o período anterior.</p>
@@ -529,8 +529,59 @@ var EV={sel:0,mode:"w",ref:new Date(),daily:{},sessions:[],activeFocus:null,D7:[
 var AC="#f0883e",GOLD="#e3b94a";
 function cnt(el){cancelAnimationFrame(el._r);var to=+el.dataset.to,f=FMT[el.dataset.f],t0=performance.now();function st(now){var k=RM?1:Math.min(1,(now-t0)/900);el.textContent=f(Math.round(to*(1-Math.pow(1-k,3))));if(k<1)el._r=requestAnimationFrame(st)}el._r=requestAnimationFrame(st)}
 function evRange(){var d=new Date(EV.ref),a,b,pa,pb,n,L=[];d.setHours(0,0,0,0);if(EV.mode==="w"){a=new Date(d);a.setDate(a.getDate()-(a.getDay()+6)%7);b=new Date(a);b.setDate(a.getDate()+6);pa=new Date(a);pa.setDate(pa.getDate()-7);pb=new Date(b);pb.setDate(pb.getDate()-7);n=7;for(var i=0;i<7;i++){var x=new Date(a);x.setDate(a.getDate()+i);L.push(wd(x).slice(0,3))}}else if(EV.mode==="m"){a=new Date(d.getFullYear(),d.getMonth(),1);b=new Date(d.getFullYear(),d.getMonth()+1,0);pa=new Date(d.getFullYear(),d.getMonth()-1,1);pb=new Date(d.getFullYear(),d.getMonth(),0);n=b.getDate();for(var j=1;j<=n;j++)L.push(String(j))}else{a=new Date(d.getFullYear(),0,1);b=new Date(d.getFullYear(),11,31);pa=new Date(d.getFullYear()-1,0,1);pb=new Date(d.getFullYear()-1,11,31);n=12;L=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]}return{a:a,pa:pa,pb:pb,n:n,L:L}}
-function evDraw(){var n=EV.D7.length,step=296/Math.max(1,n-1),X=function(k){return 40+step*k},mx=Math.max(60,Math.max.apply(null,EV.D7.map(function(x){return x.m})),Math.max.apply(null,EV.previous))*1.15,Y=function(v){return 158-v/mx*128},me=EV.D7.map(function(x,k){return[X(k),Y(x.m)]}),pr=EV.previous.map(function(v,k){return[X(k),Y(v)]}),s="",st=mx>240?60:30;for(var v=st;v<mx;v+=st){var gy=Y(v);s+='<line x1="40" y1="'+gy+'" x2="336" y2="'+gy+'" stroke="#2f2f33" stroke-dasharray="3 5"/><text x="30" y="'+(gy+3)+'" text-anchor="end" fill="#c8c8cc" font-size="9">'+ft(v)+'</text>'}s+='<line x1="40" y1="158" x2="336" y2="158" stroke="#37373b"/><path d="'+sm(pr)+'" fill="none" stroke="'+PU+'" stroke-width="2" stroke-dasharray="5 5"/><path d="'+sm(me)+'" fill="none" stroke="'+AC+'" stroke-width="3.4"/>';for(var k=0;k<n;k++){var best=k===EV.bi,sel=k===EV.sel,col=best?GOLD:sel?AC:"#c8c8cc";s+='<circle cx="'+me[k][0]+'" cy="'+me[k][1]+'" r="'+(best||sel?6.5:4.5)+'" fill="'+(best?GOLD:sel?AC:"#1a1a1c")+'" stroke="'+AC+'" stroke-width="2"/><text x="'+me[k][0]+'" y="'+(me[k][1]-10)+'" text-anchor="middle" fill="'+col+'" font-size="'+(n>15?7:10)+'" font-weight="700">'+ft(EV.D7[k].m)+'</text><text id="dl'+k+'" x="'+me[k][0]+'" y="177" text-anchor="middle" fill="'+col+'" font-size="'+(n>15?7:10)+'" font-weight="700">'+EV.labels[k]+'</text><rect class="hit" data-k="'+k+'" x="'+(me[k][0]-step/2)+'" y="0" width="'+step+'" height="200"/>'}$("evc").innerHTML=s}
-function evSel(){[].forEach.call($("evc").querySelectorAll("[id^=dl]"),function(el,j){el.setAttribute("fill",j===EV.bi?GOLD:j===EV.sel?AC:"#c8c8cc")})}
+function evDraw(){
+ var n=EV.D7.length,step=296/Math.max(1,n-1),X=function(k){return 40+step*k},
+ mx=Math.max(60,Math.max.apply(null,EV.D7.map(function(x){return x.m})),Math.max.apply(null,EV.previous))*1.15,
+ Y=function(v){return 158-v/mx*128},me=EV.D7.map(function(x,k){return[X(k),Y(x.m)]}),
+ pr=EV.previous.map(function(v,k){return[X(k),Y(v)]}),s='<defs>'+
+ '<linearGradient id="eva" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+AC+'" stop-opacity=".38"/><stop offset="1" stop-color="'+AC+'" stop-opacity="0"/></linearGradient>'+
+ '<linearGradient id="evy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#fff" stop-opacity=".7"/></linearGradient>'+
+ '<clipPath id="evr"><rect x="0" y="0" width="340" height="190"/></clipPath></defs>',
+ st=mx>260?60:30,v,gy,k,axl="",gd,avg=EV.D7.reduce(function(a,x){return a+x.m},0)/n;
+ for(v=st;v<mx;v+=st){
+  gy=Y(v);gd='style="--d:'+(.2+v/st*.07).toFixed(2)+'s"';
+  s+='<line class="gl" '+gd+' x1="40" y1="'+gy+'" x2="336" y2="'+gy+'" stroke="#2f2f33" stroke-dasharray="3 5"/>';
+  axl+='<line class="gl" '+gd+' x1="35" y1="'+gy+'" x2="40" y2="'+gy+'" stroke="#fff" stroke-opacity=".55" stroke-width="1.5" stroke-linecap="round"/><text class="gl" '+gd+' x="30" y="'+(gy+3.5)+'" text-anchor="end" fill="#c8c8cc" font-size="10" font-weight="600">'+ft(v)+'</text>';
+ }
+ s+='<line x1="40" y1="158" x2="336" y2="158" stroke="#37373b"/>';
+ s+='<line x1="40" y1="'+Y(avg)+'" x2="336" y2="'+Y(avg)+'" stroke="'+AC+'" stroke-opacity=".48" stroke-width="1.4" stroke-dasharray="1 5" stroke-linecap="round"/>';
+ s+='<line id="hl" class="hl" x1="'+X(EV.sel)+'" y1="'+Y(EV.D7[EV.sel].m)+'" x2="'+X(EV.sel)+'" y2="158" stroke="#fff" stroke-opacity=".42" stroke-width="1.5" stroke-dasharray="2 4" stroke-linecap="round"/>';
+ s+='<path class="fd" d="'+sm(me)+' L'+X(n-1)+',158 L'+X(0)+',158Z" fill="url(#eva)"/>';
+ s+='<path class="fd" clip-path="url(#evr)" d="'+sm(pr)+'" fill="none" stroke="'+PU+'" stroke-width="2" stroke-dasharray="5 5" stroke-linecap="round"/>';
+ for(k=0;k<n;k++)s+='<circle id="pp'+k+'" class="pop" style="--d:'+(.35+k*.035).toFixed(2)+'s" cx="'+pr[k][0]+'" cy="'+pr[k][1]+'" r="2.5" fill="'+PU+'"/>';
+ s+='<path class="ln" pathLength="1" d="'+sm(me)+'" fill="none" stroke="'+AC+'" stroke-width="3.4" stroke-linecap="round"/>';
+ s+='<circle id="sr" class="rg" cx="'+me[EV.sel][0]+'" cy="'+me[EV.sel][1]+'" r="6" fill="none" stroke="'+AC+'" stroke-width="2"/>';
+ for(k=0;k<n;k++){
+  var best=k===EV.bi,sel=k===EV.sel,show=n<=12||k%5===0||best||sel,dl=(.35+k*.035).toFixed(2)+"s",
+  label=EV.labels[k]||String(k+1);
+  s+='<circle id="md'+k+'" class="pop" style="--d:'+dl+'" cx="'+me[k][0]+'" cy="'+me[k][1]+'" r="5.5" stroke-width="2.5"/>';
+  if(show)s+='<text id="ml'+k+'" class="fd" style="animation-delay:'+( .7+k*.025).toFixed(2)+'s" x="'+me[k][0]+'" y="'+(me[k][1]-12)+'" text-anchor="middle" font-size="'+(n>20?8:11)+'" font-weight="700" stroke="#1a1a1c" stroke-width="3" paint-order="stroke">'+ft(EV.D7[k].m)+'</text>';
+  s+='<text id="dl'+k+'" class="fd" style="animation-delay:'+( .8+k*.02).toFixed(2)+'s" x="'+me[k][0]+'" y="178" text-anchor="middle" font-size="'+(n>20?8:10)+'" font-weight="700" letter-spacing=".03em">'+(n>20&&k!==0&&k!==n-1&&k%5!==0&&!best&&!sel?"":label)+'</text>';
+ }
+ s+='<line class="ax" x1="40" y1="22" x2="40" y2="158" stroke="url(#evy)" stroke-width="2" stroke-linecap="round"/>'+axl;
+ s+='<text id="plt" class="fd" text-anchor="middle" fill="'+PU+'" font-size="10.5" font-weight="700" stroke="#1a1a1c" stroke-width="3" paint-order="stroke"></text>';
+ for(k=0;k<n;k++){
+  var left=k===0?40: X(k)-step/2,right=k===n-1?336:X(k)+step/2;
+  s+='<rect class="hit" data-k="'+k+'" x="'+left+'" y="0" width="'+Math.max(1,right-left)+'" height="200"/>';
+ }
+ $("evc").innerHTML=s;EV.M=me;EV.P=pr;EV.el={sr:$("sr"),hl:$("hl"),plt:$("plt"),md:[],ml:[],dl:[],pp:[]};
+ for(k=0;k<n;k++){EV.el.md.push($("md"+k));EV.el.ml.push($("ml"+k));EV.el.dl.push($("dl"+k));EV.el.pp.push($("pp"+k));}
+ evSel();
+}
+function evSel(){
+ var k0=EV.sel,E=EV.el,j;if(!E||!E.hl)return;
+ E.hl.setAttribute("x1",EV.M[k0][0]);E.hl.setAttribute("x2",EV.M[k0][0]);E.hl.setAttribute("y1",EV.M[k0][1]+8);
+ E.sr.setAttribute("cx",EV.M[k0][0]);E.sr.setAttribute("cy",EV.M[k0][1]);
+ for(j=0;j<EV.D7.length;j++){
+  var b=j===EV.bi,sl=j===k0,c=b?GOLD:sl?AC:"#c8c8cc",d=E.md[j];
+  d.setAttribute("r",b||sl?7:5.5);d.setAttribute("fill",b?GOLD:sl?AC:"#1a1a1c");
+  d.setAttribute("stroke",b?"#fff3c4":sl?"#fff":AC);
+  if(E.ml[j])E.ml[j].setAttribute("fill",c);
+  E.dl[j].setAttribute("fill",c);
+  E.pp[j].setAttribute("r",j===k0?4:2.5);
+ }
+ var pv=EV.P[k0],t=E.plt;t.setAttribute("x",pv[0]);t.setAttribute("y",pv[1]<EV.M[k0][1]?pv[1]-9:pv[1]+16);t.textContent=ft(E.previous[k0]||0);
+}
 function panel(){
  var x=EV.D7[EV.sel],p=EV.previous[EV.sel]||0,d=p?Math.round((x.m/p-1)*100):0,nm=EV.mode==="w"?wl(x.d):EV.mode==="m"?"Dia "+x.d.getDate():EV.labels[EV.sel],key=dk(x.d);
  var sessions=EV.sessions.filter(function(s){return s.date===key}),details="";
