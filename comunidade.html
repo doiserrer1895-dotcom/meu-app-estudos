@@ -1163,22 +1163,19 @@ async function evLoadSavedStudies(){
   };
  });
  EV.daily={};
- Object.keys(daily).forEach(function(date){
-  if(/^\d{4}-\d{2}-\d{2}$/.test(date))EV.daily[date]=Math.round(Math.max(0,Number(daily[date])||0));
- });
- // Combina a leitura completa do Supabase com atualizações recentes recebidas do Foco.
- // Para o mesmo dia, mantém o maior total; não soma duas cópias do mesmo registro.
- Object.keys(parentDaily).forEach(function(date){
-  if(/^\d{4}-\d{2}-\d{2}$/.test(date))EV.daily[date]=Math.max(EV.daily[date]||0,Math.round(Math.max(0,Number(parentDaily[date])||0)));
- });
- var mergedSessions={};
- Object.keys(sessionMap).forEach(function(key){var x=sessionMap[key];if(x&&x.minutes>0)mergedSessions[[x.date,x.startedAt,x.subj,x.top].join("|")]=x});
- parentSessions.forEach(function(x){
-  if(!x||!x.minutes||!/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||"")))return;
-  var key=[x.date,x.startedAt||"",x.subj||"",x.top||""].join("|");
-  if(!mergedSessions[key]||Number(x.minutes)>Number(mergedSessions[key].minutes))mergedSessions[key]=x;
- });
- EV.sessions=Object.keys(mergedSessions).map(function(key){return mergedSessions[key]}).filter(function(x){return x.minutes>0});
+ // Quando a tela Estudos envia registros reais, ela é a fonte principal do gráfico.
+ // Assim, horas e sessões usam exatamente os mesmos dados da ferramenta Foco.
+ if(EV.parentDataReceived){
+  Object.keys(parentDaily).forEach(function(date){
+   if(/^\d{4}-\d{2}-\d{2}$/.test(date))EV.daily[date]=Math.round(Math.max(0,Number(parentDaily[date])||0));
+  });
+  EV.sessions=parentSessions.filter(function(x){return x&&x.minutes>0&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||""));});
+ }else{
+  Object.keys(daily).forEach(function(date){
+   if(/^\d{4}-\d{2}-\d{2}$/.test(date))EV.daily[date]=Math.round(Math.max(0,Number(daily[date])||0));
+  });
+  EV.sessions=Object.keys(sessionMap).map(function(key){return sessionMap[key]}).filter(function(x){return x&&x.minutes>0});
+ }
  var timer=studyState.timer||{},active=null;
  if(timer.sessionStartedAt){
   var ts=new Date(timer.sessionStartedAt);
