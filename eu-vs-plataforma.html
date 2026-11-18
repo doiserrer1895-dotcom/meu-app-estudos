@@ -632,7 +632,7 @@ function evBuild(){
  var pm=Math.max(Math.max.apply(null,pc),Math.max.apply(null,PPER))||1,h="";
  PN.forEach(function(n,k){
   var dd=pc[k]-PPER[k];
-  h+='<div class="prow"><div class="ph"><span style="color:'+n[1]+'"><svg viewBox="0 0 24 24">'+n[2]+'</svg><u>'+n[0]+'</u><small>'+PR[k]+'</small>'+(k===tp?'<span class="pk">PICO</span>':'')+'</span><em><b style="color:var(--ac)">'+pc[k]+'%</b> <span style="color:var(--mu)">·</span> <b style="color:'+PU+'">'+PPER[k]+'%</b>'+(dd?'<span class="dl '+(dd>0?"up":"dn")+'">('+(dd>0?"+":"")+dd+")</span>":"")+'</em></div><div class="pt"><i class="pl" data-w="'+(100*PPER[k]/pm)+'"></i><i class="me2" data-w="'+(100*pc[k]/pm)+'"></i></div></div>';
+  h+='<div class="prow"><div class="ph"><span style="color:'+n[1]+'"><svg viewBox="0 0 24 24">'+n[2]+'</svg><u>'+n[0]+'</u><small>'+PR[k]+'</small>'+(k===tp?'<span class="pk">PICO</span>':'')+'</span><em><b style="color:var(--ac)">'+pc[k]+'%</b> <span style="color:var(--mu)">·</span> <b style="color:'+PU+'">'+PPER[k]+'% · '+ft(prevPeriods[k])+'</b>'+(dd?'<span class="dl '+(dd>0?"up":"dn")+'">('+(dd>0?"+":"")+dd+")</span>":"")+'</em></div><div class="pt"><i class="pl" data-w="'+(100*PPER[k]/pm)+'"></i><i class="me2" data-w="'+(100*pc[k]/pm)+'"></i></div></div>';
  });
  $("evp").innerHTML=h;
 }
@@ -1040,7 +1040,10 @@ window.addEventListener("message",function(event){
   });
  }
  if(Array.isArray(payload.sessions)){
+  // Preserva sessões recuperadas do Supabase: o histórico local pode não ter
+  // startedAt de registros antigos, mesmo quando o banco guarda o horário.
   var fresh={};
+  LOG.forEach(function(x){if(x&&isFinite(x.i)&&x.m>0)fresh[x.i+"|"+x.m]=x;});
   payload.sessions.forEach(function(x){
    if(!x)return;
    var stamp=new Date(x.startedAt||x.started_at);
