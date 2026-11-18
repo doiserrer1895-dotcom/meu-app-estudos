@@ -262,18 +262,18 @@ body:not(.embed-ev) nav button[data-t="missoes"]{display:inline-flex!important}
 
   <section class="sec on" id="rank">
     <div class="card" id="evtool">
-      <div class="chd"><h2><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Eu vs Plataforma</h2><span>últimos 7 dias</span></div>
+      <div class="chd"><h2><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Eu vs Plataforma</h2><span>Semana atual · 7 dias</span></div>
       <div class="kp" id="evk"></div>
       <div class="ins" id="evi"></div>
       <svg id="evc" viewBox="0 0 340 202" width="100%" role="img" aria-label="Tempo de estudo dos últimos 7 dias comparado à plataforma"></svg>
       <div class="dtip" id="evt"></div>
-      <div class="leg"><span><b style="background:var(--ac)"></b>Você</span><span><b style="background:#a78bdb"></b>Média da plataforma</span><span><b style="background:none;border-top:2px dotted var(--ac);height:0;border-radius:0;margin-bottom:3px"></b>Sua média</span></div>
-      <p class="cap">Plataforma = média de todos os usuários do aplicativo, calculada no servidor. Seus estudos entram automaticamente quando você aperta Finalizar no cronômetro da aba Foco.</p>
+      <div class="leg"><span><b style="background:var(--ac)"></b>Período atual</span><span><b style="background:#a78bdb"></b>Período anterior</span></div>
+      <p class="cap">Comparação dos seus próprios registros com o período anterior.</p>
       <div class="pr">
-        <div class="chd"><h2>Quando eu estudo</h2><span>últimos 7 dias</span></div>
-        <div id="evp"></div>
-        <p class="cap">Detectado automaticamente pelo horário em que cada sessão começa. O percentual é a parte do seu tempo de estudo da semana.</p>
-        <div class="leg"><span><b style="background:var(--ac)"></b>Você</span><span><b style="background:#a78bdb"></b>Plataforma</span></div>
+        <div class="chd"><h2>Resumo do período</h2><span>atual × anterior</span></div>
+        <div id="evp" hidden></div>
+        <p class="cap">Selecione um ponto para consultar o detalhe daquele dia ou mês.</p>
+        
       </div>
     </div>
     <div class="stt"><h2>Ranking</h2><span>amigos e geral</span></div>
@@ -524,105 +524,14 @@ var wd=function(d){return cap(d.toLocaleDateString("pt-BR",{weekday:"short"}).re
 var wl=function(d){return cap(d.toLocaleDateString("pt-BR",{weekday:"long"}))};
 var dm=function(d){return p2(d.getDate())+"/"+p2(d.getMonth()+1)};
 var hm=function(t,add){var p=t.split(":"),m=(+p[0]*60+ +p[1]+add)%1440;return p2(Math.floor(m/60))+":"+p2(m%60)};
-var EV={sel:6,day:""};
+var EV={sel:0,mode:"w",ref:new Date(),daily:{},D7:[],previous:[],labels:[],bi:-1};
 var AC="#f0883e",GOLD="#e3b94a";
-
-function cnt(el){
- cancelAnimationFrame(el._r);
- var to=+el.dataset.to,f=FMT[el.dataset.f],t0=performance.now();
- function st(now){
-  var k=RM?1:Math.min(1,(now-t0)/900),e=1-Math.pow(1-k,3);
-  el.textContent=f(Math.round(to*e));
-  if(k<1)el._r=requestAnimationFrame(st);
- }
- el._r=requestAnimationFrame(st);
-}
-/* gráfico de linhas: monta UMA vez; selecionar um dia só move o destaque e troca estilos (sem recriar o SVG) */
-function evDraw(){
- var D7=EV.D7,
-  mx=Math.max(Math.max.apply(null,D7.map(function(x){return x.m})),Math.max.apply(null,PLAT),60)*1.12,
-  X=function(k){return 60+43*k},Y=function(v){return 158-v/mx*128},
-  me=D7.map(function(x,k){return[X(k),Y(x.m)]}),pl=PLAT.map(function(v,k){return[X(k),Y(v)]}),
-  s='<defs><linearGradient id="eva" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+AC+'" stop-opacity=".38"/><stop offset="1" stop-color="'+AC+'" stop-opacity="0"/></linearGradient><linearGradient id="evy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#fff" stop-opacity=".7"/></linearGradient><clipPath id="evr"><rect x="0" y="0" width="340" height="190"/></clipPath></defs>',
-  st=mx>260?60:30,v,gy,k,axl="",gd;
- for(v=st;v<mx;v+=st){gy=Y(v);gd='style="--d:'+(.2+v/st*.09).toFixed(2)+'s"';s+='<line class="gl" '+gd+' x1="40" y1="'+gy+'" x2="336" y2="'+gy+'" stroke="#2f2f33" stroke-dasharray="3 5"/>';axl+='<line class="gl" '+gd+' x1="35" y1="'+gy+'" x2="40" y2="'+gy+'" stroke="#fff" stroke-opacity=".55" stroke-width="1.5" stroke-linecap="round"/><text class="gl" '+gd+' x="30" y="'+(gy+3.5)+'" text-anchor="end" fill="#c8c8cc" font-size="10" font-weight="600">'+ft(v)+'</text>';}
- s+='<line x1="40" y1="158" x2="336" y2="158" stroke="#37373b"/>';
- s+='<line x1="40" y1="'+Y(EV.avg)+'" x2="336" y2="'+Y(EV.avg)+'" stroke="'+AC+'" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="1 5" stroke-linecap="round"/>';
- s+='<line id="hl" class="hl" x1="'+X(0)+'" y1="'+Y(0)+'" x2="'+X(0)+'" y2="158" stroke="#fff" stroke-opacity=".4" stroke-width="1.5" stroke-dasharray="2 4" stroke-linecap="round" style="transform:translateX('+(43*EV.sel)+'px)"/>';
- s+='<path class="fd" d="'+sm(me)+' L'+X(6)+',158 L'+X(0)+',158Z" fill="url(#eva)"/><path class="fd" clip-path="url(#evr)" d="'+sm(pl)+'" fill="none" stroke="'+PU+'" stroke-width="2" stroke-dasharray="5 5" stroke-linecap="round"/>';
- for(k=0;k<7;k++)s+='<circle id="pp'+k+'" class="pop" style="--d:'+(.5+k*.12).toFixed(2)+'s" cx="'+pl[k][0]+'" cy="'+pl[k][1]+'" r="2.5" fill="'+PU+'"/>';
- s+='<path class="ln" pathLength="1" d="'+sm(me)+'" fill="none" stroke="'+AC+'" stroke-width="3.4" stroke-linecap="round"/>';
- s+='<circle id="sr" class="rg" cx="'+me[6][0]+'" cy="'+me[6][1]+'" r="5" fill="none" stroke="'+AC+'" stroke-width="2"/>';
- D7.forEach(function(x,k){
-  var nm=k===6?"HOJE":k===5?"ONTEM":wd(x.d).toUpperCase(),dl=(.5+k*.12).toFixed(2)+"s";
-  s+='<circle id="md'+k+'" class="pop" style="--d:'+dl+'" cx="'+me[k][0]+'" cy="'+me[k][1]+'" r="5.5" stroke-width="2.5"/>';
-  s+='<text id="ml'+k+'" class="fd" style="animation-delay:'+(.75+k*.12).toFixed(2)+'s" x="'+me[k][0]+'" y="'+(me[k][1]-13)+'" text-anchor="middle" font-size="12" font-weight="700" stroke="#1a1a1c" stroke-width="3" paint-order="stroke">'+ft(x.m)+'</text>';
-  s+='<text id="dl'+k+'" x="'+X(k)+'" y="177" text-anchor="middle" font-size="11" font-weight="700" letter-spacing=".06em">'+nm+'</text><text x="'+X(k)+'" y="191" text-anchor="middle" fill="#8b8b92" font-size="10">'+dm(x.d)+'</text>';
- });
- s+='<line class="ax" x1="40" y1="22" x2="40" y2="158" stroke="url(#evy)" stroke-width="2" stroke-linecap="round"/>'+axl;
- s+='<text id="plt" class="fd" text-anchor="middle" fill="'+PU+'" font-size="10.5" font-weight="700" stroke="#1a1a1c" stroke-width="3" paint-order="stroke"></text>';
- for(k=0;k<7;k++)s+='<rect class="hit" data-k="'+k+'" x="'+(X(k)-21.5)+'" y="0" width="43" height="200"/>';
- $("evc").innerHTML=s;
- EV.M=me;EV.P=pl;
- EV.el={sr:$("sr"),hl:$("hl"),plt:$("plt"),md:[],ml:[],dl:[],pp:[]};
- for(k=0;k<7;k++){EV.el.md.push($("md"+k));EV.el.ml.push($("ml"+k));EV.el.dl.push($("dl"+k));EV.el.pp.push($("pp"+k));}
- evSel();
-}
-function evSel(){
- var k0=EV.sel,E=EV.el,j;
- E.hl.style.transform="translateX("+(43*k0)+"px)";
- for(j=0;j<7;j++){
-  var b=j===EV.bi,sl=j===k0,c=b?GOLD:j===6?AC:sl?"#fff":"#c8c8cc",d=E.md[j];
-  d.setAttribute("r",b||sl?7:5.5);
-  d.setAttribute("fill",b?GOLD:sl?AC:"#1a1a1c");
-  d.setAttribute("stroke",b?"#fff3c4":sl?"#fff":AC);
-  E.ml[j].setAttribute("fill",c);E.dl[j].setAttribute("fill",c);
-  E.pp[j].setAttribute("r",j===k0?4:2.5);
- }
- var pv=EV.P[k0],mv=EV.M[k0],t=E.plt;E.sr.setAttribute("cx",mv[0]);E.sr.setAttribute("cy",mv[1]);E.hl.setAttribute("y1",mv[1]+8);
- t.setAttribute("x",pv[0]);t.setAttribute("y",pv[1]<mv[1]?pv[1]-9:pv[1]+16);t.textContent=ft(PLAT[k0]);
-}
-function panel(){
- var k=EV.sel,x=EV.D7[k],pf=PLAT[k],dd=pf?Math.round((x.m/pf-1)*100):0,mxv=Math.max(x.m,pf,1),h,
-  nm=k===6?"Hoje":k===5?"Ontem":wl(x.d);
- h='<div class="h"><b>'+nm+' · '+dm(x.d)+'</b><span class="'+(dd>=0?"up":"dn")+'">'+(pf?(dd>=0?"+":"")+dd+'% vs plataforma':'sem dados da plataforma')+'</span></div>';
- h+='<div class="ms"><div><small>Tempo total</small><b>'+ft(x.m)+'</b></div><div><small>Sessões</small><b>'+x.n+'</b></div><div><small>Por sessão</small><b>'+(x.n?ft(Math.round(x.m/x.n)):"—")+'</b></div></div>';
- h+='<div class="cb"><span>Você</span><div class="bar"><i style="width:'+(100*x.m/mxv)+'%;background:var(--ac)"></i></div><em>'+ft(x.m)+'</em></div><div class="cb"><span>Plataforma</span><div class="bar"><i style="width:'+(100*pf/mxv)+'%;background:'+PU+'"></i></div><em>'+ft(pf)+'</em></div>';
- h+='<p class="ex">'+(x.n?'Neste dia você estudou <b>'+ft(x.m)+'</b>, '+(dd===0?'o mesmo que':'<b class="'+(dd>=0?"up":"dn")+'">'+Math.abs(dd)+'% '+(dd>0?"mais":"menos")+'</b> que')+' a média da plataforma ('+ft(pf)+'). ':'Você não estudou neste dia'+(pf?'; a média da plataforma foi '+ft(pf):'')+'. ')+(pf?'Na semana, você passou a média da plataforma em <b>'+EV.wins+' de 7</b> dias.':'')+(k===6?' O dia de hoje ainda está em andamento.':'')+'</p>';
- if(x.n){
-  h+='<div class="sh">Sessões do dia <span>o período vem da hora em que você começou</span></div>';
-  x.s.forEach(function(q){h+='<div class="sr"><i style="background:'+PN[q[2]][1]+'"></i><b>'+q[0]+' → '+hm(q[0],q[1])+'</b><span>'+PN[q[2]][0]+'</span><em>'+ft(q[1])+'</em></div>'});
- }
- $("evt").innerHTML=h;
-}
-function evBuild(){
- recalcSess();
- var now=new Date(),D7=[],per=[0,0,0,0],i;
- for(i=6;i>=0;i--){var d=new Date(now);d.setDate(now.getDate()-i);D7.push({d:d,m:0,n:0,s:[]});}
- SESS.forEach(function(x){var o=D7[6-x[0]],h=+x[1].slice(0,2),p=h<6?0:h<12?1:h<18?2:3;o.m+=x[2];o.n++;o.s.push([x[1],x[2],p]);per[p]+=x[2];});
- D7.forEach(function(x){x.s.sort(function(a,b){return a[0]<b[0]?-1:1});var hv=HORAS[dk(x.d)];if(hv!==undefined)x.m=hv});
- var psum=per.reduce(function(a,b){return a+b},0),tot=D7.reduce(function(a,x){return a+x.m},0),avg=Math.round(tot/7),pav=Math.round(PLAT.reduce(function(a,b){return a+b})/7),df=pav?Math.round((avg/pav-1)*100):0,bi=0;
- D7.forEach(function(x,k){if(x.m>D7[bi].m)bi=k});
- var bd=D7[bi],pc=per.map(function(v){return Math.round(100*v/(psum||1))}),tp=psum?pc.indexOf(Math.max.apply(null,pc)):-1;
- if(!tot)bi=-1;
- EV.D7=D7;EV.bi=bi;EV.sel=6;EV.avg=avg;EV.day=now.toDateString();
- EV.wins=D7.filter(function(x,k){return x.m>PLAT[k]}).length;
- var K=[
-  ["Média por dia",IC.clk,'<b data-to="'+avg+'" data-f="m">0m</b>',"tempo total ÷ 7 dias","#f0883e","rgba(240,136,62,.16)"],
-  ["Vs plataforma",IC.trd,'<b data-to="'+df+'" data-f="p" class="'+(df>=0?"up":"dn")+'">0%</b>',(pav?"plataforma faz "+ft(pav)+" por dia":"sem dados da plataforma ainda"),df>=0?"#f0883e":"#e5707a",df>=0?"rgba(240,136,62,.16)":"rgba(229,112,122,.16)"],
-  ["Ranking semanal",IC.tro,'<b data-to="'+rankOf("Estudos")+'" data-f="r">#1</b>',"entre amigos e geral","#e3b94a","rgba(227,185,74,.14)"],
-  ["Melhor dia",IC.cal,'<b>'+(tot?wd(bd.d):"—")+'</b>',tot?ft(bd.m)+" · "+bd.n+(bd.n===1?" sessão":" sessões"):"sem estudos ainda","#a78bdb","rgba(167,139,219,.16)"]];
- $("evk").innerHTML=K.map(function(k){return '<div style="--c:'+k[4]+';--g:'+k[5]+'"><small><svg viewBox="0 0 24 24">'+k[1]+'</svg>'+k[0]+'</small>'+k[2]+'<em>'+k[3]+'</em></div>'}).join("");
- $("evi").innerHTML=!tot?'<svg viewBox="0 0 24 24">'+IC.bulb+'</svg><div>Você ainda não tem estudos registrados. Quando começar, o app mostra aqui o seu ritmo e compara com a plataforma. Cada sessão que você finaliza no cronômetro entra aqui na hora.</div>':'<svg viewBox="0 0 24 24">'+IC.bulb+'</svg><div>Você estuda mais de <b>'+PN[tp][0].toLowerCase()+'</b> ('+pc[tp]+'% do seu tempo) e está <b class="'+(df>=0?"up":"dn")+'">'+Math.abs(df)+'% '+(df>=0?"acima":"abaixo")+'</b> da média da plataforma. Toque em um dia do gráfico para ver o que aconteceu nele.</div>';
- evDraw();panel();
- var pm=Math.max(Math.max.apply(null,pc),Math.max.apply(null,PPER))||1,h="";
- PN.forEach(function(n,k){
-  var dd=pc[k]-PPER[k];
-  h+='<div class="prow"><div class="ph"><span style="color:'+n[1]+'"><svg viewBox="0 0 24 24">'+n[2]+'</svg><u>'+n[0]+'</u><small>'+PR[k]+'</small>'+(k===tp?'<span class="pk">PICO</span>':'')+'</span><em><b style="color:var(--ac)">'+pc[k]+'%</b> <span style="color:var(--mu)">·</span> <b style="color:'+PU+'">'+PPER[k]+'%</b>'+(dd?'<span class="dl '+(dd>0?"up":"dn")+'">('+(dd>0?"+":"")+dd+")</span>":"")+'</em></div><div class="pt"><i class="pl" data-w="'+(100*PPER[k]/pm)+'"></i><i class="me2" data-w="'+(100*pc[k]/pm)+'"></i></div></div>';
- });
- $("evp").innerHTML=h;
-}
-/* efeitos de entrada (contadores + barras de período); reaproveitados ao voltar para a aba */
+function cnt(el){cancelAnimationFrame(el._r);var to=+el.dataset.to,f=FMT[el.dataset.f],t0=performance.now();function st(now){var k=RM?1:Math.min(1,(now-t0)/900);el.textContent=f(Math.round(to*(1-Math.pow(1-k,3))));if(k<1)el._r=requestAnimationFrame(st)}el._r=requestAnimationFrame(st)}
+function evRange(){var d=new Date(EV.ref),a,b,pa,pb,n,L=[];d.setHours(0,0,0,0);if(EV.mode==="w"){a=new Date(d);a.setDate(a.getDate()-(a.getDay()+6)%7);b=new Date(a);b.setDate(a.getDate()+6);pa=new Date(a);pa.setDate(pa.getDate()-7);pb=new Date(b);pb.setDate(pb.getDate()-7);n=7;for(var i=0;i<7;i++){var x=new Date(a);x.setDate(a.getDate()+i);L.push(wd(x).slice(0,3))}}else if(EV.mode==="m"){a=new Date(d.getFullYear(),d.getMonth(),1);b=new Date(d.getFullYear(),d.getMonth()+1,0);pa=new Date(d.getFullYear(),d.getMonth()-1,1);pb=new Date(d.getFullYear(),d.getMonth(),0);n=b.getDate();for(var j=1;j<=n;j++)L.push(String(j))}else{a=new Date(d.getFullYear(),0,1);b=new Date(d.getFullYear(),11,31);pa=new Date(d.getFullYear()-1,0,1);pb=new Date(d.getFullYear()-1,11,31);n=12;L=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]}return{a:a,pa:pa,pb:pb,n:n,L:L}}
+function evDraw(){var n=EV.D7.length,step=296/Math.max(1,n-1),X=function(k){return 40+step*k},mx=Math.max(60,Math.max.apply(null,EV.D7.map(function(x){return x.m})),Math.max.apply(null,EV.previous))*1.15,Y=function(v){return 158-v/mx*128},me=EV.D7.map(function(x,k){return[X(k),Y(x.m)]}),pr=EV.previous.map(function(v,k){return[X(k),Y(v)]}),s="",st=mx>240?60:30;for(var v=st;v<mx;v+=st){var gy=Y(v);s+='<line x1="40" y1="'+gy+'" x2="336" y2="'+gy+'" stroke="#2f2f33" stroke-dasharray="3 5"/><text x="30" y="'+(gy+3)+'" text-anchor="end" fill="#c8c8cc" font-size="9">'+ft(v)+'</text>'}s+='<line x1="40" y1="158" x2="336" y2="158" stroke="#37373b"/><path d="'+sm(pr)+'" fill="none" stroke="'+PU+'" stroke-width="2" stroke-dasharray="5 5"/><path d="'+sm(me)+'" fill="none" stroke="'+AC+'" stroke-width="3.4"/>';for(var k=0;k<n;k++){var best=k===EV.bi,sel=k===EV.sel,col=best?GOLD:sel?AC:"#c8c8cc";s+='<circle cx="'+me[k][0]+'" cy="'+me[k][1]+'" r="'+(best||sel?6.5:4.5)+'" fill="'+(best?GOLD:sel?AC:"#1a1a1c")+'" stroke="'+AC+'" stroke-width="2"/><text x="'+me[k][0]+'" y="'+(me[k][1]-10)+'" text-anchor="middle" fill="'+col+'" font-size="'+(n>15?7:10)+'" font-weight="700">'+ft(EV.D7[k].m)+'</text><text id="dl'+k+'" x="'+me[k][0]+'" y="177" text-anchor="middle" fill="'+col+'" font-size="'+(n>15?7:10)+'" font-weight="700">'+EV.labels[k]+'</text><rect class="hit" data-k="'+k+'" x="'+(me[k][0]-step/2)+'" y="0" width="'+step+'" height="200"/>'}$("evc").innerHTML=s}
+function evSel(){[].forEach.call($("evc").querySelectorAll("[id^=dl]"),function(el,j){el.setAttribute("fill",j===EV.bi?GOLD:j===EV.sel?AC:"#c8c8cc")})}
+function panel(){var x=EV.D7[EV.sel],p=EV.previous[EV.sel]||0,d=p?Math.round((x.m/p-1)*100):0,nm=EV.mode==="w"?wl(x.d):EV.mode==="m"?"Dia "+x.d.getDate():EV.labels[EV.sel];$("evt").innerHTML='<div class="h"><b>'+nm+'</b><span class="'+(d>=0?"up":"dn")+'">'+(p?(d>=0?"+":"")+d+"% vs período anterior":"sem registro anterior")+'</span></div><div class="ms"><div><small>Tempo atual</small><b>'+ft(x.m)+'</b></div><div><small>Período anterior</small><b>'+ft(p)+'</b></div><div><small>Diferença</small><b>'+(x.m>=p?"+":"-")+ft(Math.abs(x.m-p))+'</b></div></div><div class="cb"><span>Atual</span><div class="bar"><i style="width:'+(100*x.m/Math.max(x.m,p,1))+'%;background:var(--ac)"></i></div><em>'+ft(x.m)+'</em></div><div class="cb"><span>Anterior</span><div class="bar"><i style="width:'+(100*p/Math.max(x.m,p,1))+'%;background:'+PU+'"></i></div><em>'+ft(p)+'</em></div>'}
+function evBuild(){var r=evRange(),cur=[],prev=[];for(var i=0;i<r.n;i++){var d=new Date(r.a);if(EV.mode==="y")d.setMonth(i);else d.setDate(d.getDate()+i);cur.push({d:d,m:Math.max(0,Math.round(+EV.daily[dk(d)]||0))});var pd=new Date(r.pa);if(EV.mode==="y")pd.setMonth(i);else if(EV.mode==="m")pd.setDate(Math.min(i+1,r.pb.getDate()));else pd.setDate(pd.getDate()+i);prev.push(Math.max(0,Math.round(+EV.daily[dk(pd)]||0)))}EV.D7=cur;EV.previous=prev;EV.labels=r.L;EV.bi=-1;var total=0;cur.forEach(function(x,k){total+=x.m;if(x.m>0&&(EV.bi<0||x.m>cur[EV.bi].m))EV.bi=k});EV.sel=Math.min(EV.sel,r.n-1);var sumPrev=prev.reduce(function(a,b){return a+b},0),diff=sumPrev?Math.round((total/sumPrev-1)*100):0,best=EV.bi<0?"—":r.L[EV.bi];$("evk").innerHTML=[["Tempo no período",ft(total),EV.mode],["Período anterior",ft(sumPrev),"comparação pessoal"],["Variação",sumPrev?(diff>=0?"+":"")+diff+"%":"—","atual × anterior"],["Melhor "+(EV.mode==="y"?"mês":"dia"),best,EV.bi<0?"sem registros":ft(cur[EV.bi].m)]].map(function(x){return'<div><small>'+x[0]+'</small><b>'+x[1]+'</b><em>'+x[2]+'</em></div>'}).join("");$("evi").innerHTML='<svg viewBox="0 0 24 24">'+IC.bulb+'</svg><div>Comparação dos seus próprios registros com o período anterior. O destaque indica seu melhor '+(EV.mode==="y"?"mês":"dia")+'.</div>';$("evtool").querySelector(".chd span").textContent=(EV.mode==="w"?"Semana":EV.mode==="m"?"Mês":"Ano")+" atual";$("evtool .leg").innerHTML='<span><b style="background:var(--ac)"></b>Período atual</span><span><b style="background:'+PU+'"></b>Período anterior</span>';var cap=$("evtool").querySelector(".cap");if(cap)cap.textContent="Somente seus registros de estudo. A comparação acompanha o seletor Semana, Mês e Ano.";evDraw();panel()}
 function fillBars(){
  var bars=document.querySelectorAll("#evp i");
  [].forEach.call(bars,function(i){i.style.transition="none";i.style.width="0"});
@@ -639,7 +548,7 @@ $("evc").addEventListener("click",function(e){
  EV.sel=+k;evSel();panel();
 });
 
-/* ---------- navegação ---------- */
+window.addEventListener("message",function(event){if(event.origin!==location.origin||!event.data||event.data.type!=="eu-vs-plataforma-period")return;var z=event.data;EV.mode=z.mode==="w"||z.mode==="y"?z.mode:"m";EV.ref=z.ref?new Date(z.ref):new Date();EV.daily={};(Array.isArray(z.daily)?z.daily:[]).forEach(function(x){if(x&&/^\\d{4}-\\d{2}-\\d{2}$/.test(x.date))EV.daily[x.date]=Math.max(0,Math.round(+x.minutes||0))});evBuild()});\n/* ---------- navegação ---------- */
 var navB=document.querySelectorAll("nav button"),secs=document.querySelectorAll(".sec");
 [].forEach.call(navB,function(b){
  b.onclick=function(){
