@@ -355,7 +355,7 @@ async function syncEuVsPlatformFrame(){
  const frame=document.querySelector('iframe[title="Eu versus semana"]');if(!frame)return;
  // O histórico atual do app é a fonte oficial. Não mesclar totais/sessões antigos da nuvem,
  // pois isso faria um estudo apagado reaparecer no gráfico.
- const entries=[].concat(Array.isArray(S.entries)?S.entries:[],Array.isArray(S.sim)?S.sim:[]).filter(e=>e&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(e.date||"")));
+ const entries=[].concat(Array.isArray(S.entries)?S.entries:[],Array.isArray(S.sim)?S.sim:[]).filter(e=>e&&/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||"")));
  const dailyMap={},sessionMap={};
  entries.forEach(e=>{
   const minutes=Math.max(0,Number(e.h||0)-Number(e.p||0)/60)*60;
