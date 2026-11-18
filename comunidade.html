@@ -1167,7 +1167,11 @@ async function evLoadSavedStudies(){
   }
  });
  Object.keys(fallbackDaily).forEach(function(date){
-  daily[date]=Math.max(daily[date]||0,fallbackDaily[date]||0);
+  // estudos.dados é a fonte canônica do Foco para os dias presentes localmente.
+  daily[date]=Math.max(0,Math.round(fallbackDaily[date]||0));
+ });
+ Object.keys(parentDaily).forEach(function(date){
+  if(/^\d{4}-\d{2}-\d{2}$/.test(date))daily[date]=Math.max(0,Math.round(Number(parentDaily[date])||0));
  });
  if(!Object.keys(daily).length){
   Object.keys(sessionMap).forEach(function(key){
