@@ -1023,7 +1023,7 @@ window.addEventListener("message",function(event){
  if(Array.isArray(payload.daily)){
   HORAS={};
   payload.daily.forEach(function(x){
-   if(x&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(x.date||""))){
+   if(x&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||""))){
     HORAS[String(x.date)]=Math.max(0,Math.min(1440,Math.round(Number(x.minutes)||0)));
    }
   });
