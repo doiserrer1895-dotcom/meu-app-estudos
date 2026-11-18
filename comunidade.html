@@ -931,7 +931,10 @@ function communitySafeAction(fn){return async function(){try{return await fn.app
 ["pedido","aceitar","recusar","cancelar","remover","incentivo","sessao","lerAvisos"].forEach(function(k){ON[k]=communitySafeAction(ON[k])});
 
 /* ---------- init ---------- */
-communityInit().catch(function(e){console.error("Falha na integração da Comunidade:",e);clock(true);D=montar();segBuild();initChart();view();renderAmigos();evBuild();evFx();toast("A Comunidade precisa da configuração do Supabase. Confira o arquivo SQL.");});
+/* No modo incorporado em Estudos, o gráfico usa exclusivamente os dados enviados pela própria aba Estudos. Não depende da inicialização da Comunidade, do ranking, de amigos ou de consultas ao Supabase. Desenha imediatamente com o período atual e atualiza ao receber os registros do pai. */
+var EMBED_EU_VS_ESTUDOS=new URLSearchParams(location.search).get("embed")==="eu-vs-plataforma";
+if(EMBED_EU_VS_ESTUDOS){evBuild();evFx();}
+else communityInit().catch(function(e){console.error("Falha na integração da Comunidade:",e);clock(true);D=montar();segBuild();initChart();view();renderAmigos();evBuild();evFx();toast("A Comunidade precisa da configuração do Supabase. Confira o arquivo SQL.");});
 })();
 
 // No modo incorporado, informa a altura real ao Estudos para eliminar a rolagem interna do iframe.
