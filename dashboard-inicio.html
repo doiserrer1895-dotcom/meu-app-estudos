@@ -1740,7 +1740,21 @@ const saveSleepRow=(row,key=SLP.date)=>{if(SLP.mode==='fixed'&&key===SLP.date&&!
 const tm=t=>{const p=t.split(':');return +p[0]*60+ +p[1]},df=(a,b)=>(tm(b)-tm(a)+1440)%1440;
 const fd=m=>Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')+'min';
 const sn=r=>{const lat=r[2]?df(r[1],r[2]):0,cama=df(r[1],r[3]),dor=Math.max(0,cama-lat);return{lat,cama,dor,ef:cama?Math.min(100,dor/cama*100):0}};
-const ql=s=>s.dor>=420&&s.ef>=90?['Ótima','Noite completa e eficiente.']:s.dor>=390&&s.ef>=85?['Boa','Você descansou bem!']:['Regular','Tente dormir um pouco mais.'];
+const ql=(s,desp=0)=>{
+  const dur=s.dor,lat=s.lat,ef=s.ef,aw=Math.max(0,Number(desp)||0);
+  let score=0;
+  score+=dur>=480?40:dur>=420?35:dur>=390?28:dur>=360?20:10;
+  score+=ef>=90?25:ef>=85?20:ef>=80?14:6;
+  score+=lat<=15?15:lat<=30?12:lat<=45?7:2;
+  score+=aw===0?20:aw===1?17:aw===2?12:aw<=3?7:2;
+  const title=score>=88?'Ótima':score>=75?'Boa':score>=60?'Regular':'Atenção';
+  const tips=[];
+  if(dur<420)tips.push('faltaram '+(420-dur)+' min para alcançar 7 horas de sono');
+  if(lat>30)tips.push('você levou '+lat+' min para adormecer');
+  if(ef<85)tips.push('a eficiência ficou em '+c1(ef)+'%');
+  if(aw>2)tips.push('houve '+aw+' despertares');
+  return [title+' · '+score+'/100',tips.length?tips.join('; ')+'.':'Boa continuidade: duração, eficiência e despertares ficaram em bons níveis.'];
+};
 function cuAnim(){
   const red=matchMedia('(prefers-reduced-motion:reduce)').matches;
   $$('#gx [data-cu]').forEach(el=>{const to=+el.dataset.cu,suf=el.dataset.suf||'';
@@ -1974,7 +1988,7 @@ function drawGeral(){
   const DN={Seg:'segunda',Ter:'terça',Qua:'quarta',Qui:'quinta',Sex:'sexta','Sáb':'sábado',Dom:'domingo'};
   const sonoHTML=()=>{
     const r=sleepRow(),valid=x=>[1,2,3].every(k=>/^\d{2}:\d{2}$/.test(String(x[k]||'')));
-    const has=valid(r),done=r[5]==='realizado',s=has?sn(r):{lat:0,cama:0,dor:0,ef:0},q=has?ql(s):['Sem registro','Informe os horários desta data.'];
+    const has=valid(r),done=r[5]==='realizado',s=has?sn(r):{lat:0,cama:0,dor:0,ef:0},q=has?ql(s,r[4]):['Sem registro','Informe os horários desta data.'];
     const records=Object.values(SLP.daily||{}).filter(x=>x&&x[5]==='realizado'&&valid(x)).map(sn);
     const med=records.length?Math.round(records.reduce((x,y)=>x+y.dor,0)/records.length):null;
     const efm=records.length?records.reduce((x,y)=>x+y.ef,0)/records.length:null;
