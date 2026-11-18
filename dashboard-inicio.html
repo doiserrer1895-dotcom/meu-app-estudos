@@ -2190,6 +2190,10 @@ $('#nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('#dinfo').hidde
 applyName();drawGeral();drawPerformanceChart();scheduleDashboardWeather();
 refreshDashboardCommunity();
 window.addEventListener('focus',refreshDashboardCommunity);
+window.addEventListener('message',event=>{
+ if(event.origin!==location.origin||!event.data||event.data.type!=='study-performance-updated')return;
+ drawPerformanceChart();
+});
 setInterval(refreshDashboardCommunity,60000);
 window.addEventListener('storage',e=>{if(e.key==='estudos-v1'||(e.key&&e.key.startsWith('estudos-v1:'))||e.key==='nutri-v1'||e.key===null){if(e.key&&e.key.startsWith('estudos-v1:')){try{const parsed=JSON.parse(e.newValue||'null');DASH_STUDY_STATE=parsed&&Array.isArray(parsed.entries)&&Array.isArray(parsed.edital)?parsed:null}catch(x){DASH_STUDY_STATE=null}}drawGeral();drawPerformanceChart()}if(e.key==='constancia-v1:'+DASH_USER_ID&&e.newValue){try{DASH_CONSTANCIA_STATE=JSON.parse(e.newValue)}catch(x){}drawGeral()}if(e.key==='constancia-v1'&&!DASH_USER_ID&&e.newValue){try{DASH_CONSTANCIA_STATE=JSON.parse(e.newValue)}catch(x){}drawGeral()}});
 /* ---------- Constância: Campo (stats) + Perfil ---------- */
