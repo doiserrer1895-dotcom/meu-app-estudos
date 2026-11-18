@@ -594,7 +594,7 @@ function evSel(){
   if(E.d2[j])E.d2[j].setAttribute("fill",sl?"#fff":"#8b8b92");
   E.pp[j].setAttribute("r",j===k0?4:2.5);
  }
- var pv=EV.P[k0],t=E.plt;t.setAttribute("x",pv[0]);t.setAttribute("y",pv[1]<EV.M[k0][1]?pv[1]-9:pv[1]+16);t.textContent=ft(E.previous[k0]||0);
+ var pv=EV.P[k0],t=E.plt;t.setAttribute("x",pv[0]);t.setAttribute("y",pv[1]<EV.M[k0][1]?pv[1]-9:pv[1]+16);t.textContent=ft(EV.previous[k0]||0);
 }
 function panel(){
  var x=EV.D7[EV.sel],p=EV.previous[EV.sel]||0,d=p?Math.round((x.m/p-1)*100):0,key=dk(x.d),
