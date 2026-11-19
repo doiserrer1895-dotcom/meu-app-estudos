@@ -76,6 +76,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
     }catch(e){}
   }
   window.addEventListener("message",function(event){if(event.data&&event.data.type==="app-theme-change")applyQuestionTheme(event.data.theme);});
+  window.addEventListener("message",function(event){if(event.source===window.parent&&event.data&&event.data.type==="app-question-filter"&&bank.contentWindow)bank.contentWindow.postMessage(event.data,"*")});
   window.addEventListener("message",function(event){
     if(event.source===bank.contentWindow&&event.data&&event.data.type&&
        (event.data.type==="eear-question-attempt"||event.data.type==="eear-question-taxonomy")){
@@ -143,19 +144,14 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               }},"*");
             }
             const rawBank=(typeof B!=="undefined"&&B)||window.__eearBridgeQ||{};
-            const taxonomy={};
-            Object.keys(rawBank).forEach(function(id){
-              const question=rawBank[id];
-              if(!question||typeof question!=="object")return;
-              const discipline=String(question.d||question.discipline||question.subject||"").trim();
-              if(!discipline)return;
-              const topic=String(question.u||question.s||question.m||question.topic||"Geral").trim()||"Geral";
-              if(!taxonomy[discipline])taxonomy[discipline]=[];
-              if(!taxonomy[discipline].includes(topic))taxonomy[discipline].push(topic);
-            });
-
-            Object.keys(taxonomy).forEach(function(name){taxonomy[name].sort(function(a,b){return a.localeCompare(b,"pt-BR")})});
-            window.parent.postMessage({type:"eear-question-taxonomy",taxonomy:taxonomy},"*");
+            const taxonomy={},hierarchy={};
+            Object.keys(rawBank).forEach(function(id){const q=rawBank[id];if(!q||typeof q!=="object")return;const d=String(q.d||q.discipline||q.subject||"").trim();if(!d)return;const m=String(q.m||q.matter||q.area||"Geral").trim()||"Geral",c=String(q.s||q.content||q.topic||"Geral").trim()||"Geral",u=String(q.u||q.subtopic||q.detail||"Geral").trim()||"Geral",t=String(q.u||q.s||q.m||q.topic||"Geral").trim()||"Geral";if(!taxonomy[d])taxonomy[d]=[];if(!taxonomy[d].includes(t))taxonomy[d].push(t);if(!hierarchy[d])hierarchy[d]={};if(!hierarchy[d][m])hierarchy[d][m]={};if(!hierarchy[d][m][c])hierarchy[d][m][c]=[];if(!hierarchy[d][m][c].includes(u))hierarchy[d][m][c].push(u)});
+            function sortTree(o){Object.keys(o).forEach(k=>Array.isArray(o[k])?o[k].sort((a,b)=>a.localeCompare(b,"pt-BR")):sortTree(o[k]))}
+            Object.keys(taxonomy).forEach(n=>taxonomy[n].sort((a,b)=>a.localeCompare(b,"pt-BR")));sortTree(hierarchy);
+            window.parent.postMessage({type:"eear-question-taxonomy",taxonomy:taxonomy},"*");window.parent.postMessage({type:"eear-question-taxonomy-full",hierarchy:hierarchy},"*");
+            function applyLinkedFilter(f){document.querySelectorAll(".card[data-id]").forEach(card=>{const q=rawBank[card.dataset.id]||{},norm=v=>String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").trim().toLowerCase(),fields=[q.d||q.discipline||q.subject,q.m||q.matter||q.area,q.s||q.content||q.topic,q.u||q.subtopic||q.detail].map(norm),wanted=[f.subject,f.matter,f.content,f.specific].map(norm);card.style.display=wanted.every((v,i)=>!v||fields[i]===v)?"":"none"})}
+            window.addEventListener("message",ev=>{if(ev.data&&ev.data.type==="app-question-filter"){window.__appQuestionFilter=ev.data.filter||{};applyLinkedFilter(window.__appQuestionFilter)}});
+            try{new MutationObserver(()=>{if(window.__appQuestionFilter)applyLinkedFilter(window.__appQuestionFilter)}).observe(document.body,{childList:true,subtree:true})}catch(e){}
             document.addEventListener("click",function(event){
               const bankAnswer=event.target.closest&&event.target.closest(".alt[data-a]");
               if(bankAnswer){
