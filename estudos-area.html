@@ -72,9 +72,11 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 .seg.s4 button{font-size:12px;padding:9px 2px}
 .stk{display:flex;height:14px;border-radius:8px;overflow:hidden;margin-bottom:8px}.stk i{display:block;height:100%}
 .row.sb{padding-left:18px;background:var(--in);border-radius:10px;margin:2px 0;padding-right:10px;border:0}
-.bank-link-preview{display:block;margin-top:8px;padding:10px 12px;border:1px solid var(--bd);border-left:3px solid #4cc7ff;border-radius:12px;background:var(--in);font-size:13px;line-height:1.45;color:var(--mu)}
-.bank-link-preview strong{display:block;color:var(--tx);font-size:12px;margin-bottom:3px}
-.bank-topic-path{display:block;margin-top:4px;color:#4cc7ff;font-size:12px;font-weight:650;line-height:1.4}
+.bank-link-manager{display:block;margin:10px 0 8px;padding:10px 12px;border:1px solid var(--bd);border-left:3px solid #e05252;border-radius:12px;background:var(--in);font-size:13px;line-height:1.45;color:var(--mu)}
+.bank-link-manager strong{display:block;color:#e05252;font-size:13px;margin-bottom:4px}
+.bank-link-preview{display:block;margin-top:8px;padding:10px 12px;border:1px solid var(--bd);border-left:3px solid #e05252;border-radius:12px;background:var(--in);font-size:13px;line-height:1.45;color:var(--mu)}
+.bank-link-preview strong{display:block;color:#e05252;font-size:12px;margin-bottom:3px}
+.bank-topic-path{display:block;margin-top:4px;color:#e05252;font-size:12px;font-weight:650;line-height:1.4}
 .calh,.calg{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.calh{color:var(--mu);font-size:11px;text-align:center;margin-bottom:6px}
 .cal{aspect-ratio:1;border:1px solid var(--bd);background:var(--in);color:var(--mu);border-radius:10px;font-size:13px;cursor:pointer;padding:0}
 .cal.on{background:var(--gr);color:#04121a;border-color:var(--gr);font-weight:700}.cal.now{outline:2px solid var(--ac)}.cal.sel{outline:2px solid var(--tx)}
@@ -532,8 +534,7 @@ function ldiCard(m){const s=mStat(m),o=open[m.id],dy=m.days||[],es=S.entries.fil
  <label>Conteúdos — marque quando concluir</label>`+
  (m.topics.length?m.topics.map((t,i)=>{const A=agg(es.filter(e=>e.top===t)),ok=topicDone(m,t),display=topicLabel(m,t),link=m.topicLinks&&m.topicLinks[t];return `<div class="row"><button class="ck" style="${ok?'background:var(--gr);border-color:var(--gr);color:#04121a':''}" onclick="toggleTopic('${m.id}','${encodeURIComponent(t).replace(/'/g,'%27')}')">${ok?'✓':''}</button><div class="g"><b class="${ok?'done':''}">${esc(display)}</b>${link?(Array.isArray(link)?link:[link]).map(l=>`<small class="bank-topic-path">Banco de questões: ${esc(bankLinkLabel(l))}</small>`).join(''):display!==t?`<small>Vinculado ao banco: ${esc(t)}</small>`:''}${A.h>0?`<small>${f1(A.h)}h estudadas</small>`:''}</div><button class="x" onclick="delT('${m.id}',${i})">×</button></div>`}).join(''):'<div class="empty" style="padding:12px 0">Nenhum conteúdo ainda</div>')+
  `<label>Nome do conteúdo</label><input id="topic_text_${m.id}" type="text" placeholder="Digite o nome que você usa no seu curso" autocomplete="off">
- <label>Gerenciador de vínculos do banco de questões</label>
- <small class="sub" style="text-align:left;margin:0 0 8px">Selecione a localização das questões no banco para vincular ao conteúdo informado acima.</small>
+ <div class="bank-link-manager"><strong>Gerenciador de vínculos do banco de questões</strong><span>Selecione a localização das questões no banco para vincular ao conteúdo informado acima.</span></div>
  <select id="bl_subject_${m.id}" onchange="refreshBankLinkFields('${m.id}')"><option value="">Disciplina</option>${opts(bankSubjects(),'')}</select>
  <select id="bl_matter_${m.id}" onchange="refreshBankLinkFields('${m.id}')" style="margin-top:7px"><option value="">Matéria / tópico</option></select>
  <select id="bl_content_${m.id}" onchange="refreshBankLinkFields('${m.id}')" style="margin-top:7px"><option value="">Conteúdo</option></select>
@@ -1113,7 +1114,7 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register(
-        "/meu-app-estudos/service-worker.js?v=55",
+        "/meu-app-estudos/service-worker.js?v=56",
         { scope: "/meu-app-estudos/", updateViaCache: "none" }
       );
       await registration.update();
