@@ -13,7 +13,7 @@
 #bar i{display:block;height:100%;width:0;background:#4ade80;transition:width .2s}
 #retry{display:none;margin:14px auto 0;padding:10px 18px;border:1px solid #555;border-radius:10px;background:#171717;color:#fff;font-weight:700}
 body{position:relative;overflow:hidden}
-#bank{display:none;position:absolute;inset:0;width:100%;height:100%;min-height:0;border:0;background:#fff}#phonetics-link{position:fixed;z-index:5;top:10px;left:10px;padding:8px 11px;border:1px solid #555;border-radius:10px;background:#171717;color:#fff;text-decoration:none;font-size:12px;font-weight:700}#clear-linked-filter{position:fixed;z-index:5;top:10px;right:10px;padding:8px 11px;border:1px solid #555;border-radius:10px;background:#171717;color:#fff;font-size:12px;font-weight:700}
+#bank{display:none;position:absolute;inset:0;width:100%;height:100%;min-height:0;border:0;background:#fff}
 
 
 html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) fixed;color:#fafafa;font-family:Inter,-apple-system,"SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
@@ -24,7 +24,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
 </head>
 <body>
 <div id="status"><strong>Preparando o banco completo de questões…</strong><span id="detail">Aguarde enquanto os arquivos são carregados.</span><div id="bar"><i id="progress"></i></div><small>O download inicial pode demorar por causa das imagens originais.</small><button id="retry" type="button">Tentar novamente</button></div>
-<a id="phonetics-link" href="questoes-fonetica.html" target="_blank">Caderno · Fonética e Ortografia</a><button id="clear-linked-filter" type="button">Limpar filtro da agenda</button><iframe id="bank" title="Banco completo de questões EEAR"></iframe>
+<iframe id="bank" title="Banco completo de questões EEAR"></iframe>
 <script>
 (function(){
   "use strict";
@@ -77,7 +77,6 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
   }
   window.addEventListener("message",function(event){if(event.data&&event.data.type==="app-theme-change")applyQuestionTheme(event.data.theme);});
   window.addEventListener("message",function(event){if(event.source===window.parent&&event.data&&event.data.type==="app-question-filter"&&bank.contentWindow)bank.contentWindow.postMessage(event.data,"*")});
-  document.getElementById("clear-linked-filter").addEventListener("click",function(){if(bank.contentWindow)bank.contentWindow.postMessage({type:"app-question-filter",filter:{}},"*")});
   window.addEventListener("message",function(event){
     if(event.source===bank.contentWindow&&event.data&&event.data.type&&
        (event.data.type==="eear-question-attempt"||event.data.type==="eear-question-taxonomy"||event.data.type==="eear-question-taxonomy-full")){
@@ -146,11 +145,11 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             }
             const rawBank=(typeof B!=="undefined"&&B)||window.__eearBridgeQ||{};
             const taxonomy={},hierarchy={};
-            Object.keys(rawBank).forEach(function(id){const q=rawBank[id];if(!q||typeof q!=="object")return;const rawD=String(q.d||q.discipline||q.subject||"").trim();if(!rawD)return;const dn=rawD.normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().replace(/[ ]+/g," ").trim();const d=/^fisica(?:[ ]*[123])?$/.test(dn)?"Física":/^matematica(?:[ ]*[123])?$/.test(dn)?"Matemática":/^ingles(?:[ ]*[123])?$/.test(dn)?"Inglês":rawD;const m=String(q.m||q.matter||q.area||"Geral").trim()||"Geral",c=String(q.s||q.content||q.topic||"Geral").trim()||"Geral",u=String(q.u||q.subtopic||q.detail||"Geral").trim()||"Geral",t=String(q.u||q.s||q.m||q.topic||"Geral").trim()||"Geral";if(!taxonomy[d])taxonomy[d]=[];if(!taxonomy[d].includes(t))taxonomy[d].push(t);if(!hierarchy[d])hierarchy[d]={};if(!hierarchy[d][m])hierarchy[d][m]={};if(!hierarchy[d][m][c])hierarchy[d][m][c]=[];if(!hierarchy[d][m][c].includes(u))hierarchy[d][m][c].push(u)});
+            Object.keys(rawBank).forEach(function(id){const q=rawBank[id];if(!q||typeof q!=="object")return;const d=String(q.d||q.discipline||q.subject||"").trim();if(!d)return;const m=String(q.m||q.matter||q.area||"Geral").trim()||"Geral",c=String(q.s||q.content||q.topic||"Geral").trim()||"Geral",u=String(q.u||q.subtopic||q.detail||"Geral").trim()||"Geral",t=String(q.u||q.s||q.m||q.topic||"Geral").trim()||"Geral";if(!taxonomy[d])taxonomy[d]=[];if(!taxonomy[d].includes(t))taxonomy[d].push(t);if(!hierarchy[d])hierarchy[d]={};if(!hierarchy[d][m])hierarchy[d][m]={};if(!hierarchy[d][m][c])hierarchy[d][m][c]=[];if(!hierarchy[d][m][c].includes(u))hierarchy[d][m][c].push(u)});
             function sortTree(o){Object.keys(o).forEach(k=>Array.isArray(o[k])?o[k].sort((a,b)=>a.localeCompare(b,"pt-BR")):sortTree(o[k]))}
             Object.keys(taxonomy).forEach(n=>taxonomy[n].sort((a,b)=>a.localeCompare(b,"pt-BR")));sortTree(hierarchy);
             window.parent.postMessage({type:"eear-question-taxonomy",taxonomy:taxonomy},"*");window.parent.postMessage({type:"eear-question-taxonomy-full",hierarchy:hierarchy},"*");
-            function applyLinkedFilter(f){document.querySelectorAll(".card[data-id]").forEach(card=>{const q=rawBank[card.dataset.id]||{},norm=v=>String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").trim().toLowerCase(),ns=v=>{const x=norm(v);return x.replace(/^(fisica|matematica|ingles)\\s*[123]$/,"$1")},fields=[ns(q.d||q.discipline||q.subject),norm(q.m||q.matter||q.area),norm(q.s||q.content||q.topic),norm(q.u||q.subtopic||q.detail)],wanted=[ns(f.subject),norm(f.matter),norm(f.content),norm(f.specific)];card.style.display=wanted.every((v,i)=>!v||fields[i]===v)?"":"none"})}
+            function applyLinkedFilter(f){document.querySelectorAll(".card[data-id]").forEach(card=>{const q=rawBank[card.dataset.id]||{},norm=v=>String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").trim().toLowerCase(),fields=[q.d||q.discipline||q.subject,q.m||q.matter||q.area,q.s||q.content||q.topic,q.u||q.subtopic||q.detail].map(norm),wanted=[f.subject,f.matter,f.content,f.specific].map(norm);card.style.display=wanted.every((v,i)=>!v||fields[i]===v)?"":"none"})}
             window.addEventListener("message",ev=>{if(ev.data&&ev.data.type==="app-question-filter"){window.__appQuestionFilter=ev.data.filter||{};applyLinkedFilter(window.__appQuestionFilter)}});
             try{new MutationObserver(()=>{if(window.__appQuestionFilter)applyLinkedFilter(window.__appQuestionFilter)}).observe(document.body,{childList:true,subtree:true})}catch(e){}
             document.addEventListener("click",function(event){
