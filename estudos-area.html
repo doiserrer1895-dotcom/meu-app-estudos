@@ -456,14 +456,16 @@ function breakdown(es){const m={};es.forEach(e=>{const k=e.top||'Geral';m[k]=(m[
 
 /* Integra as tentativas do banco EEAR ao histórico de desempenho do aplicativo. */
 (function(){
- const acceptedSources=new Set(['banco','prova','simulado']);
+ const acceptedSources=new Set(['banco','prova','simulado','fonetica']);
  window.addEventListener('message',function(event){
   const frame=document.getElementById('question-bank-frame'),hidden=document.getElementById('question-bank-taxonomy-frame');
   const msg=event.data;
   if(!msg)return;
   if(msg.type==='eear-question-taxonomy-full'&&frame&&event.source===frame.contentWindow){bankHierarchy=msg.hierarchy&&typeof msg.hierarchy==='object'?msg.hierarchy:{};if(view==='p')render();return;}
   if(msg.type==='eear-question-taxonomy'&&((frame&&event.source===frame.contentWindow)||(hidden&&event.source===hidden.contentWindow))){bankTaxonomy=msg.taxonomy&&typeof msg.taxonomy==='object'?msg.taxonomy:{};if(view==='p')render();return;}
-  if(!frame||event.source!==frame.contentWindow||msg.type!=='eear-question-attempt')return;
+  const popupAttempt=msg.type==='eear-question-attempt'&&event.origin===location.origin&&msg.attempt&&msg.attempt.source==='fonetica';
+  if((!frame||event.source!==frame.contentWindow)&&!popupAttempt)return;
+  if(msg.type!=='eear-question-attempt')return;
   const d=(msg.attempt&&typeof msg.attempt==='object')?msg.attempt:msg;
   const source=String(d.source||d.origin||d.kind||'banco').toLowerCase();
   if(!acceptedSources.has(source))return;
