@@ -10,8 +10,7 @@
   "chunks": [
     {
       "file": "questoes-banco-01.gz",
-      "bytes": 10485760,
-      "questions": 4244
+      "bytes": 10485760
     },
     {
       "file": "questoes-banco-02.gz",
