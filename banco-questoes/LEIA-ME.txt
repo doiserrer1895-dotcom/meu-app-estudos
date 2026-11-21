@@ -8,7 +8,7 @@ Estrutura dos arquivos:
 
 O carregador está em questoes.html na raiz. Ele concatena e descompacta os nove fragmentos originais, aplica o trecho de compatibilidade do pacote 10 sem importar os registros legados e carrega o pacote 13 uma única vez.
 
-manifest.json registra a composição ativa e identifica os pacotes legados. SHA256SUMS.txt contém os hashes dos arquivos GZIP.
+manifest.json registra a composição ativa e identifica os pacotes legados. SHA256SUMS.txt valida os nove fragmentos originais (01–09); os pacotes suplementares 10–13 não fazem parte dessa lista de hashes.
 
 Não renomeie, edite ou recomprima os arquivos .gz sem atualizar também o carregador e os metadados correspondentes.
 
