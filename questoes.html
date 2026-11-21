@@ -306,6 +306,13 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             const uidAuditStyle=document.createElement("style");
             uidAuditStyle.textContent=".eear-uid-audit{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:0 0 20px;padding:12px 14px;border:1px solid #444;border-radius:10px;background:#151515;color:#f5f5f5;font:12px/1.5 system-ui,Arial,sans-serif}.eear-uid-audit strong{font-size:13px}.eear-uid-audit-count,.eear-uid-audit-answerable{width:100%;font-weight:700}.eear-uid-audit-answerable{color:#d1fae5}.eear-uid-audit-subjects,.eear-uid-audit-ranges{width:100%;color:#bbb}.eear-uid-audit.has-errors{border-color:#b7791f;background:#241b0d}.eear-uid-audit.all-ok{border-color:#276749;background:#101d16}";
             document.head.appendChild(uidAuditStyle);
+            function firstQuestionValue(question,names){
+              for(const name of names){
+                const value=question&&question[name];
+                if(value!==undefined&&value!==null&&String(value).trim()!=="")return cleanLabel(value);
+              }
+              return "";
+            }
             function applyQuestionUIDs(root){
               const scope=root&&root.querySelectorAll?root:document;
               const cards=[];
@@ -313,17 +320,38 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               scope.querySelectorAll(".card[data-id]").forEach(card=>cards.push(card));
               cards.forEach(function(card){
                 const question=rawBank[card.dataset.id];
-                if(!question||!question.__eearUID||card.querySelector(".eear-question-uid"))return;
-                const label=document.createElement("div");
-                label.className="eear-question-uid";
-                label.textContent=question.__eearUIDLabel;
-                label.setAttribute("aria-label","Identificador "+question.__eearUID);
-                card.insertBefore(label,card.firstChild);
+                if(!question||!question.__eearUID)return;
+                let panel=card.querySelector(".eear-question-metadata");
+                if(!panel){
+                  panel=document.createElement("div");
+                  panel.className="eear-question-metadata";
+                  card.insertBefore(panel,card.firstChild);
+                }
+                const path=question.__eearFilterPath||{};
+                const values=[
+                  ["Matéria",firstQuestionValue(question,["d","discipline","subject"])],
+                  ["Dificuldade",firstQuestionValue(question,["difficulty","dificuldade","nivel","nível","level","dif"])],
+                  ["Assunto",path.assunto||firstQuestionValue(question,["m","matter","area"])],
+                  ["Tópico",path.topico||firstQuestionValue(question,["s","content","topic"])],
+                  ["Conteúdo específico",path.conteudo||firstQuestionValue(question,["u","subtopic","detail"])],
+                  ["ID",question.__eearUID]
+                ];
+                panel.replaceChildren();
+                values.forEach(function(entry){
+                  if(!entry[1])return;
+                  const item=document.createElement("span");
+                  item.className="eear-metadata-item";
+                  const label=document.createElement("b");
+                  label.textContent=entry[0]+": ";
+                  const value=document.createElement("span");
+                  value.textContent=entry[1];
+                  item.append(label,value);
+                  panel.appendChild(item);
+                });
               });
             }
             const uidStyle=document.createElement("style");
-            uidStyle.textContent=".eear-question-uid{display:inline-flex;align-items:center;margin:0 0 16px;padding:5px 10px;border:1px solid #555;border-radius:8px;background:#202020;color:#f5f5f5;font:800 12px/1.2 system-ui,Arial,sans-serif;letter-spacing:.04em}";
-            document.head.appendChild(uidStyle);
+            uidStyle.textContent=".eear-question-metadata{display:flex;flex-wrap:wrap;align-items:center;gap:7px 14px;margin:0 0 20px;padding:10px 12px;border:1px solid #414141;border-radius:9px;background:#1c1c1c;color:#ddd;font:12px/1.45 system-ui,Arial,sans-serif}.eear-metadata-item{display:inline-block;max-width:100%;overflow-wrap:anywhere}.eear-metadata-item b{color:#fff;font-weight:800}.eear-metadata-item:last-child{padding:3px 8px;border:1px solid #666;border-radius:6px;background:#292929;color:#fff;font-weight:800}.eear-question-metadata:empty{display:none}";
             applyQuestionUIDs(document);
             try{new MutationObserver(function(records){records.forEach(function(record){record.addedNodes.forEach(function(node){if(node.nodeType===1){if(node.matches&&node.matches(".card[data-id]"))applyQuestionUIDs(node);applyQuestionUIDs(node)}})})}).observe(document.body,{childList:true,subtree:true})}catch(e){}
             const taxonomy={},hierarchy={};
