@@ -217,15 +217,22 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               q.r="";
               textAnswerFixes.push(q.id||key);
             });
-            if(textAnswerFixes.length){
+            const noKeyIds=new Set(["m2-06-Difícil-22","triunfo_eear_208"]);
+            noKeyIds.forEach(function(id){
+              const q=rawBank[id];if(!q)return;
+              q.__eearNoKey=true;q.open=true;q.r="";
+              q.text=String(q.prompt||q.text||"");
+              q.answerText="O material de origem não informa o gabarito desta questão.";
+            });
+            if(textAnswerFixes.length||noKeyIds.size){
               const originalQuestionCard=card;
               card=function(q){
-                if(!q||!q.__eearTextAnswer)return originalQuestionCard(q);
+                if(!q||(!q.__eearTextAnswer&&!q.__eearNoKey))return originalQuestionCard(q);
                 const v=ans[q.id],esc=function(x){return String(x??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")};
-                const tags='<div class="tags"><span class="tag lv">'+esc(q.l||"")+'</span><span class="tag">Matéria: '+esc(q.d||"")+'</span><span class="tag">Conteúdo: '+esc(q.m||"")+'</span>'+(q.s?'<span class="tag">Assunto: '+esc(q.s)+'</span>':"")+(q.u&&q.u!==q.s?'<span class="tag">Conteúdo específico: '+esc(q.u)+'</span>':"")+'<span class="tag">Resposta aberta</span></div>';
+                const tags='<div class="tags"><span class="tag lv">'+esc(q.l||"")+'</span><span class="tag">Matéria: '+esc(q.d||"")+'</span><span class="tag">Conteúdo: '+esc(q.m||"")+'</span>'+(q.s?'<span class="tag">Assunto: '+esc(q.s)+'</span>':"")+(q.u&&q.u!==q.s?'<span class="tag">Conteúdo específico: '+esc(q.u)+'</span>':"")+(q.__eearNoKey?'<span class="tag">Gabarito indisponível</span>':'<span class="tag">Resposta aberta</span>')+'</div>';
                 const prompt=q.text?'<div class="qtext">'+esc(q.text).replace(/\n/g,"<br>")+'</div>':"";
                 const image=q.i?'<div class="qi" data-z="1"><img loading="lazy" alt="Imagem de apoio da questão '+esc(q.n)+'" src="'+q.i+'"><span class="zm">⤢ Ampliar</span></div>':"";
-                const feedback=v?'<div class="fb ok"><span>'+esc(q.answerText)+'</span><button data-redo="1">Ocultar</button></div>':'<button class="more" data-show="1" style="margin-top:12px;width:100%;align-self:stretch">Ver resposta</button>';
+                const feedback=q.__eearNoKey?'<div class="fb"><span>'+esc(q.answerText)+'</span></div>':(v?'<div class="fb ok"><span>'+esc(q.answerText)+'</span><button data-redo="1">Ocultar</button></div>':'<button class="more" data-show="1" style="margin-top:12px;width:100%;align-self:stretch">Ver resposta</button>');
                 return '<article class="card" data-id="'+esc(q.id)+'">'+tags+prompt+image+feedback+'</article>';
               };
               if(typeof render==="function")render();
