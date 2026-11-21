@@ -514,7 +514,7 @@ function addEntry(h,q,a,preserveSession=false){const T=S.timer;const date=iso(ne
 
 /* ---------- PLANO DE ESTUDOS / LDI CONFIGURÁVEL ---------- */
 function topicList(m){return [...new Set((Array.isArray(m&&m.topics)?m.topics:[]).filter(t=>typeof t==='string'&&t.trim()))]}
-function topicDone(m,t){return (m.doneTopics||[]).includes(t)||(m.agendaDoneTopics||[]).includes(t)}
+function topicDone(m,t){return (m.doneTopics||[]).includes(t)}
 function subjectDone(m){const topics=topicList(m);return topics.length>0&&topics.every(t=>topicDone(m,t))}
 function toggleTopic(id,encoded){const t=decodeURIComponent(encoded),m=S.edital.find(x=>x.id===id);if(!m)return;m.doneTopics=m.doneTopics||[];const i=m.doneTopics.indexOf(t);if(i>=0)m.doneTopics.splice(i,1);else m.doneTopics.push(t);save();render()}
 let bankTaxonomy={},bankHierarchy={};
@@ -581,7 +581,7 @@ function editTopicLink(id,encoded,index){const m=S.edital.find(x=>x.id===id),t=d
 
 function addT(id){const m=S.edital.find(x=>x.id===id),input=$('#topic_text_'+id),s=$('#bl_subject_'+id),ma=$('#bl_matter_'+id),c=$('#bl_content_'+id),sp=$('#bl_specific_'+id);if(!m)return;const subject=s&&s.value||'',matter=ma&&ma.value||'',content=c&&c.value||'',specific=sp&&sp.value||'',editing=window.bankLinkEditing,key=editing&&editing.id===id?editing.topic:(input&&String(input.value||'').trim());if(!key){alert('Digite o nome do conteúdo acima.');return}if(!(subject&&matter)){alert('Selecione a disciplina e o assunto.');return}if(!m.topics.includes(key))m.topics.push(key);m.topicLinks=m.topicLinks||{};const raw=m.topicLinks[key],list=Array.isArray(raw)?raw:(raw?[raw]:[]),next={subject,matter,content,specific,topic:specific||content};if(editing&&editing.id===id&&editing.topic===key){list[editing.index]=next;window.bankLinkEditing=null;const b=$('#bl_add_'+id);if(b)b.textContent='Adicionar vínculo'}else if(!list.some(l=>l.subject===subject&&l.matter===matter&&l.content===content&&l.specific===specific))list.push(next);m.topicLinks[key]=list;save();render()}function editT(id){const m=S.edital.find(x=>x.id===id),input=$('#t_'+id),v=input&&input.selectedIndex>0?String(input.options[input.selectedIndex].value||input.options[input.selectedIndex].textContent).trim():'';if(!m||!v){alert('Escolha primeiro um tópico do banco de questões.');return;}const current=topicLabel(m,v),next=prompt('Digite o nome que deseja usar neste tópico no LDI:',current);if(next===null)return;const clean=next.trim();if(!clean){alert('O nome do tópico não pode ficar vazio.');return;}m.topicAliases=m.topicAliases||{};if(clean===v)delete m.topicAliases[v];else m.topicAliases[v]=clean;save();render()}
 function delM(id){S.edital=S.edital.filter(x=>x.id!==id);S.sched=S.sched.filter(x=>S.edital.some(m=>m.name===x.subj));pend={};save();render()}
-function delT(id,i){const m=S.edital.find(x=>x.id===id);if(!m)return;const t=topicList(m)[i];if(!t)return;m.topics=m.topics.filter(x=>x!==t);m.doneTopics=(m.doneTopics||[]).filter(x=>x!==t);if(m.topicAliases)delete m.topicAliases[t];if(m.topicLinks)delete m.topicLinks[t];if(m.agendaDoneTopics)m.agendaDoneTopics=m.agendaDoneTopics.filter(x=>x!==t);save();render()}
+function delT(id,i){const m=S.edital.find(x=>x.id===id);if(!m)return;const t=topicList(m)[i];if(!t)return;m.topics=m.topics.filter(x=>x!==t);m.doneTopics=(m.doneTopics||[]).filter(x=>x!==t);if(m.topicAliases)delete m.topicAliases[t];if(m.topicLinks)delete m.topicLinks[t];save();render()}
 function tgD(id,i){const m=S.edital.find(x=>x.id===id);if(!m)return;const d=m.days||(m.days=[]),k=d.indexOf(i);k<0?d.push(i):d.splice(k,1);d.sort();save();render()}
 function setGoal(id,v){const m=S.edital.find(x=>x.id===id);if(!m)return;m.goal=Math.max(0,parseFloat(String(v).replace(',','.'))||0);save();render()}
 
@@ -603,10 +603,8 @@ function vQ(){return '<div class="top">Questões</div><div class="question-bank-
 function openSh(k){sheet=k;render()}
 function pickD(n,b){dur=n;b.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));b.classList.add('on')}
 function addS(){if(!S.edital.length)return;S.sched.push({id:uid(),date:sheet,subj:$('#ss').value,top:$('#st').value,min:dur,done:0});sheet=null;save();render()}
-function syncAgendaTopicProgress(subj,top){if(!subj||!top)return;const m=S.edital.find(x=>x.name===subj);if(!m||!m.topics.includes(top))return;m.agendaDoneTopics=Array.isArray(m.agendaDoneTopics)?m.agendaDoneTopics:[];const completed=S.sched.some(x=>x.subj===subj&&x.top===top&&Number(x.done)===1),i=m.agendaDoneTopics.indexOf(top);if(completed&&i<0)m.agendaDoneTopics.push(top);else if(!completed&&i>=0)m.agendaDoneTopics.splice(i,1)}
-function rebuildAgendaTopicProgress(){let changed=false;S.edital.forEach(m=>{const completed=new Set(S.sched.filter(x=>x.subj===m.name&&Number(x.done)===1&&x.top).map(x=>x.top)),next=topicList(m).filter(t=>completed.has(t)),previous=Array.isArray(m.agendaDoneTopics)?m.agendaDoneTopics:[];if(JSON.stringify(previous)!==JSON.stringify(next))changed=true;m.agendaDoneTopics=next});return changed}
-function tgS(id){const r=S.sched.find(x=>x.id===id);if(!r)return;r.done=r.done?0:1;syncAgendaTopicProgress(r.subj,r.top);save();render()}
-function delS(id){const r=S.sched.find(x=>x.id===id);S.sched=S.sched.filter(x=>x.id!==id);if(r)syncAgendaTopicProgress(r.subj,r.top);save();render()}
+function tgS(id){const r=S.sched.find(x=>x.id===id);if(!r)return;r.done=r.done?0:1;save();render()}
+function delS(id){S.sched=S.sched.filter(x=>x.id!==id);save();render()}
 function autoFill(){wkDays().forEach((d,i)=>{const k=iso(d);S.edital.forEach(m=>{if((m.days||[]).includes(i)&&!S.sched.some(x=>x.date===k&&x.subj===m.name)){const mn=m.goal?Math.max(15,Math.round(m.goal*60/m.days.length/15)*15):60;S.sched.push({id:uid(),date:k,subj:m.name,top:'',min:mn,done:0})}})});save();render()}
 
 /* ---------- CRONÔMETRO ---------- */
@@ -918,7 +916,6 @@ async function activate(user){
   window.__activeUserId=user.id;
   localStorage.setItem(cacheKey,JSON.stringify(S));
   ready=true;
-  if(rebuildAgendaTopicProgress())save();
   notifyPerformanceDashboard();
   if(queuedState){setCloudStatus('Recuperando alterações...');clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,50)}
   else setCloudStatus('Sincronizado');
