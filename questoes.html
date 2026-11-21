@@ -188,6 +188,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               const id=question.id??question.qid??question.key??question.i??question.n??key;
               if(id===undefined||id===null||String(id).trim()==="")return;
               rawBank[String(id)]=question;
+              if(key!==undefined&&key!==null&&String(key).trim()!==""&&!rawBank[String(key)])rawBank[String(key)]=question;
             }
             if(typeof B!=="undefined"&&Array.isArray(B))B.forEach((question,index)=>addBridgeQuestion(question,index));
             if(typeof Q!=="undefined"&&Q){
