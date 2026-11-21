@@ -236,12 +236,12 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               q.r="";
               textAnswerFixes.push(q.id||key);
             });
-            const noKeyIds=new Set(["m2-06-Difícil-22","triunfo_eear_208"]);
+            const noKeyIds=new Set(["m2-06-Difícil-22","pa2_18","pa2_19","pa2_20","pa2_21","f1-02-Difícil-85","f1-02-Difícil-91","triunfo_eear_208"]);
             noKeyIds.forEach(function(id){
               const q=rawBank[id];if(!q)return;
               q.__eearNoKey=true;q.open=true;q.r="";
               q.text=String(q.prompt||q.text||"");
-              q.answerText="O material de origem não informa o gabarito desta questão.";
+              q.answerText=(id==="f1-02-Difícil-85"||id==="f1-02-Difícil-91")?"A resolução desta questão está disponível em vídeo no curso.":"O material de origem não informa o gabarito desta questão.";
             });
             if(textAnswerFixes.length||noKeyIds.size){
               const originalQuestionCard=card;
