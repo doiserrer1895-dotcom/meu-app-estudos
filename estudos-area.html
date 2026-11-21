@@ -604,6 +604,7 @@ function openSh(k){sheet=k;render()}
 function pickD(n,b){dur=n;b.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));b.classList.add('on')}
 function addS(){if(!S.edital.length)return;S.sched.push({id:uid(),date:sheet,subj:$('#ss').value,top:$('#st').value,min:dur,done:0});sheet=null;save();render()}
 function syncAgendaTopicProgress(subj,top){if(!subj||!top)return;const m=S.edital.find(x=>x.name===subj);if(!m||!m.topics.includes(top))return;m.agendaDoneTopics=Array.isArray(m.agendaDoneTopics)?m.agendaDoneTopics:[];const completed=S.sched.some(x=>x.subj===subj&&x.top===top&&Number(x.done)===1),i=m.agendaDoneTopics.indexOf(top);if(completed&&i<0)m.agendaDoneTopics.push(top);else if(!completed&&i>=0)m.agendaDoneTopics.splice(i,1)}
+function rebuildAgendaTopicProgress(){let changed=false;S.edital.forEach(m=>{const completed=new Set(S.sched.filter(x=>x.subj===m.name&&Number(x.done)===1&&x.top).map(x=>x.top)),next=topicList(m).filter(t=>completed.has(t)),previous=Array.isArray(m.agendaDoneTopics)?m.agendaDoneTopics:[];if(JSON.stringify(previous)!==JSON.stringify(next))changed=true;m.agendaDoneTopics=next});return changed}
 function tgS(id){const r=S.sched.find(x=>x.id===id);if(!r)return;r.done=r.done?0:1;syncAgendaTopicProgress(r.subj,r.top);save();render()}
 function delS(id){const r=S.sched.find(x=>x.id===id);S.sched=S.sched.filter(x=>x.id!==id);if(r)syncAgendaTopicProgress(r.subj,r.top);save();render()}
 function autoFill(){wkDays().forEach((d,i)=>{const k=iso(d);S.edital.forEach(m=>{if((m.days||[]).includes(i)&&!S.sched.some(x=>x.date===k&&x.subj===m.name)){const mn=m.goal?Math.max(15,Math.round(m.goal*60/m.days.length/15)*15):60;S.sched.push({id:uid(),date:k,subj:m.name,top:'',min:mn,done:0})}})});save();render()}
@@ -917,6 +918,7 @@ async function activate(user){
   window.__activeUserId=user.id;
   localStorage.setItem(cacheKey,JSON.stringify(S));
   ready=true;
+  if(rebuildAgendaTopicProgress())save();
   notifyPerformanceDashboard();
   if(queuedState){setCloudStatus('Recuperando alterações...');clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,50)}
   else setCloudStatus('Sincronizado');
