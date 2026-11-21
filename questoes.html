@@ -330,28 +330,28 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
                 const path=question.__eearFilterPath||{};
                 const values=[
                   ["Matéria",firstQuestionValue(question,["d","discipline","subject"])],
-                  ["Dificuldade",firstQuestionValue(question,["difficulty","dificuldade","nivel","nível","level","dif"])],
+                  ["Dificuldade",firstQuestionValue(question,["difficulty","dificuldade","nivel","nível","level","dif","difficulty_level","grau"])],
                   ["Assunto",path.assunto||firstQuestionValue(question,["m","matter","area"])],
                   ["Tópico",path.topico||firstQuestionValue(question,["s","content","topic"])],
                   ["Conteúdo específico",path.conteudo||firstQuestionValue(question,["u","subtopic","detail"])],
-                  ["ID",question.__eearUID]
+                  ["ID sequencial",question.__eearUID]
                 ];
                 panel.replaceChildren();
                 values.forEach(function(entry){
-                  if(!entry[1])return;
                   const item=document.createElement("span");
                   item.className="eear-metadata-item";
                   const label=document.createElement("b");
                   label.textContent=entry[0]+": ";
                   const value=document.createElement("span");
-                  value.textContent=entry[1];
+                  value.textContent=entry[1]||"Não informado";
+                  if(!entry[1])item.classList.add("is-missing");
                   item.append(label,value);
                   panel.appendChild(item);
                 });
               });
             }
             const uidStyle=document.createElement("style");
-            uidStyle.textContent=".eear-question-metadata{display:flex;flex-wrap:wrap;align-items:center;gap:7px 14px;margin:0 0 20px;padding:10px 12px;border:1px solid #414141;border-radius:9px;background:#1c1c1c;color:#ddd;font:12px/1.45 system-ui,Arial,sans-serif}.eear-metadata-item{display:inline-block;max-width:100%;overflow-wrap:anywhere}.eear-metadata-item b{color:#fff;font-weight:800}.eear-metadata-item:last-child{padding:3px 8px;border:1px solid #666;border-radius:6px;background:#292929;color:#fff;font-weight:800}.eear-question-metadata:empty{display:none}";
+            uidStyle.textContent=".eear-question-metadata{display:flex;flex-wrap:wrap;align-items:center;gap:7px 14px;margin:0 0 20px;padding:10px 12px;border:1px solid #414141;border-radius:9px;background:#1c1c1c;color:#ddd;font:12px/1.45 system-ui,Arial,sans-serif}.eear-metadata-item{display:inline-block;max-width:100%;overflow-wrap:anywhere}.eear-metadata-item b{color:#fff;font-weight:800}.eear-metadata-item:last-child{padding:3px 8px;border:1px solid #666;border-radius:6px;background:#292929;color:#fff;font-weight:800}.eear-question-metadata:empty{display:none}.eear-metadata-item.is-missing{opacity:.58}";
             applyQuestionUIDs(document);
             try{new MutationObserver(function(records){records.forEach(function(record){record.addedNodes.forEach(function(node){if(node.nodeType===1){if(node.matches&&node.matches(".card[data-id]"))applyQuestionUIDs(node);applyQuestionUIDs(node)}})})}).observe(document.body,{childList:true,subtree:true})}catch(e){}
             const taxonomy={},hierarchy={};
