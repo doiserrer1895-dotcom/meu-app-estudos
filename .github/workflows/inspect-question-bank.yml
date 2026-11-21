@@ -1,0 +1,25 @@
+name: Inspect existing question bank
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-question-bank.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  decompress:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild existing compressed bank
+        run: |
+          cat banco-questoes/questoes-banco-*.gz > /tmp/bank.gz
+          gzip -t /tmp/bank.gz
+          gzip -dc /tmp/bank.gz > /tmp/bank.html
+          wc -c /tmp/bank.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: existing-question-bank-html
+          path: /tmp/bank.html
+          retention-days: 1
