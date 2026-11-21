@@ -301,7 +301,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               }
             };
             window.__eearUnanswerableAudit=uidBlockedAudit;
-            const uidExpected={"Matemática":1853,"Física":970,"Português":1665,"Inglês":360};
+            const uidExpected={"Matemática":2004,"Física":1095,"Português":1671,"Inglês":480};
             let uidCursor=1;
             const uidRanges={};
             uidSubjectOrder.forEach(function(subject){
@@ -312,7 +312,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             const uidUniqueCount=new Set(uidQuestions.map(item=>item.question.__eearUID)).size;
             const uidExpectedMatch=uidSubjectOrder.every(subject=>uidCounts[subject]===uidExpected[subject]);
             const uidAudit={
-              expectedTotal:4848,
+              expectedTotal:5250,
               totalIdentified:uidSeen.size,
               totalWithUID:uidQuestions.length,
               answerableTotal:uidAnswerable.length,
@@ -327,7 +327,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               ranges:uidRanges,
               firstUID:uidQuestions.length?uidQuestions[0].question.__eearUID:null,
               lastUID:uidQuestions.length?uidQuestions[uidQuestions.length-1].question.__eearUID:null,
-              allQuestionsCovered:uidQuestions.length===uidSeen.size&&uidQuestions.length===4848&&uidExpectedMatch&&uidUniqueCount===uidQuestions.length
+              allQuestionsCovered:uidQuestions.length===uidSeen.size&&uidQuestions.length===5250&&uidExpectedMatch&&uidUniqueCount===uidQuestions.length
             };
             window.__eearUIDAudit=uidAudit;
             console.info("[EEAR] Auditoria de IDs sequenciais:",uidAudit);
