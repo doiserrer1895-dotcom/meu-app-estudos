@@ -20,11 +20,14 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
 #bar{background:rgba(255,255,255,.10);border-radius:99px}
 #retry{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);border-radius:13px}
 
+
+#export-bank{display:none;position:fixed;right:12px;top:12px;z-index:10;padding:9px 13px;border:1px solid #4ade80;border-radius:10px;background:#101810;color:#d1fae5;font:700 12px system-ui;box-shadow:0 4px 18px #0008;cursor:pointer}#export-bank:disabled{opacity:.65;cursor:wait}
 </style>
 </head>
 <body>
 <div id="status"><strong>Preparando o banco completo de questões…</strong><span id="detail">Aguarde enquanto os arquivos são carregados.</span><div id="bar"><i id="progress"></i></div><small>O download inicial pode demorar por causa das imagens originais.</small><button id="retry" type="button">Tentar novamente</button></div>
 <iframe id="bank" title="Banco completo de questões EEAR"></iframe>
+<button id="export-bank" type="button">Exportar banco para edição</button>
 <script>
 (function(){
   "use strict";
@@ -34,6 +37,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
   const progress=document.getElementById("progress");
   const retry=document.getElementById("retry");
   const bank=document.getElementById("bank");
+  const exportBank=document.getElementById("export-bank");
   let activeTheme=(function(){try{return localStorage.getItem("app-theme-evolucao")==="light"?"light":"dark"}catch(e){return "dark"}})();
   function hideInnerThemeControls(doc){
     if(!doc)return;
@@ -87,6 +91,23 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
   function bankCacheKey(){return new URL("__eear_question_bank_cache_v1.html",location.href).href}
   async function readCachedBank(){try{if(window.caches){const cache=await caches.open("eear-question-bank-cache-v1"),response=await cache.match(bankCacheKey());if(response){const blob=await response.blob();if(blob.size>=1000000)return blob}}}catch(e){}const db=await openBankCache();if(!db)return null;return new Promise(function(resolve){try{const request=db.transaction("cache","readonly").objectStore("cache").get("bank-html-v1");request.onsuccess=function(){const blob=request.result instanceof Blob&&request.result.size>=1000000?request.result:null;resolve(blob)};request.onerror=function(){resolve(null)}}catch(e){resolve(null)}finally{db.close()}})}
   async function writeCachedBank(blob){try{if(window.caches){const cache=await caches.open("eear-question-bank-cache-v1");await cache.put(bankCacheKey(),new Response(blob,{headers:{"Content-Type":"text/html;charset=utf-8"}}))}}catch(e){console.warn("Cache API não conseguiu guardar o banco:",e)}const db=await openBankCache();if(!db)return;await new Promise(function(resolve){try{const tx=db.transaction("cache","readwrite");tx.objectStore("cache").put(blob,"bank-html-v1");tx.oncomplete=resolve;tx.onerror=resolve;tx.onabort=resolve}catch(e){resolve()}});db.close()}
+  async function exportCurrentBank(){
+    if(!exportBank)return;
+    exportBank.disabled=true;
+    exportBank.textContent="Preparando arquivo…";
+    try{
+      const blob=await readCachedBank();
+      if(!blob)throw new Error("O banco ainda não está salvo neste dispositivo. Recarregue a página e aguarde o carregamento completo.");
+      const doc=bank.contentDocument;
+      const count=doc?doc.querySelectorAll(".card[data-id]").length:0;
+      const url=URL.createObjectURL(new Blob([await blob.text()],{type:"text/html;charset=utf-8"}));
+      const a=document.createElement("a");a.href=url;a.download="banco-eear-atual-exportado.html";document.body.appendChild(a);a.click();a.remove();
+      setTimeout(function(){URL.revokeObjectURL(url)},60000);
+      exportBank.textContent=count?"Banco exportado ("+count+" questões)":"Banco exportado";
+    }catch(error){alert(error&&error.message?error.message:"Não foi possível exportar o banco.");exportBank.textContent="Exportar banco para edição";}
+    finally{exportBank.disabled=false;}
+  }
+  exportBank.addEventListener("click",exportCurrentBank);
   async function start(){
     retry.style.display="none";
     bank.style.display="none";
@@ -127,6 +148,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
       bank.onload=async function(){
         status.style.display="none";
         bank.style.display="block";
+        exportBank.style.display="block";
         try{
 
           const targetDoc=bank.contentDocument;
