@@ -1,11 +1,15 @@
 PACOTE DO BANCO COMPLETO DE QUESTÕES EEAR
 
 Estrutura dos arquivos:
-- questoes-banco-01.gz até questoes-banco-09.gz: fragmentos consecutivos do mesmo fluxo GZIP original. O carregador deve concatenar os nove arquivos na ordem e descompactar o fluxo uma única vez.
-- questoes-banco-10.gz até questoes-banco-12.gz: pacotes GZIP independentes do complemento de questões. Cada arquivo deve ser descompactado individualmente e anexado ao banco original na ordem.
-- manifest.json e SHA256SUMS.txt: metadados e verificações do pacote original de nove fragmentos (não representam, isoladamente, o complemento 10–12).
+- questoes-banco-01.gz até questoes-banco-09.gz: fragmentos consecutivos do fluxo GZIP original. O carregador concatena os nove arquivos na ordem e descompacta o fluxo uma única vez (4.244 questões).
+- questoes-banco-10.gz: ajuste de compatibilidade do carregador para os pacotes complementares; não acrescenta questões.
+- questoes-banco-11.gz e questoes-banco-12.gz: pacotes GZIP independentes com 402 questões adicionais (202 + 200).
+- questoes-banco-13.gz: pacote GZIP independente com 604 questões do material Triunfo Militar.
+- Total atual: 5.250 questões (Matemática 2.004; Português 1.671; Física 1.095; Inglês 480).
 
-O carregador está em questoes.html na raiz. Ele carrega os nove fragmentos originais em conjunto e depois os três pacotes complementares independentes.
+O carregador está em questoes.html na raiz. Ele carrega os nove fragmentos originais em conjunto e depois os pacotes independentes 10 a 13.
+
+manifest.json registra a composição e as contagens atualizadas. SHA256SUMS.txt contém os hashes dos 13 pacotes e do manifesto.
 
 Não renomeie, edite ou recomprima os arquivos .gz sem atualizar também o carregador e os metadados correspondentes.
 
