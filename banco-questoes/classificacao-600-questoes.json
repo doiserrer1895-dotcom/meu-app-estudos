@@ -1,0 +1,906 @@
+{
+  "title": "Classificação das questões EEAR",
+  "statedTotal": 600,
+  "sumOfDisciplineTotals": 604,
+  "note": "A soma das quantidades informadas por disciplina é 604 (208 + 120 + 125 + 151), embora o material seja apresentado como 600 questões. Não foram removidas nem redistribuídas questões; manter a divergência visível até conferência.",
+  "subjects": [
+    {
+      "name": "Português",
+      "total": 208,
+      "areas": [
+        {
+          "name": "Ortografia",
+          "total": 17,
+          "topics": [
+            [
+              "Acentuação gráfica",
+              10
+            ],
+            [
+              "Grafia e emprego de palavras (parônimos, homônimos, uso de letras)",
+              7
+            ]
+          ]
+        },
+        {
+          "name": "Morfologia",
+          "total": 59,
+          "topics": [
+            [
+              "Pronomes",
+              12
+            ],
+            [
+              "Substantivo (gênero, número, coletivo)",
+              10
+            ],
+            [
+              "Verbos (flexão, modos, tempos, locuções)",
+              9
+            ],
+            [
+              "Adjetivo, locução adjetiva e graus",
+              7
+            ],
+            [
+              "Formação de palavras",
+              6
+            ],
+            [
+              "Advérbio e locução adverbial",
+              5
+            ],
+            [
+              "Vozes verbais",
+              4
+            ],
+            [
+              "Colocação pronominal",
+              3
+            ],
+            [
+              "Classes de palavras (preposição, substantivo, locuções)",
+              1
+            ],
+            [
+              "Orações coordenadas",
+              1
+            ],
+            [
+              "Sujeito e predicado",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Sintaxe",
+          "total": 44,
+          "topics": [
+            [
+              "Orações subordinadas (substantivas, adjetivas, adverbiais)",
+              13
+            ],
+            [
+              "Termos integrantes e acessórios (objeto, complemento, adjunto, aposto, vocativo)",
+              10
+            ],
+            [
+              "Sujeito e predicado",
+              6
+            ],
+            [
+              "Concordância nominal",
+              4
+            ],
+            [
+              "Concordância verbal",
+              4
+            ],
+            [
+              "Orações coordenadas",
+              4
+            ],
+            [
+              "Regência (verbal/nominal)",
+              2
+            ],
+            [
+              "Pronomes relativos e preposições (regência)",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Pontuação",
+          "total": 22,
+          "topics": [
+            [
+              "Emprego da vírgula",
+              16
+            ],
+            [
+              "Pontuação e sentido (justificativa dos sinais)",
+              5
+            ],
+            [
+              "Dois-pontos e outros sinais",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Crase",
+          "total": 12,
+          "topics": [
+            [
+              "Emprego do acento grave (crase)",
+              12
+            ]
+          ]
+        },
+        {
+          "name": "Fonética",
+          "total": 7,
+          "topics": [
+            [
+              "Encontros vocálicos (ditongo, hiato, tritongo)",
+              3
+            ],
+            [
+              "Acentuação gráfica",
+              1
+            ],
+            [
+              "Separação silábica",
+              1
+            ],
+            [
+              "Sílaba tônica (tonicidade)",
+              1
+            ],
+            [
+              "Classificação de vocábulos (sílabas/encontros)",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Tipos de discurso e figuras de linguagem",
+          "total": 15,
+          "topics": [
+            [
+              "Figuras de linguagem (identificação/classificação)",
+              9
+            ],
+            [
+              "Metonímia",
+              3
+            ],
+            [
+              "Metáfora",
+              2
+            ],
+            [
+              "Discurso direto e indireto",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Interpretação de texto",
+          "total": 26,
+          "topics": [
+            [
+              "Interpretação de trecho (sentido da expressão)",
+              3
+            ],
+            [
+              "Inferência e conclusão",
+              2
+            ],
+            [
+              "Compreensão geral do texto",
+              1
+            ],
+            [
+              "Compreensão: experiência do autor",
+              1
+            ],
+            [
+              "Ideia principal e moral do texto",
+              1
+            ],
+            [
+              "Inferência: características do autor",
+              1
+            ],
+            [
+              "Interpretação: informação explícita no texto",
+              1
+            ],
+            [
+              "Interpretação: localização de trecho/evidência",
+              1
+            ],
+            [
+              "Interpretação: relação de causa",
+              1
+            ],
+            [
+              "Interpretação: estrutura e parágrafos",
+              1
+            ],
+            [
+              "Interpretação de texto (geral)",
+              1
+            ],
+            [
+              "Vocabulário: sentido das palavras no contexto",
+              1
+            ],
+            [
+              "Humor e morfologia (tirinha)",
+              1
+            ],
+            [
+              "Morfologia em contexto (classes de palavras)",
+              1
+            ],
+            [
+              "Pronomes",
+              1
+            ],
+            [
+              "Pronomes relativos e período composto",
+              1
+            ],
+            [
+              "Substantivo (palavra substantivada)",
+              1
+            ],
+            [
+              "Vozes verbais",
+              1
+            ],
+            [
+              "Predicativo e ambiguidade",
+              1
+            ],
+            [
+              "Sintaxe: adjunto adnominal/sintagmas",
+              1
+            ],
+            [
+              "Figuras de linguagem (metáfora)",
+              1
+            ],
+            [
+              "Discurso direto e indireto",
+              1
+            ],
+            [
+              "Ortografia/grafia em contexto",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Vocabulário",
+          "total": 6,
+          "topics": [
+            [
+              "Compreensão geral do texto",
+              2
+            ],
+            [
+              "Tema e assunto do texto",
+              1
+            ],
+            [
+              "Interpretação do título",
+              1
+            ],
+            [
+              "Interpretação de trecho (sentido da expressão)",
+              1
+            ],
+            [
+              "Inferência: sentido da frase final",
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Inglês",
+      "total": 120,
+      "areas": [
+        {
+          "name": "Gramática",
+          "total": 93,
+          "topics": [
+            [
+              "Comparativo e superlativo",
+              15
+            ],
+            [
+              "Tempos verbais",
+              12
+            ],
+            [
+              "Classes de palavras (adjetivo, advérbio, substantivo, verbo)",
+              11
+            ],
+            [
+              "Preposições",
+              8
+            ],
+            [
+              "Artigos",
+              6
+            ],
+            [
+              "Pronomes relativos",
+              5
+            ],
+            [
+              "Verbos: gerúndio, infinitivo e imperativo",
+              5
+            ],
+            [
+              "Conectivos e sinônimos",
+              4
+            ],
+            [
+              "Números (cardinais e ordinais)",
+              3
+            ],
+            [
+              "Pronomes pessoais e reflexivos",
+              3
+            ],
+            [
+              "Substantivos (plural e gênero)",
+              3
+            ],
+            [
+              "Verbos modais",
+              3
+            ],
+            [
+              "Adjetivos terminados em -ed / -ing",
+              2
+            ],
+            [
+              "Advérbios",
+              2
+            ],
+            [
+              "Condicionais",
+              2
+            ],
+            [
+              "Make/do e phrasal verbs",
+              2
+            ],
+            [
+              "Pronomes: referência (coesão)",
+              2
+            ],
+            [
+              "Quantificadores (some, any, much, many)",
+              2
+            ],
+            [
+              "Voz passiva",
+              2
+            ],
+            [
+              "Formação de palavras (sufixos)",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Compreensão de textos",
+          "total": 27,
+          "topics": [
+            [
+              "Vocabulário: sinônimos e sentido no contexto",
+              7
+            ],
+            [
+              "Compreensão: informação explícita",
+              6
+            ],
+            [
+              "Inferência",
+              4
+            ],
+            [
+              "Gramática em contexto (completar texto)",
+              3
+            ],
+            [
+              "Compreensão: verdadeiro ou falso",
+              2
+            ],
+            [
+              "Interpretação de tirinha/cartoon",
+              2
+            ],
+            [
+              "Interpretação de frase",
+              1
+            ],
+            [
+              "Números (cardinais e ordinais)",
+              1
+            ],
+            [
+              "Pronomes: referência (coesão)",
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Física",
+      "total": 125,
+      "areas": [
+        {
+          "name": "Conceitos básicos e fundamentais",
+          "total": 9,
+          "topics": [
+            [
+              "Vetores e grandezas vetoriais",
+              6
+            ],
+            [
+              "Unidades, SI e conversão de unidades",
+              3
+            ]
+          ]
+        },
+        {
+          "name": "O movimento, o equilíbrio e suas leis físicas",
+          "total": 31,
+          "topics": [
+            [
+              "Hidrostática (Pascal, Stevin, empuxo, vasos comunicantes)",
+              7
+            ],
+            [
+              "Dinâmica (Leis de Newton, plano inclinado, peso)",
+              6
+            ],
+            [
+              "Estática (equilíbrio de ponto material e de corpo extenso, momento de força)",
+              6
+            ],
+            [
+              "Cinemática (MU, queda livre, gráficos)",
+              3
+            ],
+            [
+              "Movimento circular (MCU, polias, força centrípeta)",
+              3
+            ],
+            [
+              "Lançamento de projéteis",
+              2
+            ],
+            [
+              "Trabalho e potência",
+              2
+            ],
+            [
+              "Calorimetria (calor, mudança de estado)",
+              1
+            ],
+            [
+              "Lei de Hooke (molas)",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Energia, trabalho e potência",
+          "total": 11,
+          "topics": [
+            [
+              "Energia mecânica (cinética, potencial, elástica, conservação)",
+              6
+            ],
+            [
+              "Gravitação universal",
+              5
+            ]
+          ]
+        },
+        {
+          "name": "Fenômenos elétricos e magnéticos",
+          "total": 39,
+          "topics": [
+            [
+              "Associação de resistores e circuitos",
+              5
+            ],
+            [
+              "Campo magnético gerado por corrente e regra da mão direita",
+              5
+            ],
+            [
+              "Eletrodinâmica: conceitos, grandezas e condutores",
+              5
+            ],
+            [
+              "Eletrostática: carga, eletrização e condutores",
+              4
+            ],
+            [
+              "Lei de Coulomb e campo elétrico",
+              3
+            ],
+            [
+              "Leis de Ohm e resistividade",
+              3
+            ],
+            [
+              "Magnetismo: ímãs e substâncias magnéticas",
+              3
+            ],
+            [
+              "Capacitores",
+              2
+            ],
+            [
+              "Fluxo magnético e indução",
+              2
+            ],
+            [
+              "Instrumentos de medida elétrica",
+              2
+            ],
+            [
+              "Leis de Kirchhoff",
+              2
+            ],
+            [
+              "Potência elétrica e efeitos da corrente",
+              2
+            ],
+            [
+              "Força magnética sobre cargas",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Oscilações, ondas e óptica",
+          "total": 25,
+          "topics": [
+            [
+              "Equação fundamental das ondas e tipos de onda",
+              5
+            ],
+            [
+              "Reflexão e refração da luz",
+              5
+            ],
+            [
+              "Espelhos esféricos e lentes esféricas",
+              3
+            ],
+            [
+              "Ondulatória: princípio de Huygens, reflexão e propagação",
+              3
+            ],
+            [
+              "Acústica (qualidades do som, Doppler)",
+              2
+            ],
+            [
+              "Defeitos da visão e lentes",
+              2
+            ],
+            [
+              "Espelhos planos",
+              2
+            ],
+            [
+              "Princípios da óptica geométrica (sombra, eclipses)",
+              2
+            ],
+            [
+              "Prismas",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Calor e fenômenos térmicos",
+          "total": 10,
+          "topics": [
+            [
+              "Calorimetria (calor, mudança de estado)",
+              3
+            ],
+            [
+              "Gases ideais e termodinâmica",
+              3
+            ],
+            [
+              "Calor e energia interna (conceitos)",
+              1
+            ],
+            [
+              "Dilatação térmica",
+              1
+            ],
+            [
+              "Período e frequência (movimento periódico)",
+              1
+            ],
+            [
+              "Termometria (escalas termométricas)",
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Matemática",
+      "total": 151,
+      "areas": [
+        {
+          "name": "Álgebra I (bloco sem título no PDF, nome dado por mim)",
+          "total": 40,
+          "topics": [
+            [
+              "Função exponencial e equações exponenciais",
+              6
+            ],
+            [
+              "Funções: domínio, inversa, composta e valor numérico",
+              5
+            ],
+            [
+              "Logaritmos (propriedades e função logarítmica)",
+              5
+            ],
+            [
+              "Função quadrática",
+              4
+            ],
+            [
+              "Progressão geométrica (PG)",
+              4
+            ],
+            [
+              "Progressão aritmética (PA)",
+              3
+            ],
+            [
+              "Função afim (1º grau)",
+              2
+            ],
+            [
+              "Função modular",
+              2
+            ],
+            [
+              "Inequações (1º e 2º grau)",
+              2
+            ],
+            [
+              "Equações do 1º grau e problemas (idades)",
+              1
+            ],
+            [
+              "Equações polinomiais e relações de Girard",
+              1
+            ],
+            [
+              "Geometria analítica",
+              1
+            ],
+            [
+              "Matrizes e determinantes",
+              1
+            ],
+            [
+              "Números complexos",
+              1
+            ],
+            [
+              "Sequências",
+              1
+            ],
+            [
+              "Trigonometria: inequação/arcos no ciclo",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Geometria plana",
+          "total": 25,
+          "topics": [
+            [
+              "Triângulos (existência, retângulo, isósceles, semelhança)",
+              9
+            ],
+            [
+              "Áreas de figuras planas",
+              7
+            ],
+            [
+              "Circunferência e ângulos (potência de ponto, ângulo inscrito)",
+              2
+            ],
+            [
+              "Geometria analítica",
+              2
+            ],
+            [
+              "Polígonos regulares",
+              2
+            ],
+            [
+              "Pirâmide (planificação/volume)",
+              1
+            ],
+            [
+              "Quadriláteros notáveis",
+              1
+            ],
+            [
+              "Ângulos (complemento e suplemento)",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Trigonometria",
+          "total": 16,
+          "topics": [
+            [
+              "Redução ao 1º quadrante e arcos côngruos",
+              4
+            ],
+            [
+              "Equações e inequações trigonométricas",
+              3
+            ],
+            [
+              "Funções seno/cosseno e quadrantes",
+              3
+            ],
+            [
+              "Medidas de arcos e conversão grau-radiano",
+              3
+            ],
+            [
+              "Relações e fórmulas trigonométricas (adição de arcos)",
+              2
+            ],
+            [
+              "Trigonometria no triângulo retângulo",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Álgebra II",
+          "total": 19,
+          "topics": [
+            [
+              "Análise combinatória",
+              6
+            ],
+            [
+              "Matrizes e determinantes",
+              6
+            ],
+            [
+              "Probabilidade",
+              6
+            ],
+            [
+              "Equações do 1º grau e problemas (idades)",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Estatística",
+          "total": 7,
+          "topics": [
+            [
+              "Medidas de tendência central (média, mediana, moda)",
+              4
+            ],
+            [
+              "Porcentagem, proporção e gráficos (setores, tabelas)",
+              3
+            ]
+          ]
+        },
+        {
+          "name": "Geometria espacial",
+          "total": 15,
+          "topics": [
+            [
+              "Esfera (volume e área)",
+              5
+            ],
+            [
+              "Cone (volume, geratriz, setor)",
+              3
+            ],
+            [
+              "Pirâmide (volume e altura)",
+              3
+            ],
+            [
+              "Cilindro (área e volume)",
+              2
+            ],
+            [
+              "Poliedros (relação de Euler)",
+              1
+            ],
+            [
+              "Prisma (volume)",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Geometria analítica",
+          "total": 14,
+          "topics": [
+            [
+              "Retas: equação, posição relativa e colinearidade",
+              6
+            ],
+            [
+              "Distância entre pontos, ponto médio e baricentro",
+              5
+            ],
+            [
+              "Circunferência (equação e posição relativa)",
+              3
+            ]
+          ]
+        },
+        {
+          "name": "Álgebra (polinômios, complexos, equações)",
+          "total": 15,
+          "topics": [
+            [
+              "Números complexos",
+              8
+            ],
+            [
+              "Equações polinomiais e relações de Girard",
+              3
+            ],
+            [
+              "Polinômios (grau, divisão, identidade)",
+              3
+            ],
+            [
+              "Funções polinomiais do 1º grau (interseção de gráficos)",
+              1
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}
