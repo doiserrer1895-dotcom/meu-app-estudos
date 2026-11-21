@@ -215,18 +215,18 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               const raw=[question.m||question.matter||question.area,question.s||question.content||question.topic,question.u||question.subtopic||question.detail].map(cleanLabel);
               const path=[];
               raw.forEach(function(value){if(!value)return;const n=normLabel(value);if(!path.length||normLabel(path[path.length-1])!==n)path.push(value)});
-              const topic=path[0]||"";
-              const content=path[1]||"";
-              const specific=path[2]||"";
-              question.__eearFilterPath={subject:d,topic:topic,content:content,specific:specific};
-              if(!topic)return;
+              const assunto=path[0]||"";
+              const topico=path[1]||"";
+              const conteudo=path[2]||"";
+              question.__eearFilterPath={subject:d,assunto:assunto,topico:topico,conteudo:conteudo};
+              if(!assunto)return;
               if(!taxonomy[d])taxonomy[d]=[];
-              if(!taxonomy[d].includes(topic))taxonomy[d].push(topic);
+              if(!taxonomy[d].includes(assunto))taxonomy[d].push(assunto);
               if(!hierarchy[d])hierarchy[d]={};
-              if(!hierarchy[d][topic])hierarchy[d][topic]={};
-              if(content){
-                if(!hierarchy[d][topic][content])hierarchy[d][topic][content]=[];
-                if(specific&&!hierarchy[d][topic][content].includes(specific))hierarchy[d][topic][content].push(specific);
+              if(!hierarchy[d][assunto])hierarchy[d][assunto]={};
+              if(topico){
+                if(!hierarchy[d][assunto][topico])hierarchy[d][assunto][topico]=[];
+                if(conteudo&&!hierarchy[d][assunto][topico].includes(conteudo))hierarchy[d][assunto][topico].push(conteudo);
               }
             });
             subjectOrder.forEach(function(subject){if(taxonomy[subject])taxonomy[subject].sort((a,b)=>a.localeCompare(b,"pt-BR"))});
@@ -235,7 +235,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             function sortTree(o){Object.keys(o).forEach(k=>Array.isArray(o[k])?o[k].sort((a,b)=>a.localeCompare(b,"pt-BR")):sortTree(o[k]))}
             Object.keys(taxonomy).forEach(n=>taxonomy[n].sort((a,b)=>a.localeCompare(b,"pt-BR")));sortTree(hierarchy);
             window.parent.postMessage({type:"eear-question-taxonomy",taxonomy:taxonomy},"*");window.parent.postMessage({type:"eear-question-taxonomy-full",hierarchy:hierarchy},"*");
-            function applyLinkedFilter(f){document.querySelectorAll(".card[data-id]").forEach(card=>{const q=rawBank[card.dataset.id]||{},path=q.__eearFilterPath||{},norm=v=>String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").trim().toLowerCase(),fields=[path.subject,path.topic,path.content,path.specific],wanted=[f.subject,f.matter,f.content,f.specific].map(norm);card.style.display=wanted.every((v,i)=>!v||norm(fields[i])===v)?"":"none"})}
+            function applyLinkedFilter(f){document.querySelectorAll(".card[data-id]").forEach(card=>{const q=rawBank[card.dataset.id]||{},path=q.__eearFilterPath||{},norm=v=>String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").trim().toLowerCase(),fields=[path.subject,path.assunto,path.topico,path.conteudo],wanted=[f.subject,f.matter,f.content,f.specific].map(norm);card.style.display=wanted.every((v,i)=>!v||norm(fields[i])===v)?"":"none"})}
             window.addEventListener("message",ev=>{if(ev.data&&ev.data.type==="app-question-filter"){window.__appQuestionFilter=ev.data.filter||{};applyLinkedFilter(window.__appQuestionFilter)}});
             try{new MutationObserver(()=>{if(window.__appQuestionFilter)applyLinkedFilter(window.__appQuestionFilter)}).observe(document.body,{childList:true,subtree:true})}catch(e){}
             document.addEventListener("click",function(event){
