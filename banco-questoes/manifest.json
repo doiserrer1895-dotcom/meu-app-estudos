@@ -58,21 +58,25 @@
       "bytes": 6626104,
       "active": false,
       "duplicate_legacy": true,
-      "questions": 604
+      "questions": 202,
+      "legacy_duplicate": true,
+      "role": "compatibility-script-only"
     },
     {
       "file": "questoes-banco-11.gz",
       "bytes": 7344742,
-      "questions": 604,
+      "questions": 202,
       "active": false,
-      "duplicate_legacy": true
+      "duplicate_legacy": true,
+      "legacy_duplicate": true
     },
     {
       "file": "questoes-banco-12.gz",
       "bytes": 3560999,
-      "questions": 604,
+      "questions": 200,
       "active": false,
-      "duplicate_legacy": true
+      "duplicate_legacy": true,
+      "legacy_duplicate": true
     },
     {
       "file": "questoes-banco-13.gz",
@@ -90,7 +94,7 @@
       "Inglês": 240
     },
     "main_embedded_images": 3324,
-    "matters": 74,
+    "matters": 61,
     "levels": {
       "Fácil": 1626,
       "Médio": 2600,
@@ -104,23 +108,17 @@
       "Física": 125,
       "Inglês": 120
     },
+    "appended_source_questions_without_answer_key": 1,
     "total_including_appended_source": 4848,
-    "additional_questions": 402,
-    "additional_question_packages": {
-      "questoes-banco-11.gz": 202,
-      "questoes-banco-12.gz": 200
-    },
     "total_questions": 4848,
-    "main_plus_additional_402": 4646,
     "total_by_subject": {
       "Matemática": 1853,
       "Português": 1665,
       "Física": 970,
       "Inglês": 360
     },
-    "appended_source_questions_without_answer_key": 1,
-    "discursive_answers_reclassified": 160,
-    "legacy_duplicate_records_excluded": 604
+    "legacy_duplicate_records_excluded": 604,
+    "discursive_records_reclassified": 160
   },
   "official_exams": {
     "CFS 1/2023": 96,
@@ -130,7 +128,7 @@
     "Simulado estilo A · 2021.1": 96,
     "Simulado estilo B · 2021.2": 96
   },
-  "all_raster_image_references": 4330,
+  "all_raster_image_references": 3928,
   "all_raster_images_validated": true,
   "image_payloads_losslessly_preserved": true,
   "question_attempt_bridge": [
