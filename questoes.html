@@ -313,47 +313,44 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               }
               return "";
             }
+            const uidAliasMap=new Map();
+            Object.keys(rawBank).forEach(function(key){
+              const q=rawBank[key];if(!q||typeof q!=="object")return;
+              [key,q.id,q.qid,q.key,q.i,q.n].forEach(function(alias){
+                if(alias!==undefined&&alias!==null&&String(alias).trim()!=="")uidAliasMap.set(String(alias),q);
+              });
+            });
             function applyQuestionUIDs(root){
               const scope=root&&root.querySelectorAll?root:document;
               const cards=[];
-              if(scope.matches&&scope.matches(".card[data-id]"))cards.push(scope);
-              scope.querySelectorAll(".card[data-id]").forEach(card=>cards.push(card));
+              if(scope.matches&&scope.matches(".card"))cards.push(scope);
+              scope.querySelectorAll(".card").forEach(card=>cards.push(card));
               cards.forEach(function(card){
-                const question=rawBank[card.dataset.id];
-                if(!question||!question.__eearUID)return;
-                let panel=card.querySelector(".eear-question-metadata");
-                if(!panel){
-                  panel=document.createElement("div");
-                  panel.className="eear-question-metadata";
-                  card.insertBefore(panel,card.firstChild);
+                const key=card.dataset.id||card.dataset.qid||card.dataset.questionId||card.getAttribute("data-question-id")||card.id||"";
+                const question=rawBank[String(key)]||uidAliasMap.get(String(key));
+                const uid=question&&question.__eearUID;
+                let label=card.querySelector(":scope > .eear-question-uid");
+                if(!label){
+                  label=document.createElement("div");
+                  label.className="eear-question-uid";
+                  card.insertBefore(label,card.firstChild);
                 }
-                const path=question.__eearFilterPath||{};
-                const values=[
-                  ["Matéria",firstQuestionValue(question,["d","discipline","subject"])],
-                  ["Dificuldade",firstQuestionValue(question,["difficulty","dificuldade","nivel","nível","level","dif","difficulty_level","grau"])],
-                  ["Assunto",path.assunto||firstQuestionValue(question,["m","matter","area"])],
-                  ["Tópico",path.topico||firstQuestionValue(question,["s","content","topic"])],
-                  ["Conteúdo específico",path.conteudo||firstQuestionValue(question,["u","subtopic","detail"])],
-                  ["ID sequencial",question.__eearUID]
-                ];
-                panel.replaceChildren();
-                values.forEach(function(entry){
-                  const item=document.createElement("span");
-                  item.className="eear-metadata-item";
-                  const label=document.createElement("b");
-                  label.textContent=entry[0]+": ";
-                  const value=document.createElement("span");
-                  value.textContent=entry[1]||"Não informado";
-                  if(!entry[1])item.classList.add("is-missing");
-                  item.append(label,value);
-                  panel.appendChild(item);
-                });
+                label.textContent=uid?"ID "+uid:(key?"ID "+String(key):"ID indisponível");
+                label.setAttribute("aria-label",label.textContent);
               });
             }
             const uidStyle=document.createElement("style");
-            uidStyle.textContent=".eear-question-metadata{display:flex;flex-wrap:wrap;align-items:center;gap:7px 14px;margin:0 0 20px;padding:10px 12px;border:1px solid #414141;border-radius:9px;background:#1c1c1c;color:#ddd;font:12px/1.45 system-ui,Arial,sans-serif}.eear-metadata-item{display:inline-block;max-width:100%;overflow-wrap:anywhere}.eear-metadata-item b{color:#fff;font-weight:800}.eear-metadata-item:last-child{padding:3px 8px;border:1px solid #666;border-radius:6px;background:#292929;color:#fff;font-weight:800}.eear-question-metadata:empty{display:none}.eear-metadata-item.is-missing{opacity:.58}";
+            uidStyle.textContent=".eear-question-uid{display:inline-flex!important;align-items:center;margin:0 0 14px;padding:5px 10px;border:1px solid #777;border-radius:7px;background:#252525;color:#fff;font:800 12px/1.2 system-ui,Arial,sans-serif;letter-spacing:.04em;position:relative;z-index:1}.card .eear-question-uid{visibility:visible!important;opacity:1!important}";
+            document.head.appendChild(uidStyle);
             applyQuestionUIDs(document);
-            try{new MutationObserver(function(records){records.forEach(function(record){if(record.type==="attributes"){applyQuestionUIDs(record.target);return}record.addedNodes.forEach(function(node){if(node.nodeType===1){applyQuestionUIDs(node)}})});applyQuestionUIDs(document)}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:["data-id"]})}catch(e){}
+            try{
+              new MutationObserver(function(records){
+                records.forEach(function(record){
+                  if(record.type==="attributes"){applyQuestionUIDs(record.target);return}
+                  record.addedNodes.forEach(function(node){if(node.nodeType===1)applyQuestionUIDs(node)});
+                });
+              }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:["data-id","data-qid","data-question-id","id"]});
+            }catch(e){}
             const taxonomy={},hierarchy={};
             function cleanLabel(value){return String(value||"").replace(/<[^>]*>/g," ").replace(/\\s+/g," ").trim()}
             function normLabel(value){return cleanLabel(value).normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase()}
