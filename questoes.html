@@ -202,21 +202,51 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             // UID sequencial único por questão, agrupado por disciplina.
             // O identificador interno original permanece intacto para respostas e estatísticas.
             const uidSubjectOrder=["Matemática","Física","Português","Inglês"];
-            const uidSeen=new Set(),uidQuestions=[];
+            const uidCounts={"Matemática":0,"Física":0,"Português":0,"Inglês":0};
+            const uidSeen=new Set(),uidQuestions=[],uidUnclassified=[];
             Object.keys(rawBank).forEach(function(key){
               const question=rawBank[key];
               if(!question||typeof question!=="object"||uidSeen.has(question))return;
               uidSeen.add(question);
-              const subject=canonicalSubject(question.d||question.discipline||question.subject||"");
+              const rawSubject=question.d||question.discipline||question.subject||"";
+              const subject=canonicalSubject(rawSubject);
               const order=uidSubjectOrder.indexOf(subject);
-              if(order<0)return;
+              if(order<0){
+                if(rawSubject)uidUnclassified.push({key:String(key),subject:String(rawSubject)});
+                return;
+              }
               uidQuestions.push({question:question,subject:subject,order:order,sequence:uidQuestions.length});
             });
             uidQuestions.sort((a,b)=>a.order-b.order||a.sequence-b.sequence);
             uidQuestions.forEach(function(item,index){
               item.question.__eearUID=String(index+1).padStart(4,"0");
               item.question.__eearUIDLabel="#ID "+item.question.__eearUID;
+              uidCounts[item.subject]++;
             });
+            const uidAudit={
+              totalIdentified:uidSeen.size,
+              totalWithUID:uidQuestions.length,
+              withoutUID:uidSeen.size-uidQuestions.length,
+              unclassified:uidUnclassified,
+              bySubject:uidCounts,
+              firstUID:uidQuestions.length?uidQuestions[0].question.__eearUID:null,
+              lastUID:uidQuestions.length?uidQuestions[uidQuestions.length-1].question.__eearUID:null
+            };
+            window.__eearUIDAudit=uidAudit;
+            console.info("[EEAR] Auditoria de IDs sequenciais:",uidAudit);
+            const uidAuditBox=document.createElement("section");
+            uidAuditBox.className="eear-uid-audit";
+            uidAuditBox.innerHTML="<strong>Identificação das questões</strong><span class='eear-uid-audit-count'></span><span class='eear-uid-audit-subjects'></span>";
+            uidAuditBox.querySelector(".eear-uid-audit-count").textContent=uidAudit.totalWithUID+" de "+uidAudit.totalIdentified+" questões com ID";
+            uidAuditBox.querySelector(".eear-uid-audit-subjects").textContent=uidSubjectOrder.map(function(subject){return subject+": "+uidCounts[subject]}).join("  •  ");
+            if(uidAudit.withoutUID){
+              uidAuditBox.classList.add("has-errors");
+              uidAuditBox.querySelector(".eear-uid-audit-count").textContent+=" — "+uidAudit.withoutUID+" sem ID; confira a classificação da disciplina.";
+            }
+            document.body.insertBefore(uidAuditBox,document.body.firstChild);
+            const uidAuditStyle=document.createElement("style");
+            uidAuditStyle.textContent=".eear-uid-audit{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:0 0 20px;padding:12px 14px;border:1px solid #444;border-radius:10px;background:#151515;color:#f5f5f5;font:12px/1.5 system-ui,Arial,sans-serif}.eear-uid-audit strong{font-size:13px}.eear-uid-audit-count{font-weight:700}.eear-uid-audit-subjects{width:100%;color:#bbb}.eear-uid-audit.has-errors{border-color:#b7791f;background:#241b0d}";
+            document.head.appendChild(uidAuditStyle);
             function applyQuestionUIDs(root){
               const scope=root&&root.querySelectorAll?root:document;
               const cards=[];
@@ -244,8 +274,8 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               const n=normLabel(value).replace(/[._-]+/g," ").replace(/\\s+/g," ").trim();
               if(/^matematica(?:\\s*[123])?$/.test(n))return "Matemática";
               if(/^fisica(?:\\s*[123])?$/.test(n))return "Física";
-              if(/^portugues$/.test(n))return "Português";
-              if(/^ingles$/.test(n))return "Inglês";
+              if(/^portugues(?:\\s*[123])?$/.test(n))return "Português";
+              if(/^ingles(?:\\s*[123])?$/.test(n))return "Inglês";
               return "";
             }
             const subjectOrder=["Matemática","Português","Física","Inglês"];
