@@ -317,24 +317,33 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               }
               return "";
             }
-            const uidAliasMap=new Map();
+            const uidAliasMap=new Map(),uidNumericAliasMap=new Map();
+            function uidNormalizeAlias(value){
+              return String(value==null?"":value).trim().toLowerCase().replace(/^(?:bank|questao|question|q)[_-]?/,"");
+            }
             Object.keys(rawBank).forEach(function(key){
               const q=rawBank[key];if(!q||typeof q!=="object")return;
               [key,q.id,q.qid,q.key,q.i,q.n].forEach(function(alias){
-                if(alias!==undefined&&alias!==null&&String(alias).trim()!=="")uidAliasMap.set(String(alias),q);
+                if(alias===undefined||alias===null||String(alias).trim()==="")return;
+                const exact=String(alias),normalized=uidNormalizeAlias(exact);
+                if(!uidAliasMap.has(exact))uidAliasMap.set(exact,q);
+                if(normalized&&!uidAliasMap.has(normalized))uidAliasMap.set(normalized,q);
+                const digits=normalized.match(/\d+$/);
+                if(digits&&!uidNumericAliasMap.has(digits[0]))uidNumericAliasMap.set(digits[0],q);
               });
             });
             function applyQuestionUIDs(root){
               const scope=root&&root.querySelectorAll?root:document;
               const cards=[];
-              if(scope.matches&&scope.matches(".card[data-id]"))cards.push(scope);
-              scope.querySelectorAll(".card[data-id]").forEach(card=>cards.push(card));
+              if(scope.matches&&scope.matches(".card"))cards.push(scope);
+              scope.querySelectorAll(".card").forEach(card=>cards.push(card));
               let mapped=0;
               cards.forEach(function(card){
-                const key=String(card.getAttribute("data-id")||"");
-                const question=rawBank[key]||uidAliasMap.get(key);
-                const uid=question&&question.__eearUID;
+                const key=String(card.getAttribute("data-id")||card.getAttribute("data-qid")||card.getAttribute("data-question-id")||"");
+                const normalized=uidNormalizeAlias(key),digits=normalized.match(/\d+$/);
+                const question=rawBank[key]||uidAliasMap.get(key)||uidAliasMap.get(normalized)||(digits&&uidNumericAliasMap.get(digits[0]));
                 let label=card.querySelector(":scope > .eear-question-uid");
+                const uid=question&&question.__eearUID;
                 if(!uid){
                   if(label)label.remove();
                   return;
@@ -346,10 +355,10 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
                   card.insertBefore(label,card.firstChild);
                 }
                 label.textContent="ID #"+uid;
-                label.style.display="inline-flex";
+                label.style.cssText="display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center;margin:0 0 14px;padding:5px 10px;border:1px solid #777;border-radius:7px;background:#252525;color:#fff;font:800 12px/1.2 system-ui,Arial,sans-serif;letter-spacing:.04em;position:relative;z-index:5";
                 label.setAttribute("aria-label","ID #"+uid);
               });
-              window.__eearUIDCardAudit={cardsFound:document.querySelectorAll(".card[data-id]").length,cardsMapped:mapped,questionsWithUID:uidQuestions.length};
+              window.__eearUIDCardAudit={cardsFound:document.querySelectorAll(".card").length,cardsMapped:mapped,questionsWithUID:uidQuestions.length};
             }
             const uidStyle=document.createElement("style");
             uidStyle.textContent=".eear-question-uid{display:inline-flex!important;align-items:center;margin:0 0 14px;padding:5px 10px;border:1px solid #777;border-radius:7px;background:#252525;color:#fff;font:800 12px/1.2 system-ui,Arial,sans-serif;letter-spacing:.04em;position:relative;z-index:1}.card .eear-question-uid{visibility:visible!important;opacity:1!important}";
