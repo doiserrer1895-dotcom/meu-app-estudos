@@ -24,7 +24,7 @@ Base: pacotes GZIP 01 a 13, descompactados e conferidos com o carregador do apli
 - A versão consolidada foi usada para conferir os gabaritos da importação antiga. A questão 56 de Português, que estava sem alternativa em uma cópia antiga, já possui gabarito D na versão consolidada; a versão ativa com maior resolução também possui D.
 - A questão 208 de Português permanece sem gabarito: o material de origem não apresenta resposta para ela. O aplicativo sinaliza “Gabarito indisponível”, sem inventar alternativa.
 - Os registros principais com resposta textual preservada no campo de solução e sem alternativa (160 casos) foram reclassificados como resposta aberta para exibir a solução textual em vez de tratar “R” ou campo vazio como alternativa.
-- Os itens pa2_18 a pa2_21 e m2-06-Difícil-22 são sinalizados como sem gabarito, em vez de mostrar “Sem Resposta” ou “Resposta não informada” como se fosse solução. As questões f1-02-Difícil-85 e f1-02-Difícil-91 informam que a resolução está em vídeo no curso. A questão pa1_24 mantém “Demonstração” como resposta aberta.
+- Os itens pa1_39, pa2_18 a pa2_21 e m2-06-Difícil-22 são sinalizados como sem gabarito, em vez de mostrar “Sem Resposta” ou “Resposta não informada” como se fosse solução. As questões f1-02-Difícil-85 e f1-02-Difícil-91 informam que a resolução está em vídeo no curso. A questão pa1_24 mantém “Demonstração” como resposta aberta.
 - Não foram alteradas outras alternativas sem fonte confiável para confirmar a correção.
 
 4. IMAGENS
