@@ -1,15 +1,14 @@
 PACOTE DO BANCO COMPLETO DE QUESTÕES EEAR
 
 Estrutura dos arquivos:
-- questoes-banco-01.gz até questoes-banco-09.gz: fragmentos consecutivos do fluxo GZIP original. O carregador concatena os nove arquivos na ordem e descompacta o fluxo uma única vez (4.244 questões).
-- questoes-banco-10.gz: ajuste de compatibilidade do carregador para os pacotes complementares; não acrescenta questões.
-- questoes-banco-11.gz e questoes-banco-12.gz: pacotes GZIP independentes com 402 questões adicionais (202 + 200).
-- questoes-banco-13.gz: pacote GZIP independente com 604 questões do material Triunfo Militar.
-- Total atual: 5.250 questões (Matemática 2.004; Português 1.671; Física 1.095; Inglês 480).
+- questoes-banco-01.gz até questoes-banco-09.gz: fragmentos consecutivos do fluxo GZIP original, que formam as 4.244 questões principais.
+- questoes-banco-10.gz até questoes-banco-12.gz: importação antiga das questões Triunfo Militar. Esses três arquivos contêm 604 registros legados que foram substituídos pela versão consolidada do pacote 13. Não são adicionados ao banco atual para evitar duplicação. O carregador mantém somente o trecho de compatibilidade do pacote 10 e ignora os registros antigos dos pacotes 10, 11 e 12.
+- questoes-banco-13.gz: versão consolidada das 604 questões Triunfo Militar, carregada no banco atual.
+- Total ativo: 4.848 questões (Matemática 1.853; Português 1.665; Física 970; Inglês 360).
 
-O carregador está em questoes.html na raiz. Ele carrega os nove fragmentos originais em conjunto e depois os pacotes independentes 10 a 13.
+O carregador está em questoes.html na raiz. Ele concatena e descompacta os nove fragmentos originais, aplica o trecho de compatibilidade do pacote 10 sem importar os registros legados e carrega o pacote 13 uma única vez.
 
-manifest.json registra a composição e as contagens atualizadas. SHA256SUMS.txt contém os hashes SHA-256 dos 13 pacotes GZIP.
+manifest.json registra a composição ativa e identifica os pacotes legados. SHA256SUMS.txt contém os hashes dos arquivos GZIP.
 
 Não renomeie, edite ou recomprima os arquivos .gz sem atualizar também o carregador e os metadados correspondentes.
 
