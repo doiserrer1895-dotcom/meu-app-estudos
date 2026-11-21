@@ -303,7 +303,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               const range=uidRanges[subject];
               const line=document.createElement("span");
               line.className="eear-uid-summary-line";
-              line.textContent=subject+": "+(range?"#"+range.first+" até #"+range.last+" ("+uidCounts[subject].toLocaleString("pt-BR")+")":"sem questões");
+              line.textContent=subject+": "+(range?"ID #"+range.first+" até ID #"+range.last:"sem questões");
               uidSummary.appendChild(line);
             });
             document.body.insertBefore(uidSummary,document.body.firstChild);
@@ -330,10 +330,16 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               if(scope.matches&&scope.matches(".card"))cards.push(scope);
               scope.querySelectorAll(".card").forEach(card=>cards.push(card));
               cards.forEach(function(card){
+                // IDs pertencem exclusivamente ao Banco de Questões, nunca a provas ou simulados.
+                let label=card.querySelector(":scope > .eear-question-uid");
+                const isExamOrSimulation=!!card.closest("[data-exam-q],[data-sim-q],[data-exam-answer],[data-sim-answer]");
+                if(isExamOrSimulation){
+                  if(label)label.remove();
+                  return;
+                }
                 const key=card.dataset.id||card.dataset.qid||card.dataset.questionId||card.getAttribute("data-question-id")||card.id||"";
                 const question=rawBank[String(key)]||uidAliasMap.get(String(key));
                 const uid=question&&question.__eearUID;
-                let label=card.querySelector(":scope > .eear-question-uid");
                 if(!label){
                   label=document.createElement("div");
                   label.className="eear-question-uid";
