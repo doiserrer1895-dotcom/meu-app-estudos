@@ -540,7 +540,7 @@ function ldiCard(m){const s=mStat(m),o=open[m.id],dy=m.days||[],es=S.entries.fil
  <select id="bl_subject_${m.id}" onchange="refreshBankLinkFields('${m.id}')"><option value="">Disciplina</option>${opts(bankSubjects(),'')}</select>
  <select id="bl_matter_${m.id}" onchange="refreshBankLinkFields('${m.id}')" style="margin-top:7px"><option value="">Assunto</option></select>
  <select id="bl_content_${m.id}" onchange="refreshBankLinkFields('${m.id}')" style="margin-top:7px"><option value="">Conteúdo</option></select>
- <select id="bl_specific_${m.id}" onchange="previewBankLink('${m.id}')" style="margin-top:7px"><option value="">Conteúdo específico</option></select>
+ <select id="bl_specific_${m.id}" onchange="previewBankLink('${m.id}')" style="margin-top:7px"><option value="">4. Conteúdo</option></select>
  <div id="bl_preview_${m.id}" class="bank-link-preview"><strong>Vínculo com o banco de questões</strong>Selecione a disciplina e o tópico para visualizar o caminho.</div>
  <button id="bl_add_${m.id}" class="btn" style="width:100%;margin-top:8px" onclick="addT('${m.id}')">Adicionar vínculo</button>
  <div id="bl_links_${m.id}" style="margin-top:8px">${renderTopicLinks(m)}</div>
