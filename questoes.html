@@ -214,7 +214,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
                 const picked=(typeof ans!=="undefined"&&ans[id])||bankAnswer.dataset.a;
                 if(!question||question.open||!question.r||question.r==="ANULADA")return;
                 const accepted=question.legacy_d==="Física 2"?[question.r,question.r2].filter(Boolean):[question.r];
-                emit("banco",id,question.d,question.u||question.s||question.m,picked,accepted.includes(picked));
+                emit("banco",id,question.d||question.discipline||question.subject,question.u||question.subtopic||question.s||question.content||question.m||question.matter,picked,accepted.includes(picked));
                 return;
               }
               const examAnswer=event.target.closest&&event.target.closest("[data-exam-answer]");
