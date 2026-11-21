@@ -121,12 +121,13 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
         if(typeof DecompressionStream==="undefined")throw new Error("Este navegador não oferece suporte à descompactação necessária. Atualize o Chrome ou Edge.");
         const parts=[];
         const BATCH=3;
-        // Os arquivos 01–09 são fragmentos consecutivos de UM único fluxo GZIP.
-        // Portanto, precisam ser concatenados antes de descompactar.
+        // Exibição unificada: arquivos 1 a 12. Os nove primeiros são
+        // fragmentos do mesmo GZIP e precisam ser unidos antes de descompactar.
         const legacyChunks=[];
+        let loadedFiles=0;
         for(let start=1;start<=9;start+=BATCH){
           const end=Math.min(start+BATCH-1,9);
-          detail.textContent="Carregando banco original ("+start+"–"+end+" de 9)…";
+          detail.textContent="Carregando banco de questões ("+(loadedFiles+1)+" a "+end+" de "+TOTAL+")…";
           const batch=await Promise.all(Array.from({length:end-start+1},async function(_,offset){
             const i=start+offset,name="questoes-banco-"+String(i).padStart(2,"0")+".gz";
             const response=await fetch("banco-questoes/"+name,{cache:"no-store"});
@@ -134,27 +135,28 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             return new Uint8Array(await response.arrayBuffer());
           }));
           legacyChunks.push.apply(legacyChunks,batch);
-          progress.style.width=(end/TOTAL*100)+"%";
+          loadedFiles=end;
+          progress.style.width=(loadedFiles/TOTAL*100)+"%";
         }
         const legacySize=legacyChunks.reduce((sum,chunk)=>sum+chunk.byteLength,0);
         const legacyStream=new Uint8Array(legacySize);
         let legacyOffset=0;
         legacyChunks.forEach(function(chunk){legacyStream.set(chunk,legacyOffset);legacyOffset+=chunk.byteLength});
-        detail.textContent="Descompactando banco original de 4.244 questões…";
+        detail.textContent="Descompactando os arquivos 1 a 9…";
         const legacyDecoded=await new Response(new Blob([legacyStream]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
         parts.push(legacyDecoded);
-        // Os arquivos 10–12 são pacotes GZIP independentes, descompactados um a um.
+        // Os arquivos 10–12 são pacotes GZIP independentes, na mesma sequência visual.
         for(let fileNumber=10;fileNumber<=TOTAL;fileNumber++){
           const name="questoes-banco-"+String(fileNumber).padStart(2,"0")+".gz";
-          detail.textContent="Carregando complemento de questões ("+(fileNumber-9)+" de 3)…";
+          detail.textContent="Carregando banco de questões ("+fileNumber+" de "+TOTAL+")…";
           const response=await fetch("banco-questoes/"+name,{cache:"no-store"});
           if(!response.ok)throw new Error("Não foi possível carregar "+name+" (HTTP "+response.status+").");
           const compressed=new Uint8Array(await response.arrayBuffer());
           const decoded=await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
-          // Os blocos 11 e 12 foram exportados como Q.push sem a tag <script> inicial.
           const normalized=fileNumber>=11&&/^\s*Q\.push\s*\(/.test(decoded)?"<script>\n"+decoded:decoded;
           parts.push(normalized);
-          progress.style.width=(fileNumber/TOTAL*100)+"%";
+          loadedFiles=fileNumber;
+          progress.style.width=(loadedFiles/TOTAL*100)+"%";
         }
         blob=new Blob(parts,{type:"text/html;charset=utf-8"});
         if(blob.size<1000000)throw new Error("O banco descompactado parece incompleto.");
@@ -197,6 +199,41 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             }
             if(window.__eearBridgeQ&&typeof window.__eearBridgeQ==="object")Object.keys(window.__eearBridgeQ).forEach(key=>{if(!rawBank[key])rawBank[key]=window.__eearBridgeQ[key]});
             window.__eearBridgeQ=rawBank;
+            // UID sequencial único por questão, agrupado por disciplina.
+            // O identificador interno original permanece intacto para respostas e estatísticas.
+            const uidSubjectOrder=["Matemática","Física","Português","Inglês"];
+            const uidSeen=new Set(),uidQuestions=[];
+            Object.keys(rawBank).forEach(function(key){
+              const question=rawBank[key];
+              if(!question||typeof question!=="object"||uidSeen.has(question))return;
+              uidSeen.add(question);
+              const subject=canonicalSubject(question.d||question.discipline||question.subject||"");
+              const order=uidSubjectOrder.indexOf(subject);
+              if(order<0)return;
+              uidQuestions.push({question:question,subject:subject,order:order,sequence:uidQuestions.length});
+            });
+            uidQuestions.sort((a,b)=>a.order-b.order||a.sequence-b.sequence);
+            uidQuestions.forEach(function(item,index){
+              item.question.__eearUID=String(index+1).padStart(4,"0");
+              item.question.__eearUIDLabel="#ID "+item.question.__eearUID;
+            });
+            function applyQuestionUIDs(root){
+              const scope=root&&root.querySelectorAll?root:document;
+              scope.querySelectorAll(".card[data-id]").forEach(function(card){
+                const question=rawBank[card.dataset.id];
+                if(!question||!question.__eearUID||card.querySelector(".eear-question-uid"))return;
+                const label=document.createElement("div");
+                label.className="eear-question-uid";
+                label.textContent=question.__eearUIDLabel;
+                label.setAttribute("aria-label","Identificador "+question.__eearUID);
+                card.insertBefore(label,card.firstChild);
+              });
+            }
+            const uidStyle=document.createElement("style");
+            uidStyle.textContent=".eear-question-uid{display:inline-flex;align-items:center;margin:0 0 16px;padding:5px 10px;border:1px solid #555;border-radius:8px;background:#202020;color:#f5f5f5;font:800 12px/1.2 system-ui,Arial,sans-serif;letter-spacing:.04em}";
+            document.head.appendChild(uidStyle);
+            applyQuestionUIDs(document);
+            try{new MutationObserver(function(records){records.forEach(function(record){record.addedNodes.forEach(function(node){if(node.nodeType===1){if(node.matches&&node.matches(".card[data-id]"))applyQuestionUIDs(node);applyQuestionUIDs(node)}})})}).observe(document.body,{childList:true,subtree:true})}catch(e){}
             const taxonomy={},hierarchy={};
             function cleanLabel(value){return String(value||"").replace(/<[^>]*>/g," ").replace(/\\s+/g," ").trim()}
             function normLabel(value){return cleanLabel(value).normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase()}
