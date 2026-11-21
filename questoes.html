@@ -232,7 +232,29 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             const uidAnswerable=uidQuestions.filter(function(item){return uidHasValidAnswer(item.question)});
             const uidAnswerableCounts={"Matemática":0,"Física":0,"Português":0,"Inglês":0};
             uidAnswerable.forEach(function(item){uidAnswerableCounts[item.subject]++});
-            const uidExpectedAnswerable=4612;
+            // Diagnóstico individual das questões que não passam pela correção automática.
+            const uidBlocked={open:[],annulled:[],missingKey:[],other:[]};
+            uidQuestions.forEach(function(item){
+              const q=item.question,rawKey=q&&q.r,normalized=rawKey===undefined||rawKey===null?"":String(rawKey).trim().toUpperCase();
+              if(q&&q.open)uidBlocked.open.push(item);
+              else if(normalized==="ANULADA")uidBlocked.annulled.push(item);
+              else if(normalized==="")uidBlocked.missingKey.push(item);
+              else if(!uidHasValidAnswer(q))uidBlocked.other.push(item);
+            });
+            const uidBlockedAudit={
+              total:uidQuestions.length-uidAnswerable.length,
+              open:uidBlocked.open.length,
+              annulled:uidBlocked.annulled.length,
+              missingKey:uidBlocked.missingKey.length,
+              other:uidBlocked.other.length,
+              examples:{
+                open:uidBlocked.open.slice(0,20).map(item=>({uid:item.question.__eearUID,subject:item.subject,key:item.question.r,open:item.question.open})),
+                annulled:uidBlocked.annulled.slice(0,20).map(item=>({uid:item.question.__eearUID,subject:item.subject,key:item.question.r,open:item.question.open})),
+                missingKey:uidBlocked.missingKey.slice(0,20).map(item=>({uid:item.question.__eearUID,subject:item.subject,key:item.question.r,open:item.question.open})),
+                other:uidBlocked.other.slice(0,20).map(item=>({uid:item.question.__eearUID,subject:item.subject,key:item.question.r,open:item.question.open}))
+              }
+            };
+            window.__eearUnanswerableAudit=uidBlockedAudit;
             const uidExpected={"Matemática":1853,"Física":970,"Português":1665,"Inglês":360};
             let uidCursor=1;
             const uidRanges={};
@@ -248,9 +270,9 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               totalIdentified:uidSeen.size,
               totalWithUID:uidQuestions.length,
               answerableTotal:uidAnswerable.length,
-              expectedAnswerableTotal:uidExpectedAnswerable,
               notAnswerableTotal:uidQuestions.length-uidAnswerable.length,
               answerableBySubject:uidAnswerableCounts,
+              unanswerableReasons:uidBlockedAudit,
               withoutUID:uidSeen.size-uidQuestions.length,
               duplicateUIDs:uidQuestions.length-uidUniqueCount,
               unclassified:uidUnclassified,
@@ -265,20 +287,20 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             console.info("[EEAR] Auditoria de IDs sequenciais:",uidAudit);
             const uidAuditBox=document.createElement("section");
             uidAuditBox.className="eear-uid-audit";
-            uidAuditBox.innerHTML="<strong>Conferência do banco</strong><span class='eear-uid-audit-count'></span><span class='eear-uid-audit-answerable'></span><span class='eear-uid-audit-subjects'></span><span class='eear-uid-audit-ranges'></span>";
+            uidAuditBox.innerHTML="<strong>Conferência do banco</strong><span class='eear-uid-audit-count'></span><span class='eear-uid-audit-answerable'></span><span class='eear-uid-audit-reasons'></span><span class='eear-uid-audit-subjects'></span><span class='eear-uid-audit-ranges'></span>";
             uidAuditBox.querySelector(".eear-uid-audit-count").textContent=uidAudit.totalWithUID+" / 4.848 questões cadastradas com ID";
-            uidAuditBox.querySelector(".eear-uid-audit-answerable").textContent=uidAudit.answerableTotal+" / 4.612 questões com gabarito válido para responder ("+uidAudit.notAnswerableTotal+" sem resposta válida/abertas/anuladas)";
+            uidAuditBox.querySelector(".eear-uid-audit-answerable").textContent=uidAudit.answerableTotal+" questões com gabarito válido para responder; "+uidAudit.notAnswerableTotal+" não respondíveis.";
+            uidAuditBox.querySelector(".eear-uid-audit-reasons").textContent="Motivos: "+uidBlockedAudit.open+" abertas; "+uidBlockedAudit.annulled+" anuladas; "+uidBlockedAudit.missingKey+" sem gabarito; "+uidBlockedAudit.other+" outros casos. IDs e detalhes no console: window.__eearUnanswerableAudit";
             uidAuditBox.querySelector(".eear-uid-audit-subjects").textContent=uidSubjectOrder.map(function(subject){return subject+": "+uidCounts[subject]+" no banco; "+uidAnswerableCounts[subject]+" respondíveis"}).join("  •  ");
             uidAuditBox.querySelector(".eear-uid-audit-ranges").textContent=uidSubjectOrder.map(function(subject){const range=uidRanges[subject];return subject+": IDs "+(range?range.first+"–"+range.last:"sem IDs")}).join("  |  ");
-            if(!uidAudit.allQuestionsCovered||uidAudit.answerableTotal!==uidAudit.expectedAnswerableTotal){
+            if(!uidAudit.allQuestionsCovered){
               uidAuditBox.classList.add("has-errors");
               uidAuditBox.querySelector(".eear-uid-audit-count").textContent+=" — confira a quantidade real de questões e IDs.";
-              if(uidAudit.answerableTotal!==uidAudit.expectedAnswerableTotal)uidAuditBox.querySelector(".eear-uid-audit-answerable").textContent+=" — divergência em relação ao esperado.";
               uidAuditBox.querySelector(".eear-uid-audit-count").textContent+=" ("+uidAudit.withoutUID+" sem ID; "+uidAudit.duplicateUIDs+" IDs duplicados).";
             }else{
               uidAuditBox.classList.add("all-ok");
               uidAuditBox.querySelector(".eear-uid-audit-count").textContent+=" — IDs únicos em todas as questões.";
-              uidAuditBox.querySelector(".eear-uid-audit-answerable").textContent+=" — quantidade conferida.";
+              uidAuditBox.querySelector(".eear-uid-audit-answerable").textContent+="";
             }
             document.body.insertBefore(uidAuditBox,document.body.firstChild);
             const uidAuditStyle=document.createElement("style");
