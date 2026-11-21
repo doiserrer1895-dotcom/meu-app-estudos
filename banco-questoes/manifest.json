@@ -5,12 +5,13 @@
   "source_original_sha256": "613a6b62e2d6d50eba870ecb87888272c82988663c228f408ee0928c1612a8ba",
   "patched_source_sha256": "ffaf8a491141df3d7c98f0d2ad587c80e283b996194d6f84bf2027c39e8ee369",
   "compression": "gzip level 9, lossless",
-  "compressed_bytes": 90748354,
+  "compressed_bytes": 126680210,
   "chunk_size_bytes": 10485760,
   "chunks": [
     {
       "file": "questoes-banco-01.gz",
-      "bytes": 10485760
+      "bytes": 10485760,
+      "questions": 4244
     },
     {
       "file": "questoes-banco-02.gz",
@@ -45,25 +46,38 @@
       "bytes": 6862274
     },
     {
+      "file": "questoes-banco-10.gz",
+      "bytes": 6626104
+    },
+    {
+      "file": "questoes-banco-11.gz",
+      "bytes": 7344742,
+      "questions": 202
+    },
+    {
+      "file": "questoes-banco-12.gz",
+      "bytes": 3560999,
+      "questions": 200
+    },
+    {
       "file": "questoes-banco-13.gz",
       "bytes": 18400011,
-      "questions": 604,
-      "source": "Triunfo Militar – 600 Questões EEAR (604 itens)"
+      "questions": 604
     }
   ],
   "question_bank": {
     "main_questions": 4244,
     "subjects": {
-      "Matemática": 1702,
-      "Português": 1457,
-      "Física": 845,
-      "Inglês": 240
+      "Matemática": 2004,
+      "Português": 1671,
+      "Física": 1095,
+      "Inglês": 480
     },
     "main_embedded_images": 3324,
-    "matters": 46,
+    "matters": 74,
     "levels": {
       "Fácil": 1626,
-      "Médio": 1996,
+      "Médio": 3002,
       "Difícil": 622
     },
     "main_questions_without_answer_key": 86,
@@ -74,7 +88,12 @@
       "Física": 125,
       "Inglês": 120
     },
-    "total_including_appended_source": 4848
+    "total_including_appended_source": 5250,
+    "additional_questions": 402,
+    "additional_question_packages": {
+      "questoes-banco-11.gz": 202,
+      "questoes-banco-12.gz": 200
+    }
   },
   "official_exams": {
     "CFS 1/2023": 96,
@@ -84,7 +103,7 @@
     "Simulado estilo A · 2021.1": 96,
     "Simulado estilo B · 2021.2": 96
   },
-  "all_raster_image_references": 3557,
+  "all_raster_image_references": 4330,
   "all_raster_images_validated": true,
   "image_payloads_losslessly_preserved": true,
   "question_attempt_bridge": [
