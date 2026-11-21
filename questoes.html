@@ -338,27 +338,18 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               if(scope.matches&&scope.matches(".card[data-id]"))cards.push(scope);
               scope.querySelectorAll(".card[data-id]").forEach(card=>cards.push(card));
               const allCards=Array.from(document.querySelectorAll(".card[data-id]"));
-              let mapped=0,matchedByKey=0,matchedByOrder=0;
+              let matchedByKey=0;
               cards.forEach(function(card){
+                // A mesma chave usada pelo corretor do banco é a fonte do ID.
+                // Não usar posição visual como fallback: a ordem dos cartões pode
+                // mudar com filtros, paginação ou carregamento dinâmico.
                 const key=String(card.getAttribute("data-id")||card.getAttribute("data-qid")||card.getAttribute("data-question-id")||"");
                 const normalized=uidNormalizeAlias(key),digits=normalized.match(/\d+$/);
-                let question=rawBank[key]||uidAliasMap.get(key)||uidAliasMap.get(normalized)||(digits&&uidNumericAliasMap.get(digits[0]));
+                const question=rawBank[key]||uidAliasMap.get(key)||uidAliasMap.get(normalized)||(digits&&uidNumericAliasMap.get(digits[0]));
                 if(question&&question.__eearUID)matchedByKey++;
-                // Fallback definitivo: o HTML do banco mantém os cartões na mesma
-                // sequência das questões carregadas. Assim, uma chave interna
-                // diferente não deixa o cartão sem identificação.
-                if(!question||!question.__eearUID){
-                  const position=allCards.indexOf(card);
-                  const ordered=position>=0?uidQuestions[position]:null;
-                  if(ordered&&ordered.question&&ordered.question.__eearUID){
-                    question=ordered.question;
-                    matchedByOrder++;
-                  }
-                }
                 let label=card.querySelector(":scope > .eear-question-uid");
                 const uid=question&&question.__eearUID;
-                if(!uid)return;
-                mapped++;
+                if(!uid){if(label)label.remove();return}
                 if(!label){
                   label=document.createElement("div");
                   label.className="eear-question-uid";
@@ -369,7 +360,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
                 label.style.cssText="display:flex!important;visibility:visible!important;opacity:1!important;width:max-content!important;max-width:100%;align-items:center;margin:0 0 14px;padding:5px 10px;border:1px solid #777;border-radius:7px;background:#252525;color:#fff;font:800 12px/1.2 system-ui,Arial,sans-serif;letter-spacing:.04em;position:relative;z-index:5";
                 label.setAttribute("aria-label","ID #"+uid);
               });
-              window.__eearUIDCardAudit={cardsFound:allCards.length,cardsMapped:document.querySelectorAll(".card[data-id] > .eear-question-uid").length,matchedByKey:matchedByKey,matchedByOrder:matchedByOrder,questionsWithUID:uidQuestions.length};
+              window.__eearUIDCardAudit={cardsFound:allCards.length,cardsMapped:document.querySelectorAll(".card[data-id] > .eear-question-uid").length,matchedByKey:matchedByKey,questionsWithUID:uidQuestions.length};
             }
             const uidStyle=document.createElement("style");
             uidStyle.textContent=".eear-question-uid{display:inline-flex!important;align-items:center;margin:0 0 14px;padding:5px 10px;border:1px solid #777;border-radius:7px;background:#252525;color:#fff;font:800 12px/1.2 system-ui,Arial,sans-serif;letter-spacing:.04em;position:relative;z-index:1}.card .eear-question-uid{visibility:visible!important;opacity:1!important}";
