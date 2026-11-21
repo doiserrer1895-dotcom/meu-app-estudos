@@ -1,0 +1,53 @@
+RELATÓRIO DE AUDITORIA DO BANCO EEAR
+Data: 21/11/2026
+Base auditada: pacotes GZIP 01 a 13, descompactados e reunidos conforme o carregador do aplicativo.
+
+1. CONTAGEM E INTEGRIDADE
+- Total de registros: 5.250.
+- IDs: 5.250 únicos; nenhum ID repetido.
+- Matemática: 2.004.
+- Português: 1.671.
+- Física: 1.095.
+- Inglês: 480.
+- Pacotes 01–09: 4.244 registros.
+- Pacotes 11–12: 402 registros (202 + 200).
+- Pacote 13: 604 registros.
+- Pacote 10: ajuste de compatibilidade, sem registros de questões.
+- Os nove fragmentos originais foram concatenados e descompactados com sucesso. Os pacotes independentes 10–13 passaram pela validação GZIP.
+
+2. DUPLICATAS
+- Nenhum ID duplicado.
+- Nenhuma duplicata textual exata identificada nos campos de enunciado/resposta.
+- Uma imagem idêntica aparece em duas questões de Português diferentes: os enunciados e gabaritos são distintos e a imagem é um texto/cartum de apoio compartilhado. Não é duplicata de questão.
+- Nenhuma questão foi excluída porque não houve duplicata real comprovada.
+
+3. GABARITOS E RESPOSTAS
+- Nas 604 questões do pacote Triunfo Militar, 603 gabaritos coincidem com o gabarito impresso do PDF.
+- A questão 208 de Português não possui resposta no gabarito do PDF (o gabarito publicado termina na questão 207). Ela foi sinalizada no aplicativo como “Gabarito indisponível”, sem inventar alternativa.
+- Nos registros do banco principal, 160 questões que estavam marcadas com “R” ou sem alternativa, mas continham resposta textual no campo de solução, foram convertidas para o formato de resposta aberta. O aplicativo passa a exibir enunciado/imagem e botão “Ver resposta”, em vez de tratar “R” como alternativa.
+- Entre essas respostas textuais, o material contém notas como “Demonstração”, “resposta em vídeo” e “resposta não informada”; essas notas foram preservadas como estão, sem criar gabaritos.
+- A questão m2-06-Difícil-22 (“Sem Resposta”) e triunfo_eear_208 foram sinalizadas como sem gabarito disponível.
+- Os 402 registros dos pacotes 11–12 possuem alternativas A–D preenchidas. Não foi encontrada ausência de gabarito nesses pacotes.
+- Não foram alteradas alternativas A–E quando não havia uma fonte de conferência confiável.
+
+4. IMAGENS
+- 4.330 referências de imagem extraídas e decodificadas com sucesso.
+- 297 imagens têm largura inferior a 400 px ou altura inferior a 150 px; a maior parte são recortes horizontais de fórmulas/respostas, e não imagens de questão completas.
+- Foram inspecionadas visualmente amostras das imagens com menor nitidez calculada e as 30 imagens pequenas que não eram apenas tiras horizontais. Não foi identificada imagem inequivocamente ilegível nessa amostra.
+- Nenhuma imagem foi substituída sem uma fonte original de maior qualidade comprovada. A validação binária confirma que os arquivos abrem; não equivale a uma inspeção visual manual individual de todas as 4.330 imagens.
+
+5. CLASSIFICAÇÃO POR MATÉRIA
+- Todos os registros estão associados a uma das quatro disciplinas esperadas: Matemática, Português, Física ou Inglês.
+- Não foi encontrada classificação de disciplina inválida ou divergência inequívoca de matéria na checagem estrutural.
+- Não foram movidas questões sem evidência suficiente de classificação incorreta.
+
+6. AÇÕES APLICADAS NO APLICATIVO
+- Corrigida a apresentação das 160 questões discursivas com resposta textual preservada.
+- Sinalizadas as duas questões sem gabarito disponível.
+- Atualizado o total do banco e a distribuição por disciplina para 5.250.
+- Corrigida a auditoria dos IDs sequenciais: agora espera 5.250 registros, com as faixas por disciplina recalculadas dinamicamente.
+- Atualizados manifest.json, LEIA-ME.txt e SHA256SUMS.txt para refletir os 13 pacotes.
+
+Limites da auditoria:
+- Os 4.244 registros principais e os 402 registros adicionais não vieram acompanhados de um gabarito oficial completo independente para comparação alternativa por alternativa. Portanto, não foi possível declarar que todas as alternativas desses grupos foram validadas contra fonte externa.
+- A inspeção visual de nitidez foi automatizada e complementada por amostras; não se afirma inspeção humana individual de cada imagem.
