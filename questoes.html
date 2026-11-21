@@ -147,20 +147,20 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
         parts.push(legacyDecoded);
         // Os arquivos 10–13 são pacotes GZIP independentes, na mesma sequência visual.
         for(let fileNumber=10;fileNumber<=TOTAL;fileNumber++){
+          // Os pacotes 11 e 12 são a importação legada duplicada; não precisam ser baixados.
+          if(fileNumber===11||fileNumber===12){
+            loadedFiles=fileNumber;
+            progress.style.width=(loadedFiles/TOTAL*100)+"%";
+            continue;
+          }
           const name="questoes-banco-"+String(fileNumber).padStart(2,"0")+".gz";
           detail.textContent="Carregando banco de questões ("+fileNumber+" de "+TOTAL+")…";
           const response=await fetch("banco-questoes/"+name,{cache:"no-store"});
           if(!response.ok)throw new Error("Não foi possível carregar "+name+" (HTTP "+response.status+").");
           const compressed=new Uint8Array(await response.arrayBuffer());
           let decoded=await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
-          // Os pacotes 10–12 são a versão anterior das mesmas 604 questões
-          // que foram consolidadas no pacote 13. Mantemos apenas o script de
-          // compatibilidade do pacote 10 e ignoramos os registros duplicados.
-          if(fileNumber===11||fileNumber===12){
-            loadedFiles=fileNumber;
-            progress.style.width=(loadedFiles/TOTAL*100)+"%";
-            continue;
-          }
+          // O pacote 10 fornece apenas o script de compatibilidade; os registros
+          // legados dos pacotes 10–12 foram substituídos pelo pacote 13.
           if(fileNumber===10){
             const duplicateDataStart=decoded.indexOf("\nQ.push(");
             if(duplicateDataStart>=0)decoded=decoded.slice(0,duplicateDataStart)+"\\n</script>";
