@@ -384,14 +384,14 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:["data-id"]});
             }catch(e){}
             const taxonomy={},hierarchy={};
-            function cleanLabel(value){return String(value||"").replace(/<[^>]*>/g," ").replace(/\\s+/g," ").trim()}
-            function normLabel(value){return cleanLabel(value).normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase()}
+            function cleanLabel(value){return String(value||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim()}
+            function normLabel(value){return cleanLabel(value).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()}
             function canonicalSubject(value){
-              const n=normLabel(value).replace(/[._-]+/g," ").replace(/\\s+/g," ").trim();
-              if(/^matematica(?:\\s*[123])?$/.test(n))return "Matemática";
-              if(/^fisica(?:\\s*[123])?$/.test(n))return "Física";
-              if(/^portugues(?:\\s*[123])?$/.test(n))return "Português";
-              if(/^ingles(?:\\s*[123])?$/.test(n))return "Inglês";
+              const n=normLabel(value).replace(/[._-]+/g," ").replace(/\s+/g," ").trim();
+              if(/^matematica(?:\s*[123])?$/.test(n))return "Matemática";
+              if(/^fisica(?:\s*[123])?$/.test(n))return "Física";
+              if(/^portugues(?:\s*[123])?$/.test(n))return "Português";
+              if(/^ingles(?:\s*[123])?$/.test(n))return "Inglês";
               return "";
             }
             const subjectOrder=["Matemática","Português","Física","Inglês"];
