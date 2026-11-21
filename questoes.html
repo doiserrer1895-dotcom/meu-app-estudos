@@ -163,9 +163,9 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
           }
           if(fileNumber===10){
             const duplicateDataStart=decoded.indexOf("\nQ.push(");
-            if(duplicateDataStart>=0)decoded=decoded.slice(0,duplicateDataStart);
+            if(duplicateDataStart>=0)decoded=decoded.slice(0,duplicateDataStart)+"\\n</script>";
           }
-          const normalized=decoded;
+          const normalized=fileNumber===13?"<script>\\n"+decoded+"\\n</script>":decoded;
           parts.push(normalized);
           loadedFiles=fileNumber;
           progress.style.width=(loadedFiles/TOTAL*100)+"%";
