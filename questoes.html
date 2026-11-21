@@ -198,11 +198,44 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             if(window.__eearBridgeQ&&typeof window.__eearBridgeQ==="object")Object.keys(window.__eearBridgeQ).forEach(key=>{if(!rawBank[key])rawBank[key]=window.__eearBridgeQ[key]});
             window.__eearBridgeQ=rawBank;
             const taxonomy={},hierarchy={};
-            Object.keys(rawBank).forEach(function(id){const q=rawBank[id];if(!q||typeof q!=="object")return;const d=String(q.d||q.discipline||q.subject||"").trim();if(!d)return;const m=String(q.m||q.matter||q.area||"Geral").trim()||"Geral",c=String(q.s||q.content||q.topic||"Geral").trim()||"Geral",u=String(q.u||q.subtopic||q.detail||"Geral").trim()||"Geral",t=String(q.u||q.s||q.m||q.topic||"Geral").trim()||"Geral";if(!taxonomy[d])taxonomy[d]=[];if(!taxonomy[d].includes(t))taxonomy[d].push(t);if(!hierarchy[d])hierarchy[d]={};if(!hierarchy[d][m])hierarchy[d][m]={};if(!hierarchy[d][m][c])hierarchy[d][m][c]=[];if(!hierarchy[d][m][c].includes(u))hierarchy[d][m][c].push(u)});
+            function cleanLabel(value){return String(value||"").replace(/<[^>]*>/g," ").replace(/\\s+/g," ").trim()}
+            function normLabel(value){return cleanLabel(value).normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase()}
+            function canonicalSubject(value){
+              const n=normLabel(value).replace(/[._-]+/g," ").replace(/\\s+/g," ").trim();
+              if(/^matematica(?:\\s*[123])?$/.test(n))return "Matemática";
+              if(/^fisica(?:\\s*[123])?$/.test(n))return "Física";
+              if(/^portugues$/.test(n))return "Português";
+              if(/^ingles$/.test(n))return "Inglês";
+              return "";
+            }
+            const subjectOrder=["Matemática","Português","Física","Inglês"];
+            Object.keys(rawBank).forEach(function(id){
+              const question=rawBank[id];if(!question||typeof question!=="object")return;
+              const d=canonicalSubject(question.d||question.discipline||question.subject||"");if(!d)return;
+              const raw=[question.m||question.matter||question.area,question.s||question.content||question.topic,question.u||question.subtopic||question.detail].map(cleanLabel);
+              const path=[];
+              raw.forEach(function(value){if(!value)return;const n=normLabel(value);if(!path.length||normLabel(path[path.length-1])!==n)path.push(value)});
+              const topic=path[0]||"";
+              const content=path[1]||"";
+              const specific=path[2]||"";
+              question.__eearFilterPath={subject:d,topic:topic,content:content,specific:specific};
+              if(!topic)return;
+              if(!taxonomy[d])taxonomy[d]=[];
+              if(!taxonomy[d].includes(topic))taxonomy[d].push(topic);
+              if(!hierarchy[d])hierarchy[d]={};
+              if(!hierarchy[d][topic])hierarchy[d][topic]={};
+              if(content){
+                if(!hierarchy[d][topic][content])hierarchy[d][topic][content]=[];
+                if(specific&&!hierarchy[d][topic][content].includes(specific))hierarchy[d][topic][content].push(specific);
+              }
+            });
+            subjectOrder.forEach(function(subject){if(taxonomy[subject])taxonomy[subject].sort((a,b)=>a.localeCompare(b,"pt-BR"))});
+            function sortTree(o){Object.keys(o).forEach(k=>{if(Array.isArray(o[k]))o[k].sort((a,b)=>a.localeCompare(b,"pt-BR"));else sortTree(o[k])})}
+            Object.keys(hierarchy).forEach(sortTree);
             function sortTree(o){Object.keys(o).forEach(k=>Array.isArray(o[k])?o[k].sort((a,b)=>a.localeCompare(b,"pt-BR")):sortTree(o[k]))}
             Object.keys(taxonomy).forEach(n=>taxonomy[n].sort((a,b)=>a.localeCompare(b,"pt-BR")));sortTree(hierarchy);
             window.parent.postMessage({type:"eear-question-taxonomy",taxonomy:taxonomy},"*");window.parent.postMessage({type:"eear-question-taxonomy-full",hierarchy:hierarchy},"*");
-            function applyLinkedFilter(f){document.querySelectorAll(".card[data-id]").forEach(card=>{const q=rawBank[card.dataset.id]||{},norm=v=>String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").trim().toLowerCase(),fields=[q.d||q.discipline||q.subject,q.m||q.matter||q.area,q.s||q.content||q.topic,q.u||q.subtopic||q.detail].map(norm),wanted=[f.subject,f.matter,f.content,f.specific].map(norm);card.style.display=wanted.every((v,i)=>!v||fields[i]===v)?"":"none"})}
+            function applyLinkedFilter(f){document.querySelectorAll(".card[data-id]").forEach(card=>{const q=rawBank[card.dataset.id]||{},path=q.__eearFilterPath||{},norm=v=>String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").trim().toLowerCase(),fields=[path.subject,path.topic,path.content,path.specific],wanted=[f.subject,f.matter,f.content,f.specific].map(norm);card.style.display=wanted.every((v,i)=>!v||norm(fields[i])===v)?"":"none"})}
             window.addEventListener("message",ev=>{if(ev.data&&ev.data.type==="app-question-filter"){window.__appQuestionFilter=ev.data.filter||{};applyLinkedFilter(window.__appQuestionFilter)}});
             try{new MutationObserver(()=>{if(window.__appQuestionFilter)applyLinkedFilter(window.__appQuestionFilter)}).observe(document.body,{childList:true,subtree:true})}catch(e){}
             document.addEventListener("click",function(event){
