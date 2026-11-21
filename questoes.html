@@ -223,6 +223,16 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               item.question.__eearUIDLabel="#ID "+item.question.__eearUID;
               uidCounts[item.subject]++;
             });
+            // Nem toda questão cadastrada pode ser respondida: algumas são abertas,
+            // anuladas ou não possuem gabarito. Mantemos os IDs nas 4.848 questões,
+            // mas contamos separadamente as que têm resposta válida no banco.
+            function uidHasValidAnswer(question){
+              return !!question&&!question.open&&question.r!==undefined&&question.r!==null&&String(question.r).trim()!==""&&String(question.r).trim().toUpperCase()!=="ANULADA";
+            }
+            const uidAnswerable=uidQuestions.filter(function(item){return uidHasValidAnswer(item.question)});
+            const uidAnswerableCounts={"Matemática":0,"Física":0,"Português":0,"Inglês":0};
+            uidAnswerable.forEach(function(item){uidAnswerableCounts[item.subject]++});
+            const uidExpectedAnswerable=4612;
             const uidExpected={"Matemática":1853,"Física":970,"Português":1665,"Inglês":360};
             let uidCursor=1;
             const uidRanges={};
@@ -237,6 +247,10 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               expectedTotal:4848,
               totalIdentified:uidSeen.size,
               totalWithUID:uidQuestions.length,
+              answerableTotal:uidAnswerable.length,
+              expectedAnswerableTotal:uidExpectedAnswerable,
+              notAnswerableTotal:uidQuestions.length-uidAnswerable.length,
+              answerableBySubject:uidAnswerableCounts,
               withoutUID:uidSeen.size-uidQuestions.length,
               duplicateUIDs:uidQuestions.length-uidUniqueCount,
               unclassified:uidUnclassified,
@@ -251,20 +265,24 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             console.info("[EEAR] Auditoria de IDs sequenciais:",uidAudit);
             const uidAuditBox=document.createElement("section");
             uidAuditBox.className="eear-uid-audit";
-            uidAuditBox.innerHTML="<strong>Conferência dos IDs</strong><span class='eear-uid-audit-count'></span><span class='eear-uid-audit-subjects'></span><span class='eear-uid-audit-ranges'></span>";
-            uidAuditBox.querySelector(".eear-uid-audit-count").textContent=uidAudit.totalWithUID+" / 4.848 IDs atribuídos";
-            uidAuditBox.querySelector(".eear-uid-audit-subjects").textContent=uidSubjectOrder.map(function(subject){return subject+": "+uidCounts[subject]+" (esperado: "+uidExpected[subject]+")"}).join("  •  ");
-            uidAuditBox.querySelector(".eear-uid-audit-ranges").textContent=uidSubjectOrder.map(function(subject){const range=uidRanges[subject];return subject+": "+(range?range.first+"–"+range.last:"sem IDs")}).join("  |  ");
-            if(!uidAudit.allQuestionsCovered){
+            uidAuditBox.innerHTML="<strong>Conferência do banco</strong><span class='eear-uid-audit-count'></span><span class='eear-uid-audit-answerable'></span><span class='eear-uid-audit-subjects'></span><span class='eear-uid-audit-ranges'></span>";
+            uidAuditBox.querySelector(".eear-uid-audit-count").textContent=uidAudit.totalWithUID+" / 4.848 questões cadastradas com ID";
+            uidAuditBox.querySelector(".eear-uid-audit-answerable").textContent=uidAudit.answerableTotal+" / 4.612 questões com gabarito válido para responder ("+uidAudit.notAnswerableTotal+" sem resposta válida/abertas/anuladas)";
+            uidAuditBox.querySelector(".eear-uid-audit-subjects").textContent=uidSubjectOrder.map(function(subject){return subject+": "+uidCounts[subject]+" no banco; "+uidAnswerableCounts[subject]+" respondíveis"}).join("  •  ");
+            uidAuditBox.querySelector(".eear-uid-audit-ranges").textContent=uidSubjectOrder.map(function(subject){const range=uidRanges[subject];return subject+": IDs "+(range?range.first+"–"+range.last:"sem IDs")}).join("  |  ");
+            if(!uidAudit.allQuestionsCovered||uidAudit.answerableTotal!==uidAudit.expectedAnswerableTotal){
               uidAuditBox.classList.add("has-errors");
-              uidAuditBox.querySelector(".eear-uid-audit-count").textContent+=" — auditoria encontrou divergência ("+uidAudit.withoutUID+" sem ID; "+uidAudit.duplicateUIDs+" duplicados).";
+              uidAuditBox.querySelector(".eear-uid-audit-count").textContent+=" — confira a quantidade real de questões e IDs.";
+              if(uidAudit.answerableTotal!==uidAudit.expectedAnswerableTotal)uidAuditBox.querySelector(".eear-uid-audit-answerable").textContent+=" — divergência em relação ao esperado.";
+              uidAuditBox.querySelector(".eear-uid-audit-count").textContent+=" ("+uidAudit.withoutUID+" sem ID; "+uidAudit.duplicateUIDs+" IDs duplicados).";
             }else{
               uidAuditBox.classList.add("all-ok");
-              uidAuditBox.querySelector(".eear-uid-audit-count").textContent+=" — todas as questões identificadas e IDs únicos.";
+              uidAuditBox.querySelector(".eear-uid-audit-count").textContent+=" — IDs únicos em todas as questões.";
+              uidAuditBox.querySelector(".eear-uid-audit-answerable").textContent+=" — quantidade conferida.";
             }
             document.body.insertBefore(uidAuditBox,document.body.firstChild);
             const uidAuditStyle=document.createElement("style");
-            uidAuditStyle.textContent=".eear-uid-audit{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:0 0 20px;padding:12px 14px;border:1px solid #444;border-radius:10px;background:#151515;color:#f5f5f5;font:12px/1.5 system-ui,Arial,sans-serif}.eear-uid-audit strong{font-size:13px}.eear-uid-audit-count{font-weight:700}.eear-uid-audit-subjects,.eear-uid-audit-ranges{width:100%;color:#bbb}.eear-uid-audit.has-errors{border-color:#b7791f;background:#241b0d}.eear-uid-audit.all-ok{border-color:#276749;background:#101d16}";
+            uidAuditStyle.textContent=".eear-uid-audit{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:0 0 20px;padding:12px 14px;border:1px solid #444;border-radius:10px;background:#151515;color:#f5f5f5;font:12px/1.5 system-ui,Arial,sans-serif}.eear-uid-audit strong{font-size:13px}.eear-uid-audit-count,.eear-uid-audit-answerable{width:100%;font-weight:700}.eear-uid-audit-answerable{color:#d1fae5}.eear-uid-audit-subjects,.eear-uid-audit-ranges{width:100%;color:#bbb}.eear-uid-audit.has-errors{border-color:#b7791f;background:#241b0d}.eear-uid-audit.all-ok{border-color:#276749;background:#101d16}";
             document.head.appendChild(uidAuditStyle);
             function applyQuestionUIDs(root){
               const scope=root&&root.querySelectorAll?root:document;
