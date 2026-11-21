@@ -1855,7 +1855,7 @@ function syncStudyMetrics(){
   const totalQ=entries.reduce((a,e)=>a+(Number(e.q)||0),0),totalA=entries.reduce((a,e)=>a+(Number(e.a)||0),0);
   const topicList=m=>[...new Set((Array.isArray(m&&m.topics)?m.topics:[]).filter(t=>typeof t==='string'&&t.trim()))];
   const topics=S.edital.reduce((a,m)=>a+topicList(m).length,0);
-  const done=S.edital.reduce((a,m)=>a+topicList(m).filter(t=>(m.doneTopics||[]).includes(t)||(m.agendaDoneTopics||[]).includes(t)).length,0);
+  const done=S.edital.reduce((a,m)=>a+topicList(m).filter(t=>(m.doneTopics||[]).includes(t)).length,0);
   /* Constância de Estudos: dias estudados nos últimos 21 dias, igual ao calendário da aba. */
   const studied=new Set();
   entries.forEach(e=>{if(net(e)>0||(Number(e.q)||0)>0)studied.add(e.date)});
