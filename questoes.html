@@ -162,7 +162,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             continue;
           }
           if(fileNumber===10){
-            const duplicateDataStart=decoded.indexOf("\\nQ.push(");
+            const duplicateDataStart=decoded.indexOf("\nQ.push(");
             if(duplicateDataStart>=0)decoded=decoded.slice(0,duplicateDataStart);
           }
           const normalized=decoded;
