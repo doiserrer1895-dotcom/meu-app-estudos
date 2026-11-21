@@ -10,73 +10,90 @@
   "chunks": [
     {
       "file": "questoes-banco-01.gz",
-      "bytes": 10485760
+      "bytes": 10485760,
+      "active": true
     },
     {
       "file": "questoes-banco-02.gz",
-      "bytes": 10485760
+      "bytes": 10485760,
+      "active": true
     },
     {
       "file": "questoes-banco-03.gz",
-      "bytes": 10485760
+      "bytes": 10485760,
+      "active": true
     },
     {
       "file": "questoes-banco-04.gz",
-      "bytes": 10485760
+      "bytes": 10485760,
+      "active": true
     },
     {
       "file": "questoes-banco-05.gz",
-      "bytes": 10485760
+      "bytes": 10485760,
+      "active": true
     },
     {
       "file": "questoes-banco-06.gz",
-      "bytes": 10485760
+      "bytes": 10485760,
+      "active": true
     },
     {
       "file": "questoes-banco-07.gz",
-      "bytes": 10485760
+      "bytes": 10485760,
+      "active": true
     },
     {
       "file": "questoes-banco-08.gz",
-      "bytes": 10485760
+      "bytes": 10485760,
+      "active": true
     },
     {
       "file": "questoes-banco-09.gz",
-      "bytes": 6862274
+      "bytes": 6862274,
+      "active": true
     },
     {
       "file": "questoes-banco-10.gz",
-      "bytes": 6626104
+      "bytes": 6626104,
+      "active": false,
+      "duplicate_legacy": true,
+      "questions": 604
     },
     {
       "file": "questoes-banco-11.gz",
       "bytes": 7344742,
-      "questions": 202
+      "questions": 604,
+      "active": false,
+      "duplicate_legacy": true
     },
     {
       "file": "questoes-banco-12.gz",
       "bytes": 3560999,
-      "questions": 200
+      "questions": 604,
+      "active": false,
+      "duplicate_legacy": true
     },
     {
       "file": "questoes-banco-13.gz",
       "bytes": 18400011,
-      "questions": 604
+      "questions": 604,
+      "active": true
     }
   ],
   "question_bank": {
     "main_questions": 4244,
     "subjects": {
-      "Matemática": 2004,
-      "Português": 1671,
-      "Física": 1095,
-      "Inglês": 480
+      "Matemática": 1702,
+      "Português": 1457,
+      "Física": 845,
+      "Inglês": 240
     },
     "main_embedded_images": 3324,
     "matters": 74,
     "levels": {
       "Fácil": 1626,
-      "Médio": 3002,
+      "Médio": 2600,
       "Difícil": 622
     },
     "main_questions_without_answer_key": 86,
@@ -87,22 +104,23 @@
       "Física": 125,
       "Inglês": 120
     },
-    "total_including_appended_source": 5250,
+    "total_including_appended_source": 4848,
     "additional_questions": 402,
     "additional_question_packages": {
       "questoes-banco-11.gz": 202,
       "questoes-banco-12.gz": 200
     },
-    "total_questions": 5250,
+    "total_questions": 4848,
     "main_plus_additional_402": 4646,
     "total_by_subject": {
-      "Matemática": 2004,
-      "Português": 1671,
-      "Física": 1095,
-      "Inglês": 480
+      "Matemática": 1853,
+      "Português": 1665,
+      "Física": 970,
+      "Inglês": 360
     },
     "appended_source_questions_without_answer_key": 1,
-    "discursive_answers_reclassified": 160
+    "discursive_answers_reclassified": 160,
+    "legacy_duplicate_records_excluded": 604
   },
   "official_exams": {
     "CFS 1/2023": 96,
@@ -119,5 +137,17 @@
     "banco",
     "prova",
     "simulado"
+  ],
+  "active_question_packages": [
+    "questoes-banco-01.gz",
+    "questoes-banco-02.gz",
+    "questoes-banco-03.gz",
+    "questoes-banco-04.gz",
+    "questoes-banco-05.gz",
+    "questoes-banco-06.gz",
+    "questoes-banco-07.gz",
+    "questoes-banco-08.gz",
+    "questoes-banco-09.gz",
+    "questoes-banco-13.gz"
   ]
 }
