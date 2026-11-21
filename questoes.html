@@ -153,7 +153,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
           if(!response.ok)throw new Error("Não foi possível carregar "+name+" (HTTP "+response.status+").");
           const compressed=new Uint8Array(await response.arrayBuffer());
           const decoded=await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
-          const normalized=fileNumber>=11?"<script>\n"+decoded+(fileNumber===13?"\n</script>":""):decoded;
+          const normalized=fileNumber>=11?"<script>\n"+decoded+(fileNumber===13?"\n</scr"+"ipt>":""):decoded;
           parts.push(normalized);
           if(fileNumber===13){
             parts.push("<script>(function(){"+
