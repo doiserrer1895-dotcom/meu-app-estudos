@@ -31,7 +31,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
 <script>
 (function(){
   "use strict";
-  const TOTAL=12;
+  const TOTAL=13;
   const status=document.getElementById("status");
   const detail=document.getElementById("detail");
   const progress=document.getElementById("progress");
@@ -121,7 +121,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
         if(typeof DecompressionStream==="undefined")throw new Error("Este navegador não oferece suporte à descompactação necessária. Atualize o Chrome ou Edge.");
         const parts=[];
         const BATCH=3;
-        // Exibição unificada: arquivos 1 a 12. Os nove primeiros são
+        // Exibição unificada: arquivos 1 a 13. Os nove primeiros são
         // fragmentos do mesmo GZIP e precisam ser unidos antes de descompactar.
         const legacyChunks=[];
         let loadedFiles=0;
@@ -145,7 +145,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
         detail.textContent="Descompactando os arquivos 1 a 9…";
         const legacyDecoded=await new Response(new Blob([legacyStream]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
         parts.push(legacyDecoded);
-        // Os arquivos 10–12 são pacotes GZIP independentes, na mesma sequência visual.
+        // Os arquivos 10–13 são pacotes GZIP independentes, na mesma sequência visual.
         for(let fileNumber=10;fileNumber<=TOTAL;fileNumber++){
           const name="questoes-banco-"+String(fileNumber).padStart(2,"0")+".gz";
           detail.textContent="Carregando banco de questões ("+fileNumber+" de "+TOTAL+")…";
