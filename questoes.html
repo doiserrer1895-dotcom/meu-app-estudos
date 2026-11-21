@@ -152,8 +152,20 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
           const response=await fetch("banco-questoes/"+name,{cache:"no-store"});
           if(!response.ok)throw new Error("Não foi possível carregar "+name+" (HTTP "+response.status+").");
           const compressed=new Uint8Array(await response.arrayBuffer());
-          const decoded=await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
-          const normalized=fileNumber>=11&&/^\s*Q\.push\s*\(/.test(decoded)?"<script>\n"+decoded:decoded;
+          let decoded=await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
+          // Os pacotes 10–12 são a versão anterior das mesmas 604 questões
+          // que foram consolidadas no pacote 13. Mantemos apenas o script de
+          // compatibilidade do pacote 10 e ignoramos os registros duplicados.
+          if(fileNumber===11||fileNumber===12){
+            loadedFiles=fileNumber;
+            progress.style.width=(loadedFiles/TOTAL*100)+"%";
+            continue;
+          }
+          if(fileNumber===10){
+            const duplicateDataStart=decoded.indexOf("\\nQ.push(");
+            if(duplicateDataStart>=0)decoded=decoded.slice(0,duplicateDataStart);
+          }
+          const normalized=decoded;
           parts.push(normalized);
           loadedFiles=fileNumber;
           progress.style.width=(loadedFiles/TOTAL*100)+"%";
@@ -301,7 +313,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               }
             };
             window.__eearUnanswerableAudit=uidBlockedAudit;
-            const uidExpected={"Matemática":2004,"Física":1095,"Português":1671,"Inglês":480};
+            const uidExpected={"Matemática":1853,"Física":970,"Português":1665,"Inglês":360};
             let uidCursor=1;
             const uidRanges={};
             uidSubjectOrder.forEach(function(subject){
@@ -312,7 +324,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             const uidUniqueCount=new Set(uidQuestions.map(item=>item.question.__eearUID)).size;
             const uidExpectedMatch=uidSubjectOrder.every(subject=>uidCounts[subject]===uidExpected[subject]);
             const uidAudit={
-              expectedTotal:5250,
+              expectedTotal:4848,
               totalIdentified:uidSeen.size,
               totalWithUID:uidQuestions.length,
               answerableTotal:uidAnswerable.length,
@@ -327,7 +339,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               ranges:uidRanges,
               firstUID:uidQuestions.length?uidQuestions[0].question.__eearUID:null,
               lastUID:uidQuestions.length?uidQuestions[uidQuestions.length-1].question.__eearUID:null,
-              allQuestionsCovered:uidQuestions.length===uidSeen.size&&uidQuestions.length===5250&&uidExpectedMatch&&uidUniqueCount===uidQuestions.length
+              allQuestionsCovered:uidQuestions.length===uidSeen.size&&uidQuestions.length===4848&&uidExpectedMatch&&uidUniqueCount===uidQuestions.length
             };
             window.__eearUIDAudit=uidAudit;
             console.info("[EEAR] Auditoria de IDs sequenciais:",uidAudit);
