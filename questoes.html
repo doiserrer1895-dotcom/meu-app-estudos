@@ -223,29 +223,48 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               item.question.__eearUIDLabel="#ID "+item.question.__eearUID;
               uidCounts[item.subject]++;
             });
+            const uidExpected={"Matemática":1853,"Física":970,"Português":1665,"Inglês":360};
+            let uidCursor=1;
+            const uidRanges={};
+            uidSubjectOrder.forEach(function(subject){
+              const count=uidCounts[subject];
+              uidRanges[subject]=count?{first:String(uidCursor).padStart(4,"0"),last:String(uidCursor+count-1).padStart(4,"0")}:null;
+              uidCursor+=count;
+            });
+            const uidUniqueCount=new Set(uidQuestions.map(item=>item.question.__eearUID)).size;
+            const uidExpectedMatch=uidSubjectOrder.every(subject=>uidCounts[subject]===uidExpected[subject]);
             const uidAudit={
+              expectedTotal:4848,
               totalIdentified:uidSeen.size,
               totalWithUID:uidQuestions.length,
               withoutUID:uidSeen.size-uidQuestions.length,
+              duplicateUIDs:uidQuestions.length-uidUniqueCount,
               unclassified:uidUnclassified,
               bySubject:uidCounts,
+              expectedBySubject:uidExpected,
+              ranges:uidRanges,
               firstUID:uidQuestions.length?uidQuestions[0].question.__eearUID:null,
-              lastUID:uidQuestions.length?uidQuestions[uidQuestions.length-1].question.__eearUID:null
+              lastUID:uidQuestions.length?uidQuestions[uidQuestions.length-1].question.__eearUID:null,
+              allQuestionsCovered:uidQuestions.length===uidSeen.size&&uidQuestions.length===4848&&uidExpectedMatch&&uidUniqueCount===uidQuestions.length
             };
             window.__eearUIDAudit=uidAudit;
             console.info("[EEAR] Auditoria de IDs sequenciais:",uidAudit);
             const uidAuditBox=document.createElement("section");
             uidAuditBox.className="eear-uid-audit";
-            uidAuditBox.innerHTML="<strong>Identificação das questões</strong><span class='eear-uid-audit-count'></span><span class='eear-uid-audit-subjects'></span>";
-            uidAuditBox.querySelector(".eear-uid-audit-count").textContent=uidAudit.totalWithUID+" de "+uidAudit.totalIdentified+" questões com ID";
-            uidAuditBox.querySelector(".eear-uid-audit-subjects").textContent=uidSubjectOrder.map(function(subject){return subject+": "+uidCounts[subject]}).join("  •  ");
-            if(uidAudit.withoutUID){
+            uidAuditBox.innerHTML="<strong>Conferência dos IDs</strong><span class='eear-uid-audit-count'></span><span class='eear-uid-audit-subjects'></span><span class='eear-uid-audit-ranges'></span>";
+            uidAuditBox.querySelector(".eear-uid-audit-count").textContent=uidAudit.totalWithUID+" / 4.848 IDs atribuídos";
+            uidAuditBox.querySelector(".eear-uid-audit-subjects").textContent=uidSubjectOrder.map(function(subject){return subject+": "+uidCounts[subject]+" (esperado: "+uidExpected[subject]+")"}).join("  •  ");
+            uidAuditBox.querySelector(".eear-uid-audit-ranges").textContent=uidSubjectOrder.map(function(subject){const range=uidRanges[subject];return subject+": "+(range?range.first+"–"+range.last:"sem IDs")}).join("  |  ");
+            if(!uidAudit.allQuestionsCovered){
               uidAuditBox.classList.add("has-errors");
-              uidAuditBox.querySelector(".eear-uid-audit-count").textContent+=" — "+uidAudit.withoutUID+" sem ID; confira a classificação da disciplina.";
+              uidAuditBox.querySelector(".eear-uid-audit-count").textContent+=" — auditoria encontrou divergência ("+uidAudit.withoutUID+" sem ID; "+uidAudit.duplicateUIDs+" duplicados).";
+            }else{
+              uidAuditBox.classList.add("all-ok");
+              uidAuditBox.querySelector(".eear-uid-audit-count").textContent+=" — todas as questões identificadas e IDs únicos.";
             }
             document.body.insertBefore(uidAuditBox,document.body.firstChild);
             const uidAuditStyle=document.createElement("style");
-            uidAuditStyle.textContent=".eear-uid-audit{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:0 0 20px;padding:12px 14px;border:1px solid #444;border-radius:10px;background:#151515;color:#f5f5f5;font:12px/1.5 system-ui,Arial,sans-serif}.eear-uid-audit strong{font-size:13px}.eear-uid-audit-count{font-weight:700}.eear-uid-audit-subjects{width:100%;color:#bbb}.eear-uid-audit.has-errors{border-color:#b7791f;background:#241b0d}";
+            uidAuditStyle.textContent=".eear-uid-audit{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:0 0 20px;padding:12px 14px;border:1px solid #444;border-radius:10px;background:#151515;color:#f5f5f5;font:12px/1.5 system-ui,Arial,sans-serif}.eear-uid-audit strong{font-size:13px}.eear-uid-audit-count{font-weight:700}.eear-uid-audit-subjects,.eear-uid-audit-ranges{width:100%;color:#bbb}.eear-uid-audit.has-errors{border-color:#b7791f;background:#241b0d}.eear-uid-audit.all-ok{border-color:#276749;background:#101d16}";
             document.head.appendChild(uidAuditStyle);
             function applyQuestionUIDs(root){
               const scope=root&&root.querySelectorAll?root:document;
