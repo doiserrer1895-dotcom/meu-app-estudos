@@ -88,9 +88,9 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
     }
   });
   function openBankCache(){return new Promise(function(resolve){if(!window.indexedDB)return resolve(null);const request=indexedDB.open("meu-app-estudos-question-bank",1);request.onupgradeneeded=function(){if(!request.result.objectStoreNames.contains("cache"))request.result.createObjectStore("cache")};request.onsuccess=function(){resolve(request.result)};request.onerror=function(){resolve(null)}})}
-  function bankCacheKey(){return new URL("__eear_question_bank_cache_v3.html",location.href).href}
-  async function readCachedBank(){try{if(window.caches){const cache=await caches.open("eear-question-bank-cache-v3"),response=await cache.match(bankCacheKey());if(response){const blob=await response.blob();if(blob.size>=1000000)return blob}}}catch(e){}const db=await openBankCache();if(!db)return null;return new Promise(function(resolve){try{const request=db.transaction("cache","readonly").objectStore("cache").get("bank-html-v3");request.onsuccess=function(){const blob=request.result instanceof Blob&&request.result.size>=1000000?request.result:null;resolve(blob)};request.onerror=function(){resolve(null)}}catch(e){resolve(null)}finally{db.close()}})}
-  async function writeCachedBank(blob){try{if(window.caches){const cache=await caches.open("eear-question-bank-cache-v3");await cache.put(bankCacheKey(),new Response(blob,{headers:{"Content-Type":"text/html;charset=utf-8"}}))}}catch(e){console.warn("Cache API não conseguiu guardar o banco:",e)}const db=await openBankCache();if(!db)return;await new Promise(function(resolve){try{const tx=db.transaction("cache","readwrite");tx.objectStore("cache").put(blob,"bank-html-v3");tx.oncomplete=resolve;tx.onerror=resolve;tx.onabort=resolve}catch(e){resolve()}});db.close()}
+  function bankCacheKey(){return new URL("__eear_question_bank_cache_v4.html",location.href).href}
+  async function readCachedBank(){try{if(window.caches){const cache=await caches.open("eear-question-bank-cache-v4"),response=await cache.match(bankCacheKey());if(response){const blob=await response.blob();if(blob.size>=1000000)return blob}}}catch(e){}const db=await openBankCache();if(!db)return null;return new Promise(function(resolve){try{const request=db.transaction("cache","readonly").objectStore("cache").get("bank-html-v4");request.onsuccess=function(){const blob=request.result instanceof Blob&&request.result.size>=1000000?request.result:null;resolve(blob)};request.onerror=function(){resolve(null)}}catch(e){resolve(null)}finally{db.close()}})}
+  async function writeCachedBank(blob){try{if(window.caches){const cache=await caches.open("eear-question-bank-cache-v4");await cache.put(bankCacheKey(),new Response(blob,{headers:{"Content-Type":"text/html;charset=utf-8"}}))}}catch(e){console.warn("Cache API não conseguiu guardar o banco:",e)}const db=await openBankCache();if(!db)return;await new Promise(function(resolve){try{const tx=db.transaction("cache","readwrite");tx.objectStore("cache").put(blob,"bank-html-v4");tx.oncomplete=resolve;tx.onerror=resolve;tx.onabort=resolve}catch(e){resolve()}});db.close()}
   async function exportCurrentBank(){
     if(!exportBank)return;
     exportBank.disabled=true;
@@ -121,24 +121,40 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
         if(typeof DecompressionStream==="undefined")throw new Error("Este navegador não oferece suporte à descompactação necessária. Atualize o Chrome ou Edge.");
         const parts=[];
         const BATCH=3;
-        for(let start=1;start<=TOTAL;start+=BATCH){
-          const end=Math.min(start+BATCH-1,TOTAL);
-          detail.textContent="Carregando arquivos "+start+"–"+end+" de "+TOTAL+" em paralelo…";
-          const files=await Promise.all(Array.from({length:end-start+1},async function(_,offset){
+        // Os arquivos 01–09 são fragmentos consecutivos de UM único fluxo GZIP.
+        // Portanto, precisam ser concatenados antes de descompactar.
+        const legacyChunks=[];
+        for(let start=1;start<=9;start+=BATCH){
+          const end=Math.min(start+BATCH-1,9);
+          detail.textContent="Carregando banco original ("+start+"–"+end+" de 9)…";
+          const batch=await Promise.all(Array.from({length:end-start+1},async function(_,offset){
             const i=start+offset,name="questoes-banco-"+String(i).padStart(2,"0")+".gz";
-            const response=await fetch("banco-questoes/"+name);
+            const response=await fetch("banco-questoes/"+name,{cache:"no-store"});
             if(!response.ok)throw new Error("Não foi possível carregar "+name+" (HTTP "+response.status+").");
             return new Uint8Array(await response.arrayBuffer());
           }));
-          for(let offset=0;offset<files.length;offset++){
-            const fileNumber=start+offset;
-            const decoded=await new Response(new Blob([files[offset]]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
-            // Os blocos 11 e 12 foram exportados como Q.push sem a tag <script> inicial.
-            // Envolver esses fragmentos evita que o navegador os trate como texto no HTML.
-            const normalized=fileNumber>=11&&/^\s*Q\.push\s*\(/.test(decoded)?"<script>\n"+decoded:decoded;
-            parts.push(normalized);
-            progress.style.width=(fileNumber/TOTAL*100)+"%";
-          }
+          legacyChunks.push.apply(legacyChunks,batch);
+          progress.style.width=(end/TOTAL*100)+"%";
+        }
+        const legacySize=legacyChunks.reduce((sum,chunk)=>sum+chunk.byteLength,0);
+        const legacyStream=new Uint8Array(legacySize);
+        let legacyOffset=0;
+        legacyChunks.forEach(function(chunk){legacyStream.set(chunk,legacyOffset);legacyOffset+=chunk.byteLength});
+        detail.textContent="Descompactando banco original de 4.244 questões…";
+        const legacyDecoded=await new Response(new Blob([legacyStream]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
+        parts.push(legacyDecoded);
+        // Os arquivos 10–12 são pacotes GZIP independentes, descompactados um a um.
+        for(let fileNumber=10;fileNumber<=TOTAL;fileNumber++){
+          const name="questoes-banco-"+String(fileNumber).padStart(2,"0")+".gz";
+          detail.textContent="Carregando complemento de questões ("+(fileNumber-9)+" de 3)…";
+          const response=await fetch("banco-questoes/"+name,{cache:"no-store"});
+          if(!response.ok)throw new Error("Não foi possível carregar "+name+" (HTTP "+response.status+").");
+          const compressed=new Uint8Array(await response.arrayBuffer());
+          const decoded=await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
+          // Os blocos 11 e 12 foram exportados como Q.push sem a tag <script> inicial.
+          const normalized=fileNumber>=11&&/^\s*Q\.push\s*\(/.test(decoded)?"<script>\n"+decoded:decoded;
+          parts.push(normalized);
+          progress.style.width=(fileNumber/TOTAL*100)+"%";
         }
         blob=new Blob(parts,{type:"text/html;charset=utf-8"});
         if(blob.size<1000000)throw new Error("O banco descompactado parece incompleto.");
