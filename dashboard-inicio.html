@@ -1831,10 +1831,11 @@ function cuAnim(){
 }
 /* Integração dos indicadores de Estudo com a fonte real estudos-v1 (estudos-area.html). */
 function syncStudyMetrics(){
-  /* Fonte de verdade: mesmos registros e regras da Visão Geral em Estudos. */
-  let S=DASH_STUDY_STATE&&Array.isArray(DASH_STUDY_STATE.entries)&&Array.isArray(DASH_STUDY_STATE.edital)?DASH_STUDY_STATE:null;
+  /* Lê sempre a versão mais recente salva pelo LDI/Agenda. */
+  let S=null;
   const keys=DASH_USER_ID?['estudos-v1:'+DASH_USER_ID,'estudos-v1']:['estudos-v1'];
-  if(!S)for(const key of keys){try{const candidate=JSON.parse(localStorage.getItem(key)||'null');if(candidate&&Array.isArray(candidate.entries)&&Array.isArray(candidate.edital)){S=candidate;break}}catch(e){}}
+  for(const key of keys){try{const candidate=JSON.parse(localStorage.getItem(key)||'null');if(candidate&&Array.isArray(candidate.entries)&&Array.isArray(candidate.edital)){S=candidate;DASH_STUDY_STATE=candidate;break}}catch(e){}}
+  if(!S&&DASH_STUDY_STATE&&Array.isArray(DASH_STUDY_STATE.entries)&&Array.isArray(DASH_STUDY_STATE.edital))S=DASH_STUDY_STATE;
   if(!S)return;
   const parseDate=v=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(String(v||'')))return null;const [y,m,d]=v.split('-').map(Number);return new Date(y,m-1,d)};
   const dayKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -1852,8 +1853,9 @@ function syncStudyMetrics(){
   const totalH=timeEntries.reduce((a,e)=>a+net(e),0);
   /* Desempenho e progresso seguem exatamente os cálculos da Visão Geral de Estudos. */
   const totalQ=entries.reduce((a,e)=>a+(Number(e.q)||0),0),totalA=entries.reduce((a,e)=>a+(Number(e.a)||0),0);
-  const topics=S.edital.reduce((a,m)=>a+(Array.isArray(m&&m.topics)?m.topics.length:0),0);
-  const done=S.edital.reduce((a,m)=>a+(Array.isArray(m&&m.doneTopics)?m.doneTopics.filter(t=>(m.topics||[]).includes(t)).length:0),0);
+  const topicList=m=>[...new Set((Array.isArray(m&&m.topics)?m.topics:[]).filter(t=>typeof t==='string'&&t.trim()))];
+  const topics=S.edital.reduce((a,m)=>a+topicList(m).length,0);
+  const done=S.edital.reduce((a,m)=>a+topicList(m).filter(t=>(m.doneTopics||[]).includes(t)||(m.agendaDoneTopics||[]).includes(t)).length,0);
   /* Constância de Estudos: dias estudados nos últimos 21 dias, igual ao calendário da aba. */
   const studied=new Set();
   entries.forEach(e=>{if(net(e)>0||(Number(e.q)||0)>0)studied.add(e.date)});
@@ -2192,6 +2194,7 @@ refreshDashboardCommunity();
 window.addEventListener('focus',refreshDashboardCommunity);
 window.addEventListener('message',event=>{
  if(event.origin!==location.origin||!event.data||event.data.type!=='study-performance-updated')return;
+ drawGeral();
  drawPerformanceChart();
 });
 setInterval(refreshDashboardCommunity,60000);
