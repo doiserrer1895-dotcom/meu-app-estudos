@@ -135,7 +135,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             const decoded=await new Response(new Blob([files[offset]]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
             // Os blocos 11 e 12 foram exportados como Q.push sem a tag <script> inicial.
             // Envolver esses fragmentos evita que o navegador os trate como texto no HTML.
-            const normalized=fileNumber>=11&&/^\\s*Q\\.push\\s*\\(/.test(decoded)?"<script>\\n"+decoded:decoded;
+            const normalized=fileNumber>=11&&/^\s*Q\.push\s*\(/.test(decoded)?"<script>\n"+decoded:decoded;
             parts.push(normalized);
             progress.style.width=(fileNumber/TOTAL*100)+"%";
           }
