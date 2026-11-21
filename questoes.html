@@ -182,7 +182,20 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
                 topic:String(topic||"Geral"),picked:String(picked),correct:correct,date:date
               }},"*");
             }
-            const rawBank=(typeof B!=="undefined"&&B)||window.__eearBridgeQ||{};
+            const rawBank=Object.assign({},(typeof B!=="undefined"&&B&&!Array.isArray(B))?B:{});
+            function addBridgeQuestion(question,key){
+              if(!question||typeof question!=="object")return;
+              const id=question.id??question.qid??question.key??question.i??question.n??key;
+              if(id===undefined||id===null||String(id).trim()==="")return;
+              rawBank[String(id)]=question;
+            }
+            if(typeof B!=="undefined"&&Array.isArray(B))B.forEach((question,index)=>addBridgeQuestion(question,index));
+            if(typeof Q!=="undefined"&&Q){
+              if(Array.isArray(Q))Q.forEach((question,index)=>addBridgeQuestion(question,index));
+              else if(typeof Q==="object")Object.keys(Q).forEach(key=>addBridgeQuestion(Q[key],key));
+            }
+            if(window.__eearBridgeQ&&typeof window.__eearBridgeQ==="object")Object.keys(window.__eearBridgeQ).forEach(key=>{if(!rawBank[key])rawBank[key]=window.__eearBridgeQ[key]});
+            window.__eearBridgeQ=rawBank;
             const taxonomy={},hierarchy={};
             Object.keys(rawBank).forEach(function(id){const q=rawBank[id];if(!q||typeof q!=="object")return;const d=String(q.d||q.discipline||q.subject||"").trim();if(!d)return;const m=String(q.m||q.matter||q.area||"Geral").trim()||"Geral",c=String(q.s||q.content||q.topic||"Geral").trim()||"Geral",u=String(q.u||q.subtopic||q.detail||"Geral").trim()||"Geral",t=String(q.u||q.s||q.m||q.topic||"Geral").trim()||"Geral";if(!taxonomy[d])taxonomy[d]=[];if(!taxonomy[d].includes(t))taxonomy[d].push(t);if(!hierarchy[d])hierarchy[d]={};if(!hierarchy[d][m])hierarchy[d][m]={};if(!hierarchy[d][m][c])hierarchy[d][m][c]=[];if(!hierarchy[d][m][c].includes(u))hierarchy[d][m][c].push(u)});
             function sortTree(o){Object.keys(o).forEach(k=>Array.isArray(o[k])?o[k].sort((a,b)=>a.localeCompare(b,"pt-BR")):sortTree(o[k]))}
@@ -196,8 +209,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               if(bankAnswer){
                 const card=bankAnswer.closest(".card");
                 if(!card)return;
-                const id=card.dataset.id,q=window.__eearBridgeQ&&window.__eearBridgeQ[id];
-                const question=(typeof B!=="undefined"&&B[id])||q;
+                const id=card.dataset.id,question=rawBank[id]||(window.__eearBridgeQ&&window.__eearBridgeQ[id])||(typeof B!=="undefined"&&B[id]);
                 const picked=(typeof ans!=="undefined"&&ans[id])||bankAnswer.dataset.a;
                 if(!question||question.open||!question.r||question.r==="ANULADA")return;
                 const accepted=question.legacy_d==="Física 2"?[question.r,question.r2].filter(Boolean):[question.r];
