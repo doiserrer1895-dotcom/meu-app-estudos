@@ -9,7 +9,7 @@ Estrutura dos arquivos:
 
 O carregador está em questoes.html na raiz. Ele carrega os nove fragmentos originais em conjunto e depois os pacotes independentes 10 a 13.
 
-manifest.json registra a composição e as contagens atualizadas. SHA256SUMS.txt contém os hashes dos 13 pacotes e do manifesto.
+manifest.json registra a composição e as contagens atualizadas. SHA256SUMS.txt contém os hashes SHA-256 dos 13 pacotes GZIP.
 
 Não renomeie, edite ou recomprima os arquivos .gz sem atualizar também o carregador e os metadados correspondentes.
 
