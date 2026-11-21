@@ -1,53 +1,53 @@
-RELATÓRIO DE AUDITORIA DO BANCO EEAR
+RELATÓRIO DE AUDITORIA E CORREÇÕES DO BANCO EEAR
 Data: 21/11/2026
-Base auditada: pacotes GZIP 01 a 13, descompactados e reunidos conforme o carregador do aplicativo.
+Base: pacotes GZIP 01 a 13, descompactados e conferidos com o carregador do aplicativo.
 
 1. CONTAGEM E INTEGRIDADE
-- Total de registros: 5.250.
-- IDs: 5.250 únicos; nenhum ID repetido.
-- Matemática: 2.004.
-- Português: 1.671.
-- Física: 1.095.
-- Inglês: 480.
-- Pacotes 01–09: 4.244 registros.
-- Pacotes 11–12: 402 registros (202 + 200).
-- Pacote 13: 604 registros.
-- Pacote 10: ajuste de compatibilidade, sem registros de questões.
-- Os nove fragmentos originais foram concatenados e descompactados com sucesso. Os pacotes independentes 10–13 passaram pela validação GZIP.
+- Total ativo após deduplicação: 4.848 questões.
+- IDs ativos: 4.848 únicos.
+- Matemática: 1.853.
+- Português: 1.665.
+- Física: 970.
+- Inglês: 360.
+- Questões principais dos pacotes 01–09: 4.244.
+- Questões Triunfo Militar: 604.
+- Níveis finais: Fácil 1.626; Médio 2.600; Difícil 622.
+- Os nove fragmentos originais foram concatenados e descompactados com sucesso; os pacotes suplementares foram descompactados individualmente.
 
 2. DUPLICATAS
-- Nenhum ID duplicado.
-- Nenhuma duplicata textual exata identificada nos campos de enunciado/resposta.
-- Uma imagem idêntica aparece em duas questões de Português diferentes: os enunciados e gabaritos são distintos e a imagem é um texto/cartum de apoio compartilhado. Não é duplicata de questão.
-- Nenhuma questão foi excluída porque não houve duplicata real comprovada.
+- Foi encontrada uma repetição real dentro da importação legada dos pacotes 10–12: a questão 202 de Português estava cadastrada duas vezes.
+- O pacote 13 é a versão consolidada do mesmo conjunto de 604 questões. O carregador compara os registros por disciplina e número da questão, conserva a versão legada com imagens de maior resolução e classificação mais detalhada, e descarta as cópias da versão consolidada.
+- A questão 208 de Português, ausente na importação antiga, é acrescentada a partir do pacote 13.
+- Resultado: 1 registro duplicado removido; 604 questões Triunfo únicas mantidas. Nenhuma questão distinta foi excluída.
 
 3. GABARITOS E RESPOSTAS
-- Nas 604 questões do pacote Triunfo Militar, 603 gabaritos coincidem com o gabarito impresso do PDF.
-- A questão 208 de Português não possui resposta no gabarito do PDF (o gabarito publicado termina na questão 207). Ela foi sinalizada no aplicativo como “Gabarito indisponível”, sem inventar alternativa.
-- Nos registros do banco principal, 160 questões que estavam marcadas com “R” ou sem alternativa, mas continham resposta textual no campo de solução, foram convertidas para o formato de resposta aberta. O aplicativo passa a exibir enunciado/imagem e botão “Ver resposta”, em vez de tratar “R” como alternativa.
-- Entre essas respostas textuais, o material contém notas como “Demonstração”, “resposta em vídeo” e “resposta não informada”; essas notas foram preservadas como estão, sem criar gabaritos.
-- A questão m2-06-Difícil-22 (“Sem Resposta”) e triunfo_eear_208 foram sinalizadas como sem gabarito disponível.
-- Os 402 registros dos pacotes 11–12 possuem alternativas A–D preenchidas. Não foi encontrada ausência de gabarito nesses pacotes.
-- Não foram alteradas alternativas A–E quando não havia uma fonte de conferência confiável.
+- A versão consolidada foi usada para conferir os gabaritos da importação antiga. A questão 56 de Português, que estava sem alternativa em uma cópia antiga, já possui gabarito D na versão consolidada; a versão ativa com maior resolução também possui D.
+- A questão 208 de Português permanece sem gabarito: o material de origem não apresenta resposta para ela. O aplicativo sinaliza “Gabarito indisponível”, sem inventar alternativa.
+- Os registros principais com resposta textual preservada no campo de solução e sem alternativa (160 casos) foram reclassificados como resposta aberta para exibir a solução textual em vez de tratar “R” ou campo vazio como alternativa.
+- Algumas soluções são observações do material, como “Demonstração” ou “resposta não informada”; essas observações foram preservadas, não convertidas em alternativas.
+- Não foram alteradas outras alternativas sem fonte confiável para confirmar a correção.
 
 4. IMAGENS
-- 4.330 referências de imagem extraídas e decodificadas com sucesso.
-- 297 imagens têm largura inferior a 400 px ou altura inferior a 150 px; a maior parte são recortes horizontais de fórmulas/respostas, e não imagens de questão completas.
-- Foram inspecionadas visualmente amostras das imagens com menor nitidez calculada e as 30 imagens pequenas que não eram apenas tiras horizontais. Não foi identificada imagem inequivocamente ilegível nessa amostra.
-- Nenhuma imagem foi substituída sem uma fonte original de maior qualidade comprovada. A validação binária confirma que os arquivos abrem; não equivale a uma inspeção visual manual individual de todas as 4.330 imagens.
+- 3.324 imagens embutidas no banco principal e 604 imagens no conjunto Triunfo ativo: 3.928 imagens ativas.
+- As imagens Triunfo legadas, geralmente com 762 px de largura, foram preservadas em vez das cópias reprocessadas de aproximadamente 733 px do pacote 13.
+- Foram inspecionadas visualmente amostras das imagens com menor nitidez calculada e as imagens pequenas que não eram apenas tiras horizontais. Os textos, fórmulas e diagramas das amostras permanecem legíveis; não foi identificada imagem inequivocamente ilegível que pudesse ser substituída por uma fonte melhor comprovada.
+- Todos os 3.928 payloads de imagem ativos foram decodificados com sucesso. A decodificação confirma integridade do arquivo, mas não equivale a uma inspeção visual humana individual de todas as imagens.
 
 5. CLASSIFICAÇÃO POR MATÉRIA
-- Todos os registros estão associados a uma das quatro disciplinas esperadas: Matemática, Português, Física ou Inglês.
-- Não foi encontrada classificação de disciplina inválida ou divergência inequívoca de matéria na checagem estrutural.
-- Não foram movidas questões sem evidência suficiente de classificação incorreta.
+- A distribuição ativa foi conferida e contém somente Matemática, Português, Física e Inglês.
+- Nenhuma classificação de disciplina claramente incorreta foi comprovada nessa varredura.
+- Os registros legados preservam os campos de assunto/tópico mais detalhados, em vez de substituí-los pela classificação mais genérica do pacote consolidado.
 
-6. AÇÕES APLICADAS NO APLICATIVO
-- Corrigida a apresentação das 160 questões discursivas com resposta textual preservada.
-- Sinalizadas as duas questões sem gabarito disponível.
-- Atualizado o total do banco e a distribuição por disciplina para 5.250.
-- Corrigida a auditoria dos IDs sequenciais: agora espera 5.250 registros, com as faixas por disciplina recalculadas dinamicamente.
-- Atualizados manifest.json, LEIA-ME.txt e SHA256SUMS.txt para refletir os 13 pacotes.
+6. CORREÇÕES APLICADAS NO APLICATIVO
+- Deduplicação por disciplina e número da questão, com remoção da repetição da questão 202 de Português.
+- Inclusão da questão 208 de Português sem inventar gabarito.
+- Preservação da versão de maior resolução e dos metadados mais completos das questões Triunfo.
+- Conferência e manutenção do gabarito D da questão 56 de Português.
+- Reclassificação de 160 registros com solução textual para resposta aberta.
+- Total e faixas de IDs sequenciais corrigidos para 4.848 questões.
+- manifest.json e LEIA-ME.txt atualizados para refletir a contagem real.
 
-Limites da auditoria:
-- Os 4.244 registros principais e os 402 registros adicionais não vieram acompanhados de um gabarito oficial completo independente para comparação alternativa por alternativa. Portanto, não foi possível declarar que todas as alternativas desses grupos foram validadas contra fonte externa.
+LIMITES DA AUDITORIA
+- Não há gabarito oficial independente completo para todos os 4.244 registros principais. Portanto, não é possível afirmar que cada uma dessas alternativas foi validada externamente.
 - A inspeção visual de nitidez foi automatizada e complementada por amostras; não se afirma inspeção humana individual de cada imagem.
+- SHA256SUMS.txt valida somente os nove fragmentos originais 01–09. Os pacotes suplementares 10–13 não estão cobertos por essa lista de hashes.
