@@ -149,6 +149,20 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             function sortTree(o){Object.keys(o).forEach(k=>Array.isArray(o[k])?o[k].sort((a,b)=>a.localeCompare(b,"pt-BR")):sortTree(o[k]))}
             Object.keys(taxonomy).forEach(n=>taxonomy[n].sort((a,b)=>a.localeCompare(b,"pt-BR")));sortTree(hierarchy);
             window.parent.postMessage({type:"eear-question-taxonomy",taxonomy:taxonomy},"*");window.parent.postMessage({type:"eear-question-taxonomy-full",hierarchy:hierarchy},"*");
+            fetch("https://doiserrer1895-dotcom.github.io/meu-app-estudos/banco-questoes/classificacao-600-questoes.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error("taxonomy");return r.json()}).then(data=>{
+              const grouped={},flat={};
+              (data.subjects||[]).forEach(subject=>{
+                grouped[subject.name]={};flat[subject.name]=[];
+                (subject.areas||[]).forEach(area=>{
+                  const contents={};
+                  (area.topics||[]).forEach(item=>{const label=item[0];contents[label]=[]});
+                  grouped[subject.name][area.name]=contents;
+                  flat[subject.name].push(area.name);
+                });
+              });
+              window.parent.postMessage({type:"eear-question-taxonomy",taxonomy:flat},"*");
+              window.parent.postMessage({type:"eear-question-taxonomy-full",hierarchy:grouped},"*");
+            }).catch(()=>{});
             function applyLinkedFilter(f){document.querySelectorAll(".card[data-id]").forEach(card=>{const q=rawBank[card.dataset.id]||{},norm=v=>String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").trim().toLowerCase(),fields=[q.d||q.discipline||q.subject,q.m||q.matter||q.area,q.s||q.content||q.topic,q.u||q.subtopic||q.detail].map(norm),wanted=[f.subject,f.matter,f.content,f.specific].map(norm);card.style.display=wanted.every((v,i)=>!v||fields[i]===v)?"":"none"})}
             window.addEventListener("message",ev=>{if(ev.data&&ev.data.type==="app-question-filter"){window.__appQuestionFilter=ev.data.filter||{};applyLinkedFilter(window.__appQuestionFilter)}});
             try{new MutationObserver(()=>{if(window.__appQuestionFilter)applyLinkedFilter(window.__appQuestionFilter)}).observe(document.body,{childList:true,subtree:true})}catch(e){}
