@@ -56,33 +56,36 @@
     {
       "file": "questoes-banco-10.gz",
       "bytes": 6626104,
-      "active": false,
+      "active": true,
       "duplicate_legacy": true,
       "questions": 202,
       "legacy_duplicate": true,
-      "role": "compatibility-script-only"
+      "role": "legacy-import-with-compatibility-script"
     },
     {
       "file": "questoes-banco-11.gz",
       "bytes": 7344742,
       "questions": 202,
-      "active": false,
+      "active": true,
       "duplicate_legacy": true,
-      "legacy_duplicate": true
+      "legacy_duplicate": true,
+      "role": "legacy-import-deduplicated-at-runtime"
     },
     {
       "file": "questoes-banco-12.gz",
       "bytes": 3560999,
       "questions": 200,
-      "active": false,
+      "active": true,
       "duplicate_legacy": true,
-      "legacy_duplicate": true
+      "legacy_duplicate": true,
+      "role": "legacy-import-deduplicated-at-runtime"
     },
     {
       "file": "questoes-banco-13.gz",
       "bytes": 18400011,
       "questions": 604,
-      "active": true
+      "active": true,
+      "role": "consolidated-cross-check-and-missing-question-source"
     }
   ],
   "question_bank": {
@@ -117,7 +120,7 @@
       "Física": 970,
       "Inglês": 360
     },
-    "legacy_duplicate_records_excluded": 604,
+    "legacy_duplicate_records_excluded": 1,
     "discursive_records_reclassified": 160
   },
   "official_exams": {
@@ -146,6 +149,9 @@
     "questoes-banco-07.gz",
     "questoes-banco-08.gz",
     "questoes-banco-09.gz",
+    "questoes-banco-10.gz",
+    "questoes-banco-11.gz",
+    "questoes-banco-12.gz",
     "questoes-banco-13.gz"
   ]
 }
