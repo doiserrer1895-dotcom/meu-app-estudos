@@ -1,11 +1,12 @@
 PACOTE DO BANCO COMPLETO DE QUESTÕES EEAR
 
-Nesta pasta ficam:
-- questoes-banco-01.gz até questoes-banco-09.gz: partes consecutivas do mesmo fluxo GZIP.
-- manifest.json: contagens, tamanhos e hashes de referência.
-- SHA256SUMS.txt: somas de verificação dos nove pacotes.
+Estrutura dos arquivos:
+- questoes-banco-01.gz até questoes-banco-09.gz: fragmentos consecutivos do mesmo fluxo GZIP original. O carregador deve concatenar os nove arquivos na ordem e descompactar o fluxo uma única vez.
+- questoes-banco-10.gz até questoes-banco-12.gz: pacotes GZIP independentes do complemento de questões. Cada arquivo deve ser descompactado individualmente e anexado ao banco original na ordem.
+- manifest.json e SHA256SUMS.txt: metadados e verificações do pacote original de nove fragmentos (não representam, isoladamente, o complemento 10–12).
 
-O carregador questoes.html fica na raiz e busca os nove pacotes nesta pasta.
-Não renomeie, separe, abra, edite nem recomprima os arquivos .gz.
+O carregador está em questoes.html na raiz. Ele carrega os nove fragmentos originais em conjunto e depois os três pacotes complementares independentes.
+
+Não renomeie, edite ou recomprima os arquivos .gz sem atualizar também o carregador e os metadados correspondentes.
 
 As imagens auxiliares e bt_questoes.json ficam em assets/banco-questoes/.
