@@ -92,7 +92,17 @@
     "additional_question_packages": {
       "questoes-banco-11.gz": 202,
       "questoes-banco-12.gz": 200
-    }
+    },
+    "total_questions": 5250,
+    "main_plus_additional_402": 4646,
+    "total_by_subject": {
+      "Matemática": 2004,
+      "Português": 1671,
+      "Física": 1095,
+      "Inglês": 480
+    },
+    "appended_source_questions_without_answer_key": 1,
+    "discursive_answers_reclassified": 160
   },
   "official_exams": {
     "CFS 1/2023": 96,
