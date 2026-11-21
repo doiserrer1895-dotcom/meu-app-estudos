@@ -303,7 +303,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
               const range=uidRanges[subject];
               const line=document.createElement("span");
               line.className="eear-uid-summary-line";
-              line.textContent=subject+": "+(range?"ID #"+range.first+" até ID #"+range.last:"sem questões");
+              line.textContent=subject+": "+(range?"#"+range.first+" até #"+range.last:"sem questões");
               uidSummary.appendChild(line);
             });
             document.body.insertBefore(uidSummary,document.body.firstChild);
@@ -327,28 +327,29 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             function applyQuestionUIDs(root){
               const scope=root&&root.querySelectorAll?root:document;
               const cards=[];
-              if(scope.matches&&scope.matches(".card"))cards.push(scope);
-              scope.querySelectorAll(".card").forEach(card=>cards.push(card));
+              if(scope.matches&&scope.matches(".card[data-id]"))cards.push(scope);
+              scope.querySelectorAll(".card[data-id]").forEach(card=>cards.push(card));
+              let mapped=0;
               cards.forEach(function(card){
-                // IDs pertencem exclusivamente ao Banco de Questões, nunca a provas ou simulados.
+                const key=String(card.getAttribute("data-id")||"");
+                const question=rawBank[key]||uidAliasMap.get(key);
+                const uid=question&&question.__eearUID;
                 let label=card.querySelector(":scope > .eear-question-uid");
-                const isExamOrSimulation=!!card.closest("[data-exam-q],[data-sim-q],[data-exam-answer],[data-sim-answer]");
-                if(isExamOrSimulation){
+                if(!uid){
                   if(label)label.remove();
                   return;
                 }
-                const key=card.dataset.id||card.dataset.qid||card.dataset.questionId||card.getAttribute("data-question-id")||card.id||"";
-                const question=rawBank[String(key)]||uidAliasMap.get(String(key));
-                const uid=question&&question.__eearUID;
+                mapped++;
                 if(!label){
                   label=document.createElement("div");
                   label.className="eear-question-uid";
                   card.insertBefore(label,card.firstChild);
                 }
-                label.textContent=uid?"ID #"+uid:"";
-                label.style.display=uid?"inline-flex":"none";
-                if(uid)label.setAttribute("aria-label","ID #"+uid);else label.removeAttribute("aria-label");
+                label.textContent="ID #"+uid;
+                label.style.display="inline-flex";
+                label.setAttribute("aria-label","ID #"+uid);
               });
+              window.__eearUIDCardAudit={cardsFound:document.querySelectorAll(".card[data-id]").length,cardsMapped:mapped,questionsWithUID:uidQuestions.length};
             }
             const uidStyle=document.createElement("style");
             uidStyle.textContent=".eear-question-uid{display:inline-flex!important;align-items:center;margin:0 0 14px;padding:5px 10px;border:1px solid #777;border-radius:7px;background:#252525;color:#fff;font:800 12px/1.2 system-ui,Arial,sans-serif;letter-spacing:.04em;position:relative;z-index:1}.card .eear-question-uid{visibility:visible!important;opacity:1!important}";
@@ -360,7 +361,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
                   if(record.type==="attributes"){applyQuestionUIDs(record.target);return}
                   record.addedNodes.forEach(function(node){if(node.nodeType===1)applyQuestionUIDs(node)});
                 });
-              }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:["data-id","data-qid","data-question-id","id"]});
+              }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:["data-id"]});
             }catch(e){}
             const taxonomy={},hierarchy={};
             function cleanLabel(value){return String(value||"").replace(/<[^>]*>/g," ").replace(/\\s+/g," ").trim()}
