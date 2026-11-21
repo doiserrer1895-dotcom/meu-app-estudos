@@ -219,7 +219,10 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             });
             function applyQuestionUIDs(root){
               const scope=root&&root.querySelectorAll?root:document;
-              scope.querySelectorAll(".card[data-id]").forEach(function(card){
+              const cards=[];
+              if(scope.matches&&scope.matches(".card[data-id]"))cards.push(scope);
+              scope.querySelectorAll(".card[data-id]").forEach(card=>cards.push(card));
+              cards.forEach(function(card){
                 const question=rawBank[card.dataset.id];
                 if(!question||!question.__eearUID||card.querySelector(".eear-question-uid"))return;
                 const label=document.createElement("div");
