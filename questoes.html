@@ -199,11 +199,15 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
             }
             if(window.__eearBridgeQ&&typeof window.__eearBridgeQ==="object")Object.keys(window.__eearBridgeQ).forEach(key=>{if(!rawBank[key])rawBank[key]=window.__eearBridgeQ[key]});
             window.__eearBridgeQ=rawBank;
-            // UID sequencial único por questão, agrupado por disciplina.
-            // O identificador interno original permanece intacto para respostas e estatísticas.
+            // ID permanente do Banco de Questões: sequência única, agrupada por disciplina
+            // e por assunto, respeitando a ordem em que os assuntos aparecem no próprio banco.
+            // IDs não são aplicados às áreas de simulados ou provas.
             const uidSubjectOrder=["Matemática","Física","Português","Inglês"];
             const uidCounts={"Matemática":0,"Física":0,"Português":0,"Inglês":0};
-            const uidSeen=new Set(),uidQuestions=[],uidUnclassified=[];
+            const uidSeen=new Set(),uidQuestions=[],uidUnclassified=[],uidMatterOrder={};
+            function uidMatterKey(question){
+              return String(question.m||question.matter||question.area||"Sem assunto").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim()||"Sem assunto";
+            }
             Object.keys(rawBank).forEach(function(key){
               const question=rawBank[key];
               if(!question||typeof question!=="object"||uidSeen.has(question))return;
@@ -215,12 +219,16 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
                 if(rawSubject)uidUnclassified.push({key:String(key),subject:String(rawSubject)});
                 return;
               }
-              uidQuestions.push({question:question,subject:subject,order:order,sequence:uidQuestions.length});
+              const matter=uidMatterKey(question);
+              const matterKey=matter.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+              if(!uidMatterOrder[subject])uidMatterOrder[subject]=new Map();
+              if(!uidMatterOrder[subject].has(matterKey))uidMatterOrder[subject].set(matterKey,uidMatterOrder[subject].size);
+              uidQuestions.push({question:question,subject:subject,order:order,matterKey:matterKey,matterOrder:uidMatterOrder[subject].get(matterKey),sequence:uidQuestions.length});
             });
-            uidQuestions.sort((a,b)=>a.order-b.order||a.sequence-b.sequence);
+            uidQuestions.sort((a,b)=>a.order-b.order||a.matterOrder-b.matterOrder||a.sequence-b.sequence);
             uidQuestions.forEach(function(item,index){
-              item.question.__eearUID=String(index+1).padStart(4,"0");
-              item.question.__eearUIDLabel="#ID "+item.question.__eearUID;
+              item.question.__eearUID=String(index+1).padStart(3,"0");
+              item.question.__eearUIDLabel="ID #"+item.question.__eearUID;
               uidCounts[item.subject]++;
             });
             // Nem toda questão cadastrada pode ser respondida: algumas são abertas,
@@ -335,7 +343,7 @@ html,body,#status{background:radial-gradient(60% 50% at 50% 0%,#161616,#020202) 
                   label.className="eear-question-uid";
                   card.insertBefore(label,card.firstChild);
                 }
-                label.textContent=uid?"ID "+uid:(key?"ID "+String(key):"ID indisponível");
+                label.textContent=uid?"ID #"+uid:(key?"ID #"+String(key):"ID indisponível");
                 label.setAttribute("aria-label",label.textContent);
               });
             }
