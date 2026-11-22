@@ -205,17 +205,16 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 @keyframes nameEditIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:480px){.name-edit-dialog{padding:21px;border-radius:18px}.name-edit-actions button{flex:1}}
 
-/* Banco EEAR integrado */
-.question-bank-shell{width:100%;height:calc(100dvh - 150px);min-height:560px;overflow:hidden;border:1px solid var(--bd);border-radius:14px;background:#0a0a0a}
-.question-bank-frame{display:block;width:100%;height:100%;border:0;background:#0a0a0a}
-/* Banco de Questões: ocupa toda a área disponível da tela, sem o limite estreito do app. */
-body.question-bank-fullscreen{height:100dvh;overflow:hidden}
-body.question-bank-fullscreen #app{position:relative;width:100%;max-width:none;height:100dvh;min-height:100dvh;margin:0;padding:0;display:flex;flex-direction:column;overflow:hidden}
-body.question-bank-fullscreen #app>.top{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important}
-body.question-bank-fullscreen .question-bank-shell{position:relative;display:block;flex:1 1 0%;width:100%;height:100dvh;min-height:0;margin:0;padding:0;border:0;border-radius:0;overflow:hidden}
+/* Banco EEAR integrado: usa toda a viewport, sem rolagem externa. */
+html:has(body.question-bank-fullscreen),body.question-bank-fullscreen{width:100%;height:100%;min-height:100dvh;margin:0;overflow:hidden!important}
+.question-bank-shell{position:relative;display:block;width:100%;height:100dvh;min-height:0;margin:0;padding:0;overflow:hidden;border:0;border-radius:0;background:#0a0a0a}
+.question-bank-frame{position:absolute;inset:0;display:block;width:100%;height:100%;min-height:0;border:0;overflow:hidden;background:#0a0a0a}
+body.question-bank-fullscreen #app{position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;min-height:0;margin:0;padding:0;display:flex;flex-direction:column;overflow:hidden!important}
+body.question-bank-fullscreen #app>.top{display:none!important}
+body.question-bank-fullscreen .question-bank-shell{flex:1 1 auto;width:100vw;height:100dvh;min-height:0;overflow:hidden}
 body.question-bank-fullscreen #question-bank-mount{position:absolute;inset:0;width:100%;height:100%;min-height:0}
-body.question-bank-fullscreen .question-bank-frame{position:absolute;inset:0;display:block;width:100%;height:100%;min-height:0;border:0}
-@media(max-width:600px){.question-bank-shell{height:calc(100dvh - 135px);min-height:500px;border-radius:10px}body.question-bank-fullscreen #app>.top{display:none!important;height:0!important;min-height:0!important}body.question-bank-fullscreen .question-bank-shell{height:100dvh;min-height:0;border-radius:0}}
+body.question-bank-fullscreen .question-bank-frame{position:absolute;inset:0;width:100%;height:100%;min-height:0;overflow:hidden}
+
 </style>
 <link rel="manifest" href="/meu-app-estudos/manifest.webmanifest">
 <meta name="theme-color" content="#050505">
@@ -600,13 +599,15 @@ function vS(){const D=wkDays(),t=iso(today());
  <div class="chips">${[15,30,45,60,90,120,180].map(n=>`<button class="chip ${n===dur?'on':''}" onclick="pickD(${n},this)">${fmtM(n)}</button>`).join('')}</div>
  <div class="two" style="margin-top:16px"><button class="cs2" onclick="sheet=null;render()">Cancelar</button><button class="btn" onclick="addS()">Adicionar Tarefa</button></div></div></div>`:'')}
 function vQ(){
+ document.body.classList.add('question-bank-fullscreen');
  return `
  <div class="question-bank-shell">
    <iframe
      id="question-bank-frame"
      class="question-bank-frame"
      src="banco-de-questoes.html"
-     title="Banco de Questões">
+     title="Banco de Questões"
+     scrolling="no">
    </iframe>
  </div>`;
 }function openSh(k){sheet=k;render()}
