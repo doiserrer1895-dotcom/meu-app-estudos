@@ -598,6 +598,22 @@ function vS(){const D=wkDays(),t=iso(today());
  <label>Matéria</label>${selS('ss',"fillTop('ss','st')")}<label>Conteúdo</label><select id="st"></select><label>Duração estimada</label>
  <div class="chips">${[15,30,45,60,90,120,180].map(n=>`<button class="chip ${n===dur?'on':''}" onclick="pickD(${n},this)">${fmtM(n)}</button>`).join('')}</div>
  <div class="two" style="margin-top:16px"><button class="cs2" onclick="sheet=null;render()">Cancelar</button><button class="btn" onclick="addS()">Adicionar Tarefa</button></div></div></div>`:'')}
+function fitQuestionBankFrame(frame){
+ try{
+  const d=frame&&frame.contentDocument;
+  if(!d||!d.documentElement)return;
+  let style=d.getElementById('question-bank-fullscreen-fix');
+  if(!style){style=d.createElement('style');style.id='question-bank-fullscreen-fix';d.head.appendChild(style)}
+  style.textContent=`
+   html,body{width:100%!important;height:100%!important;min-height:100%!important;margin:0!important;overflow:hidden!important}
+   body{max-width:none!important}
+   #app,.app,#root,#root-app,main,.container,.wrapper,.page,.app-container{
+    width:100%!important;max-width:none!important;min-width:0!important;
+    min-height:100%!important;margin:0!important;box-sizing:border-box!important
+   }
+  `;
+ }catch(e){}
+}
 function vQ(){
  document.body.classList.add('question-bank-fullscreen');
  return `
@@ -607,7 +623,8 @@ function vQ(){
      class="question-bank-frame"
      src="banco-de-questoes.html"
      title="Banco de Questões"
-     scrolling="no">
+     scrolling="no"
+     onload="fitQuestionBankFrame(this)">
    </iframe>
  </div>`;
 }function openSh(k){sheet=k;render()}
