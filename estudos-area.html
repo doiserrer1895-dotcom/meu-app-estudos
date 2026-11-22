@@ -205,19 +205,17 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 @keyframes nameEditIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:480px){.name-edit-dialog{padding:21px;border-radius:18px}.name-edit-actions button{flex:1}}
 
-/* Banco de Questões: largura integral, coluna vertical e layout responsivo. */
-html:has(body.question-bank-fullscreen),body.question-bank-fullscreen{width:100%;height:auto;min-height:0;margin:0;overflow:auto!important}
-body.question-bank-fullscreen #app{position:relative;width:100%;max-width:none;height:auto;min-height:0;margin:0;padding:0 0 24px;display:block;overflow:visible!important}
-body.question-bank-fullscreen #app>.top{display:none!important}
-body.question-bank-fullscreen .question-bank-shell{position:relative;display:block;width:100%;max-width:none;height:auto;min-height:0;margin:0;padding:0;overflow:visible;border:0;border-radius:0;background:transparent}
-body.question-bank-fullscreen .question-bank-frame{position:relative;display:block;width:100%;max-width:100%;height:700px;min-height:0;margin:0;padding:0;border:0;overflow:visible;background:transparent}
-body.question-bank-fullscreen #question-bank-mount{position:relative;width:100%;height:auto;min-height:0}
-@media(max-width:800px){
- body.question-bank-fullscreen #app{padding:0 0 20px}
- body.question-bank-fullscreen .question-bank-shell{width:100%;max-width:none}
- body.question-bank-fullscreen .question-bank-frame{width:100%;min-width:0}
-}
-
+/* Banco EEAR integrado */
+.question-bank-shell{width:100%;height:calc(100dvh - 150px);min-height:560px;overflow:hidden;border:1px solid var(--bd);border-radius:14px;background:#0a0a0a}
+.question-bank-frame{display:block;width:100%;height:100%;border:0;background:#0a0a0a}
+/* Banco de Questões: ocupa toda a área disponível da tela, sem o limite estreito do app. */
+body.question-bank-fullscreen{height:100dvh;overflow:hidden}
+body.question-bank-fullscreen #app{position:relative;width:100%;max-width:none;height:100dvh;min-height:100dvh;margin:0;padding:0;display:flex;flex-direction:column;overflow:hidden}
+body.question-bank-fullscreen #app>.top{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important}
+body.question-bank-fullscreen .question-bank-shell{position:relative;display:block;flex:1 1 0%;width:100%;height:100dvh;min-height:0;margin:0;padding:0;border:0;border-radius:0;overflow:hidden}
+body.question-bank-fullscreen #question-bank-mount{position:absolute;inset:0;width:100%;height:100%;min-height:0}
+body.question-bank-fullscreen .question-bank-frame{position:absolute;inset:0;display:block;width:100%;height:100%;min-height:0;border:0}
+@media(max-width:600px){.question-bank-shell{height:calc(100dvh - 135px);min-height:500px;border-radius:10px}body.question-bank-fullscreen #app>.top{display:none!important;height:0!important;min-height:0!important}body.question-bank-fullscreen .question-bank-shell{height:100dvh;min-height:0;border-radius:0}}
 </style>
 <link rel="manifest" href="/meu-app-estudos/manifest.webmanifest">
 <meta name="theme-color" content="#050505">
@@ -601,122 +599,14 @@ function vS(){const D=wkDays(),t=iso(today());
  <label>Matéria</label>${selS('ss',"fillTop('ss','st')")}<label>Conteúdo</label><select id="st"></select><label>Duração estimada</label>
  <div class="chips">${[15,30,45,60,90,120,180].map(n=>`<button class="chip ${n===dur?'on':''}" onclick="pickD(${n},this)">${fmtM(n)}</button>`).join('')}</div>
  <div class="two" style="margin-top:16px"><button class="cs2" onclick="sheet=null;render()">Cancelar</button><button class="btn" onclick="addS()">Adicionar Tarefa</button></div></div></div>`:'')}
-function fitQuestionBankFrame(frame){
- try{
-  const d=frame&&frame.contentDocument;
-  if(!d||!d.documentElement)return;
-  let style=d.getElementById('question-bank-fullscreen-fix');
-  if(!style){style=d.createElement('style');style.id='question-bank-fullscreen-fix';(d.head||d.documentElement).appendChild(style)}
-  const syncTheme=()=>{
-   try{
-    const theme=window.parent.document.documentElement.getAttribute('data-theme')||'dark';
-    const light=theme==='light';
-    style.textContent=`
-     :root{
-      color-scheme:${light?'light':'dark'}!important;
-      --bg:${light?'#ffffff':'#050505'}!important;
-      --ink:${light?'#111111':'#fafafa'}!important;
-      --mute:${light?'#666666':'#a3a3a3'}!important;
-      --line:${light?'rgba(0,0,0,.14)':'rgba(255,255,255,.12)'}!important;
-      --soft:${light?'rgba(0,0,0,.045)':'rgba(255,255,255,.055)'}!important
-     }
-     html,body{width:100%!important;max-width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important;background:transparent!important;color:var(--ink)!important}
-     *,*::before,*::after{box-sizing:border-box!important;min-width:0}
-     img,svg,video,canvas{max-width:100%!important;height:auto}
-     .wrap{grid-template-columns:minmax(0,1fr)!important}
-     .q,.question,.question-card,#list>*{width:100%!important;max-width:100%!important;min-width:0!important}
-     body{font-family:Inter,-apple-system,"Segoe UI",Roboto,Arial,sans-serif!important}
-     header.top{display:flex!important;width:100%!important;max-width:none!important;min-height:72px!important;padding:12px 24px!important;margin:0!important;background:transparent!important;border-color:var(--line)!important}
-     header.top .crumb{display:none!important}
-     .hero,.marq,.dist,.tabs,.wrap,main,.top{width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important}
-     .hero{background:transparent!important;padding:32px 24px 24px!important}
-     .wrap{display:block!important;width:100%!important;min-height:0!important}
-     aside{position:static!important;top:auto!important;width:100%!important;max-width:none!important;max-height:none!important;overflow:visible!important;border-right:0!important;border-bottom:1px solid var(--line)!important;background:transparent!important}
-     main{display:block!important;width:100%!important;min-width:0!important;padding:20px 24px 48px!important}
-     .provas{width:100%!important;max-width:none!important;padding:24px 0 48px!important}
-     #app,.app,#root,#root-app,.container,.wrapper,.page,.app-container{
-      width:100%!important;max-width:none!important;min-width:0!important;
-      height:auto!important;max-height:none!important;min-height:0!important;
-      margin:0!important;box-sizing:border-box!important;overflow:visible!important
-     }
-     @media(max-width:860px){
-      .top{gap:10px!important;padding:12px 16px!important}
-      .stats{gap:12px!important;flex-wrap:wrap!important}
-      .hero{padding:26px 16px 20px!important}
-      .hero h1{font-size:clamp(34px,10vw,56px)!important}
-      aside{padding:16px!important}
-      main{padding:16px 16px 36px!important}
-      .provas{padding:18px 0 36px!important}
-      .tabs{flex-wrap:wrap!important;padding:12px 16px!important}
-      .dist{padding:18px 16px!important}
-     }
-     @media(max-width:480px){
-      .top{align-items:flex-start!important}
-      .stats{width:100%!important;justify-content:flex-start!important}
-      .stat{text-align:left!important}
-      .stat strong{font-size:18px!important}
-      .hero p{font-size:14px!important}
-      .q,.question,.question-card{min-width:0!important;max-width:100%!important}
-     }
-    `;
-    d.documentElement.setAttribute('data-theme',light?'light':'dark');
-   }catch(e){}
-  };
-  syncTheme();
-  if(!frame._bankThemeListener){
-   frame._bankThemeListener=()=>syncTheme();
-   window.addEventListener('storage',frame._bankThemeListener);
-   window.addEventListener('message',event=>{
-    if(event.data&&event.data.type==='app-theme-change')syncTheme();
-   });
-  }
-  const resize=()=>{
-   const de=d.documentElement,bo=d.body;
-   let bottom=0;
-   if(bo)for(const el of Array.from(bo.children)){
-    const rect=el.getBoundingClientRect();
-    bottom=Math.max(bottom,rect.bottom+(d.defaultView.scrollY||0));
-   }
-   const h=Math.ceil(Math.max(600,de.scrollHeight,de.offsetHeight,bo?bo.scrollHeight:0,bo?bo.offsetHeight:0,bottom)+24);
-   frame.style.height=h+'px';
-  };
-  frame.style.display='block';
-  frame.style.width='100%';
-  frame.style.maxWidth='100%';
-  frame.style.overflow='visible';
-  frame.setAttribute('scrolling','no');
-  resize();
-  d.querySelectorAll('img').forEach(img=>{
-   if(!img.complete)img.addEventListener('load',resize,{once:true});
-  });
-  if(d.fonts&&d.fonts.ready)d.fonts.ready.then(resize).catch(()=>{});
-  if(!frame._bankResizeObserver&&typeof ResizeObserver!=='undefined'){
-   frame._bankResizeObserver=new ResizeObserver(resize);
-   frame._bankResizeObserver.observe(d.documentElement);
-   if(d.body)frame._bankResizeObserver.observe(d.body);
-  }
-  if(!frame._bankMutationObserver&&typeof MutationObserver!=='undefined'){
-   frame._bankMutationObserver=new MutationObserver(resize);
-   frame._bankMutationObserver.observe(d.documentElement,{childList:true,subtree:true,attributes:true,characterData:true});
-  }
-  window.addEventListener('resize',resize,{passive:true});
-  setTimeout(resize,100);
-  setTimeout(resize,400);
-  setTimeout(resize,1000);
-  setTimeout(resize,2200);
- }catch(e){}
-}
 function vQ(){
- document.body.classList.add('question-bank-fullscreen');
  return `
  <div class="question-bank-shell">
    <iframe
      id="question-bank-frame"
      class="question-bank-frame"
      src="banco-de-questoes.html"
-     title="Banco de Questões"
-     scrolling="no"
-     onload="fitQuestionBankFrame(this)">
+     title="Banco de Questões">
    </iframe>
  </div>`;
 }function openSh(k){sheet=k;render()}
