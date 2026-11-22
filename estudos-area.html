@@ -601,23 +601,30 @@ function fitQuestionBankFrame(frame){
   const d=frame&&frame.contentDocument;
   if(!d||!d.documentElement)return;
   let style=d.getElementById('question-bank-fullscreen-fix');
-  if(!style){style=d.createElement('style');style.id='question-bank-fullscreen-fix';d.head.appendChild(style)}
+  if(!style){style=d.createElement('style');style.id='question-bank-fullscreen-fix';(d.head||d.documentElement).appendChild(style)}
   const syncTheme=()=>{
    const root=getComputedStyle(document.documentElement);
    const vars=['--bg','--card','--bd','--tx','--mu','--ac','--actx','--in'];
    const theme=vars.map(k=>k+':'+(root.getPropertyValue(k).trim()||'initial')+'!important;').join('');
+   const light=document.documentElement.dataset.theme==='light';
+   const pageBg=light?'radial-gradient(60% 50% at 50% 0%,#fff,#e9e9e9)':'radial-gradient(60% 50% at 50% 0%,#161616,#020202)';
    style.textContent=`
-    :root{color-scheme:${document.documentElement.dataset.theme==='light'?'light':'dark'}!important;${theme}}
-    html,body{width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;color:var(--tx)!important}
+    :root{color-scheme:${light?'light':'dark'}!important;${theme};}
+    html{background:transparent!important}
+    html,body{width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:${pageBg}!important;color:var(--tx)!important}
     body{max-width:none!important;font-family:Inter,-apple-system,"SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif!important;-webkit-font-smoothing:antialiased!important}
     #app,.app,#root,#root-app,main,.container,.wrapper,.page,.app-container{
-     width:100%!important;max-width:520px!important;min-width:0!important;
-     min-height:0!important;height:auto!important;margin:0 auto!important;padding-left:0!important;padding-right:0!important;
-     box-sizing:border-box!important;overflow:visible!important;background:transparent!important;color:var(--tx)!important
+     width:100%!important;max-width:520px!important;min-width:0!important;min-height:0!important;height:auto!important;
+     margin:0 auto!important;padding-left:0!important;padding-right:0!important;box-sizing:border-box!important;
+     overflow:visible!important;background:transparent!important;color:var(--tx)!important;box-shadow:none!important
     }
     .breadcrumb,.breadcrumbs,.page-breadcrumb,.bank-breadcrumb,[aria-label="breadcrumb"],[aria-label="Breadcrumb"]{display:none!important}
+    section,article,.card,.panel,.box,.surface,.filter-card,.question-card,.stats-card,.stat-card,.filters,.filter-section,.results,.question-list,.content-card{
+     background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.02))!important;
+     border-color:var(--bd)!important;color:var(--tx)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 14px 36px rgba(0,0,0,.22)!important
+    }
     input,select,textarea{color:var(--tx)!important;background:var(--in)!important;border-color:var(--bd)!important}
-   `;
+    `;
   };
   syncTheme();
   const resize=()=>{
@@ -631,7 +638,7 @@ function fitQuestionBankFrame(frame){
    if(d.body)frame._bankResizeObserver.observe(d.body);
   }
   if(!frame._bankMutationObserver&&typeof MutationObserver!=='undefined'){
-   frame._bankMutationObserver=new MutationObserver(resize);
+   frame._bankMutationObserver=new MutationObserver(()=>{syncTheme();resize()});
    frame._bankMutationObserver.observe(d.documentElement,{childList:true,subtree:true,attributes:true,characterData:true});
   }
   if(!frame._bankThemeObserver&&typeof MutationObserver!=='undefined'){
@@ -642,8 +649,10 @@ function fitQuestionBankFrame(frame){
   frame.style.background='transparent';
   frame.setAttribute('scrolling','no');
   window.addEventListener('resize',()=>{syncTheme();resize()},{passive:true});
-  setTimeout(()=>{syncTheme();resize()},150);
-  setTimeout(()=>{syncTheme();resize()},600);
+  setTimeout(()=>{syncTheme();resize()},100);
+  setTimeout(()=>{syncTheme();resize()},400);
+  setTimeout(()=>{syncTheme();resize()},1000);
+  setTimeout(()=>{syncTheme();resize()},2200);
  }catch(e){}
 }
 function vQ(){
