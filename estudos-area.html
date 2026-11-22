@@ -205,11 +205,11 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 @keyframes nameEditIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:480px){.name-edit-dialog{padding:21px;border-radius:18px}.name-edit-actions button{flex:1}}
 
-/* Banco de Questões: coluna vertical e uma única rolagem na área principal. */
+/* Banco de Questões: ocupa toda a largura do conteúdo e usa a rolagem da página principal. */
 html:has(body.question-bank-fullscreen),body.question-bank-fullscreen{width:100%;height:auto;min-height:0;margin:0;overflow:auto!important}
-body.question-bank-fullscreen #app{position:relative;width:100%;max-width:none;height:auto;min-height:0;margin:0 auto;padding:14px 12px 32px;display:block;overflow:visible!important}
+body.question-bank-fullscreen #app{position:relative;width:100%;max-width:none;height:auto;min-height:0;margin:0;padding:0 12px 32px;display:block;overflow:visible!important}
 body.question-bank-fullscreen #app>.top{display:none!important}
-body.question-bank-fullscreen .question-bank-shell{position:relative;display:block;width:min(100%,680px);height:auto;min-height:0;margin:0 auto;padding:0;overflow:visible;border:0;border-radius:18px;background:transparent}
+body.question-bank-fullscreen .question-bank-shell{position:relative;display:block;width:100%;max-width:none;height:auto;min-height:0;margin:0;padding:0;overflow:visible;border:0;border-radius:0;background:transparent}
 body.question-bank-fullscreen .question-bank-frame{position:relative;display:block;width:100%;height:1000px;min-height:0;margin:0;padding:0;border:0;overflow:hidden;background:transparent}
 body.question-bank-fullscreen #question-bank-mount{position:relative;width:100%;height:auto;min-height:0}
 
@@ -603,14 +603,39 @@ function fitQuestionBankFrame(frame){
   let style=d.getElementById('question-bank-fullscreen-fix');
   if(!style){style=d.createElement('style');style.id='question-bank-fullscreen-fix';(d.head||d.documentElement).appendChild(style)}
   style.textContent=`
-   html,body{width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
-   body{max-width:none!important}
+   :root{--bg:transparent!important;--ink:var(--tx,#fafafa)!important;--mute:var(--mu,#8e8e95)!important;--line:var(--bd,rgba(255,255,255,.12))!important;--soft:var(--in,rgba(255,255,255,.055))!important}
+   html,body{width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;color:var(--tx,#fafafa)!important}
+   body{max-width:none!important;font-family:inherit!important}
+   header.top{width:100%!important;max-width:none!important;padding:12px 24px!important;background:transparent!important;border-color:var(--bd,rgba(255,255,255,.12))!important}
+   header.top .crumb{display:none!important}
+   .hero,.marq,.dist,.tabs,.wrap,main{width:100%!important;max-width:none!important}
+   .hero{background:transparent!important}
+   .wrap{min-height:0!important}
+   aside{position:static!important;top:auto!important;max-height:none!important;overflow:visible!important}
    #app,.app,#root,#root-app,main,.container,.wrapper,.page,.app-container{
-    width:100%!important;max-width:680px!important;min-width:0!important;
+    width:100%!important;max-width:none!important;min-width:0!important;
     height:auto!important;max-height:none!important;min-height:0!important;
-    margin:0 auto!important;box-sizing:border-box!important;overflow:visible!important
+    margin:0!important;box-sizing:border-box!important;overflow:visible!important
    }
   `;
+  const syncTheme=()=>{
+   try{
+    const theme=window.parent.document.documentElement.getAttribute('data-theme')||
+      window.parent.document.documentElement.getAttribute('data-theme-evolucao')||
+      'dark';
+    d.documentElement.setAttribute('data-theme',theme);
+   }catch(e){}
+  };
+  syncTheme();
+  if(!frame._bankThemeListener){
+   frame._bankThemeListener=()=>syncTheme();
+   window.addEventListener('storage',frame._bankThemeListener);
+   d.defaultView.addEventListener('message',event=>{
+    if(event.data&&event.data.type==='app-theme-change'){
+     d.documentElement.setAttribute('data-theme',event.data.theme==='light'?'light':'dark');
+    }
+   });
+  }
   const resize=()=>{
    const de=d.documentElement,bo=d.body;
    const h=Math.max(800,de.scrollHeight,de.offsetHeight,bo?bo.scrollHeight:0,bo?bo.offsetHeight:0);
