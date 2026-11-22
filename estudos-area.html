@@ -205,9 +205,19 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 @keyframes nameEditIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:480px){.name-edit-dialog{padding:21px;border-radius:18px}.name-edit-actions button{flex:1}}
 
-/* Banco EEAR integrado */
-.question-bank-shell{width:100%;height:92vh;max-height:calc(100dvh - 120px);min-height:560px;margin:0 auto 18px;overflow:hidden;border:1px solid var(--bd);border-radius:14px;background:#0a0a0a}
-.question-bank-frame{display:block;width:100%;height:100%;border:0;background:#0a0a0a}
+/* Banco EEAR integrado: ocupa o espaço útil da aba Estudos, sem fullscreen */
+.question-bank-shell{width:100%;height:calc(100dvh - 120px);max-height:calc(100dvh - 120px);min-height:0;margin:0 auto 12px;overflow:hidden;border:1px solid var(--bd);border-radius:14px;background:#0a0a0a}
+.question-bank-frame{display:block;width:100%;height:100%;min-height:0;border:0;background:#0a0a0a}
+html,body.embedded.question-bank-view{height:100%;min-height:0;overflow:hidden}
+body.embedded.question-bank-view #app{display:flex;flex-direction:column;width:100%;height:100dvh;min-height:0;max-height:100dvh;margin:0;padding:8px 14px 12px;overflow:hidden}
+body.embedded.question-bank-view #app>.top{flex:0 0 auto;margin:2px 0 8px;padding:0;min-height:28px}
+body.embedded.question-bank-view .question-bank-shell{flex:1 1 0%;height:auto;min-height:0;max-height:none;margin:0;display:flex}
+body.embedded.question-bank-view .question-bank-frame{flex:1 1 0%;height:100%;min-height:0}
+@media(max-width:600px){
+ .question-bank-shell{border-radius:10px}
+ body.embedded.question-bank-view #app{padding:6px 10px 8px}
+ body.embedded.question-bank-view #app>.top{margin:2px 0 6px;min-height:26px}
+}
 /* Banco de Questões: ocupa toda a área disponível da tela, sem o limite estreito do app. */
 body.question-bank-fullscreen{height:100dvh;overflow:hidden}
 body.question-bank-fullscreen #app{position:relative;width:100%;max-width:none;height:100dvh;min-height:100dvh;margin:0;padding:0;display:flex;flex-direction:column;overflow:hidden}
@@ -795,7 +805,7 @@ function homeScreen(){return `<section class="home-head"><div><div class="home-e
 function ensureQuestionBankFrame(){return null}
 function parkQuestionBankFrame(){}
 
-function render(){document.body.classList.remove('question-bank-fullscreen');if(view!=='settings')parkCloudControls();if(!inStudies){$('#app').classList.add('home-shell');$('#app').innerHTML=homeScreen();const nameEdit=$('#app .home-name-edit');if(nameEdit)nameEdit.addEventListener('click',()=>{if(typeof window.__editDisplayName==='function')window.__editDisplayName();else alert('A função de edição do nome não foi carregada. Atualize a página.');});$('#nav').style.display='none';return;}$('#app').classList.remove('home-shell');$('#nav').style.setProperty('display','none','important');if(view==='settings'){parkCloudControls();$('#app').classList.add('settings-shell');$('#nav').style.display='none';$('#app').innerHTML=settingsPanel();const acts=$('#settings-actions');['cloud-backup','cloud-save-snapshot','cloud-cloud-backup','cloud-restore','cloud-import-button','cloud-retry','cloud-logout','cloud-import-file'].forEach(id=>{const el=document.getElementById(id);if(el)acts.appendChild(el)});$('#settings-email-slot').appendChild($('#cloud-email'));$('#settings-status-slot').appendChild($('#cloud-status'));return;}$('#app').classList.remove('settings-shell');$('#nav').style.setProperty('display','none','important');if(ensureSubjectColors())save();if(!S.edital.find(x=>x.name===S.timer.subj))S.timer.subj=S.edital[0]?S.edital[0].name:'';
+function render(){document.body.classList.remove('question-bank-fullscreen');document.body.classList.toggle('question-bank-view',inStudies&&view==='s');if(view!=='settings')parkCloudControls();if(!inStudies){$('#app').classList.add('home-shell');$('#app').innerHTML=homeScreen();const nameEdit=$('#app .home-name-edit');if(nameEdit)nameEdit.addEventListener('click',()=>{if(typeof window.__editDisplayName==='function')window.__editDisplayName();else alert('A função de edição do nome não foi carregada. Atualize a página.');});$('#nav').style.display='none';return;}$('#app').classList.remove('home-shell');$('#nav').style.setProperty('display','none','important');if(view==='settings'){parkCloudControls();$('#app').classList.add('settings-shell');$('#nav').style.display='none';$('#app').innerHTML=settingsPanel();const acts=$('#settings-actions');['cloud-backup','cloud-save-snapshot','cloud-cloud-backup','cloud-restore','cloud-import-button','cloud-retry','cloud-logout','cloud-import-file'].forEach(id=>{const el=document.getElementById(id);if(el)acts.appendChild(el)});$('#settings-email-slot').appendChild($('#cloud-email'));$('#settings-status-slot').appendChild($('#cloud-status'));return;}$('#app').classList.remove('settings-shell');$('#nav').style.setProperty('display','none','important');if(ensureSubjectColors())save();if(!S.edital.find(x=>x.name===S.timer.subj))S.timer.subj=S.edital[0]?S.edital[0].name:'';
  $('#app').innerHTML={d:vG,p:vP,s:vQ,c:vC,f:vF}[view]();if(view==='f')syncEuVsPlatformFrame();const top=$('#app .top');if(top){top.style.display='flex';top.style.alignItems='center';top.style.justifyContent='space-between';top.innerHTML=esc(({d:'Visão Geral',p:'LDI',s:'Questões',c:'Foco',f:'Desempenho'})[view]||'Estudos');}
  $('#nav').innerHTML='';$('#nav').style.setProperty('display','none','important');
  if(view==='c')fillTop('ts','tt2',S.timer.top);if(view==='d'){fillTop('s','tp');fillTop('rsub','rtop')}if(sheet)fillTop('ss','st')}
