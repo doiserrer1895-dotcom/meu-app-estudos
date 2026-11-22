@@ -609,6 +609,15 @@ function vS(){const D=wkDays(),t=iso(today());
  <label>Matéria</label>${selS('ss',"fillTop('ss','st')")}<label>Conteúdo</label><select id="st"></select><label>Duração estimada</label>
  <div class="chips">${[15,30,45,60,90,120,180].map(n=>`<button class="chip ${n===dur?'on':''}" onclick="pickD(${n},this)">${fmtM(n)}</button>`).join('')}</div>
  <div class="two" style="margin-top:16px"><button class="cs2" onclick="sheet=null;render()">Cancelar</button><button class="btn" onclick="addS()">Adicionar Tarefa</button></div></div></div>`:'')}
+function centerQuestionBankFrame(frame){
+ try{
+  const doc=frame&&frame.contentDocument;
+  if(!doc||!doc.head)return;
+  let style=doc.getElementById('question-bank-center-fix');
+  if(!style){style=doc.createElement('style');style.id='question-bank-center-fix';doc.head.appendChild(style)}
+  style.textContent='html,body{width:100%}#app,#root,main,.app,.app-container,.main-container,.container,.page,.page-container,.content,.content-wrapper,.wrapper,.shell,.layout{margin-left:auto!important;margin-right:auto!important}';
+ }catch(error){console.warn('Não foi possível centralizar o conteúdo do banco:',error)}
+}
 function vQ(){
  return `
  <div class="question-bank-shell">
@@ -616,7 +625,8 @@ function vQ(){
      id="question-bank-frame"
      class="question-bank-frame"
      src="banco-de-questoes.html"
-     title="Banco de Questões">
+     title="Banco de Questões"
+     onload="centerQuestionBankFrame(this)">
    </iframe>
  </div>`;
 }function openSh(k){sheet=k;render()}
