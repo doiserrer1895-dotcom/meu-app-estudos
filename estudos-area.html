@@ -603,15 +603,20 @@ function fitQuestionBankFrame(frame){
   let style=d.getElementById('question-bank-fullscreen-fix');
   if(!style){style=d.createElement('style');style.id='question-bank-fullscreen-fix';(d.head||d.documentElement).appendChild(style)}
   style.textContent=`
-   :root{--bg:transparent!important;--ink:var(--tx,#fafafa)!important;--mute:var(--mu,#8e8e95)!important;--line:var(--bd,rgba(255,255,255,.12))!important;--soft:var(--in,rgba(255,255,255,.055))!important}
-   html,body{width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;color:var(--tx,#fafafa)!important}
-   body{max-width:none!important;font-family:inherit!important}
-   header.top{width:100%!important;max-width:none!important;padding:12px 24px!important;background:transparent!important;border-color:var(--bd,rgba(255,255,255,.12))!important}
+   :root{
+    color-scheme:dark!important;
+    --bg:#050505!important;--ink:#fafafa!important;--mute:#a3a3a3!important;
+    --line:rgba(255,255,255,.12)!important;--soft:rgba(255,255,255,.055)!important
+   }
+   html,body{width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;color:#fafafa!important}
+   body{max-width:none!important;font-family:Inter,-apple-system,"Segoe UI",Roboto,Arial,sans-serif!important}
+   header.top{display:flex!important;width:100%!important;max-width:none!important;min-height:72px!important;padding:12px 24px!important;margin:0!important;background:transparent!important;border-color:rgba(255,255,255,.12)!important}
    header.top .crumb{display:none!important}
-   .hero,.marq,.dist,.tabs,.wrap,main{width:100%!important;max-width:none!important}
+   .hero,.marq,.dist,.tabs,.wrap,main{width:100%!important;max-width:none!important;min-width:0!important}
    .hero{background:transparent!important}
-   .wrap{min-height:0!important}
-   aside{position:static!important;top:auto!important;max-height:none!important;overflow:visible!important}
+   .wrap{display:grid!important;grid-template-columns:minmax(250px,28%) minmax(0,1fr)!important;min-height:0!important}
+   aside{position:static!important;top:auto!important;width:auto!important;max-height:none!important;overflow:visible!important;background:transparent!important}
+   main{min-width:0!important}
    #app,.app,#root,#root-app,main,.container,.wrapper,.page,.app-container{
     width:100%!important;max-width:none!important;min-width:0!important;
     height:auto!important;max-height:none!important;min-height:0!important;
