@@ -210,7 +210,7 @@ html:has(body.question-bank-fullscreen),body.question-bank-fullscreen{width:100%
 body.question-bank-fullscreen #app{position:relative;width:100%;max-width:none;height:auto;min-height:0;margin:0;padding:0 0 24px;display:block;overflow:visible!important}
 body.question-bank-fullscreen #app>.top{display:none!important}
 body.question-bank-fullscreen .question-bank-shell{position:relative;display:block;width:100%;max-width:none;height:auto;min-height:0;margin:0;padding:0;overflow:visible;border:0;border-radius:0;background:transparent}
-body.question-bank-fullscreen .question-bank-frame{position:relative;display:block;width:100%;height:700px;min-height:0;margin:0;padding:0;border:0;overflow:hidden;background:transparent}
+body.question-bank-fullscreen .question-bank-frame{position:relative;display:block;width:100%;max-width:100%;height:700px;min-height:0;margin:0;padding:0;border:0;overflow:visible;background:transparent}
 body.question-bank-fullscreen #question-bank-mount{position:relative;width:100%;height:auto;min-height:0}
 @media(max-width:800px){
  body.question-bank-fullscreen #app{padding:0 0 20px}
@@ -620,7 +620,11 @@ function fitQuestionBankFrame(frame){
       --line:${light?'rgba(0,0,0,.14)':'rgba(255,255,255,.12)'}!important;
       --soft:${light?'rgba(0,0,0,.045)':'rgba(255,255,255,.055)'}!important
      }
-     html,body{width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;color:var(--ink)!important}
+     html,body{width:100%!important;max-width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important;background:transparent!important;color:var(--ink)!important}
+     *,*::before,*::after{box-sizing:border-box!important;min-width:0}
+     img,svg,video,canvas{max-width:100%!important;height:auto}
+     .wrap{grid-template-columns:minmax(0,1fr)!important}
+     .q,.question,.question-card,#list>*{width:100%!important;max-width:100%!important;min-width:0!important}
      body{font-family:Inter,-apple-system,"Segoe UI",Roboto,Arial,sans-serif!important}
      header.top{display:flex!important;width:100%!important;max-width:none!important;min-height:72px!important;padding:12px 24px!important;margin:0!important;background:transparent!important;border-color:var(--line)!important}
      header.top .crumb{display:none!important}
@@ -668,15 +672,24 @@ function fitQuestionBankFrame(frame){
   }
   const resize=()=>{
    const de=d.documentElement,bo=d.body;
-   const h=Math.max(600,de.scrollHeight,de.offsetHeight,bo?bo.scrollHeight:0,bo?bo.offsetHeight:0);
+   let bottom=0;
+   if(bo)for(const el of Array.from(bo.children)){
+    const rect=el.getBoundingClientRect();
+    bottom=Math.max(bottom,rect.bottom+(d.defaultView.scrollY||0));
+   }
+   const h=Math.ceil(Math.max(600,de.scrollHeight,de.offsetHeight,bo?bo.scrollHeight:0,bo?bo.offsetHeight:0,bottom)+24);
    frame.style.height=h+'px';
   };
   frame.style.display='block';
   frame.style.width='100%';
   frame.style.maxWidth='100%';
-  frame.style.overflow='hidden';
+  frame.style.overflow='visible';
   frame.setAttribute('scrolling','no');
   resize();
+  d.querySelectorAll('img').forEach(img=>{
+   if(!img.complete)img.addEventListener('load',resize,{once:true});
+  });
+  if(d.fonts&&d.fonts.ready)d.fonts.ready.then(resize).catch(()=>{});
   if(!frame._bankResizeObserver&&typeof ResizeObserver!=='undefined'){
    frame._bankResizeObserver=new ResizeObserver(resize);
    frame._bankResizeObserver.observe(d.documentElement);
