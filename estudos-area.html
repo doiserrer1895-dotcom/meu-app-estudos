@@ -206,7 +206,7 @@ details.card summary{cursor:pointer;font-weight:700;font-size:16px}
 @media(max-width:480px){.name-edit-dialog{padding:21px;border-radius:18px}.name-edit-actions button{flex:1}}
 
 /* Banco EEAR integrado */
-.question-bank-shell{width:100%;height:calc(100dvh - 150px);min-height:560px;overflow:hidden;border:1px solid var(--bd);border-radius:14px;background:#0a0a0a}
+.question-bank-shell{width:100%;height:76vh;max-height:calc(100dvh - 180px);min-height:560px;margin:0 auto 18px;overflow:hidden;border:1px solid var(--bd);border-radius:14px;background:#0a0a0a}
 .question-bank-frame{display:block;width:100%;height:100%;border:0;background:#0a0a0a}
 /* Banco de Questões: ocupa toda a área disponível da tela, sem o limite estreito do app. */
 body.question-bank-fullscreen{height:100dvh;overflow:hidden}
@@ -215,7 +215,7 @@ body.question-bank-fullscreen #app>.top{display:none!important;height:0!importan
 body.question-bank-fullscreen .question-bank-shell{position:relative;display:block;flex:1 1 0%;width:100%;height:100dvh;min-height:0;margin:0;padding:0;border:0;border-radius:0;overflow:hidden}
 body.question-bank-fullscreen #question-bank-mount{position:absolute;inset:0;width:100%;height:100%;min-height:0}
 body.question-bank-fullscreen .question-bank-frame{position:absolute;inset:0;display:block;width:100%;height:100%;min-height:0;border:0}
-@media(max-width:600px){.question-bank-shell{height:calc(100dvh - 135px);min-height:500px;border-radius:10px}body.question-bank-fullscreen #app>.top{display:none!important;height:0!important;min-height:0!important}body.question-bank-fullscreen .question-bank-shell{height:100dvh;min-height:0;border-radius:0}}
+@media(max-width:600px){.question-bank-shell{height:70dvh;max-height:calc(100dvh - 170px);min-height:480px;margin-bottom:16px;border-radius:10px}body.question-bank-fullscreen #app>.top{display:none!important;height:0!important;min-height:0!important}body.question-bank-fullscreen .question-bank-shell{height:100dvh;min-height:0;border-radius:0}}
 </style>
 <link rel="manifest" href="/meu-app-estudos/manifest.webmanifest">
 <meta name="theme-color" content="#050505">
@@ -796,7 +796,7 @@ function ensureQuestionBankFrame(){return null}
 function parkQuestionBankFrame(){}
 
 function render(){document.body.classList.remove('question-bank-fullscreen');if(view!=='settings')parkCloudControls();if(!inStudies){$('#app').classList.add('home-shell');$('#app').innerHTML=homeScreen();const nameEdit=$('#app .home-name-edit');if(nameEdit)nameEdit.addEventListener('click',()=>{if(typeof window.__editDisplayName==='function')window.__editDisplayName();else alert('A função de edição do nome não foi carregada. Atualize a página.');});$('#nav').style.display='none';return;}$('#app').classList.remove('home-shell');$('#nav').style.setProperty('display','none','important');if(view==='settings'){parkCloudControls();$('#app').classList.add('settings-shell');$('#nav').style.display='none';$('#app').innerHTML=settingsPanel();const acts=$('#settings-actions');['cloud-backup','cloud-save-snapshot','cloud-cloud-backup','cloud-restore','cloud-import-button','cloud-retry','cloud-logout','cloud-import-file'].forEach(id=>{const el=document.getElementById(id);if(el)acts.appendChild(el)});$('#settings-email-slot').appendChild($('#cloud-email'));$('#settings-status-slot').appendChild($('#cloud-status'));return;}$('#app').classList.remove('settings-shell');$('#nav').style.setProperty('display','none','important');if(ensureSubjectColors())save();if(!S.edital.find(x=>x.name===S.timer.subj))S.timer.subj=S.edital[0]?S.edital[0].name:'';
- $('#app').innerHTML={d:vG,p:vP,s:vQ,c:vC,f:vF}[view]();if(view==='f')syncEuVsPlatformFrame();const top=$('#app .top');if(top){top.style.display=view==='s'?'none':'flex';top.style.alignItems='center';top.style.justifyContent='space-between';top.innerHTML=esc(({d:'Visão Geral',p:'LDI',s:'Questões',c:'Foco',f:'Desempenho'})[view]||'Estudos');}
+ $('#app').innerHTML={d:vG,p:vP,s:vQ,c:vC,f:vF}[view]();if(view==='f')syncEuVsPlatformFrame();const top=$('#app .top');if(top){top.style.display='flex';top.style.alignItems='center';top.style.justifyContent='space-between';top.innerHTML=esc(({d:'Visão Geral',p:'LDI',s:'Questões',c:'Foco',f:'Desempenho'})[view]||'Estudos');}
  $('#nav').innerHTML='';$('#nav').style.setProperty('display','none','important');
  if(view==='c')fillTop('ts','tt2',S.timer.top);if(view==='d'){fillTop('s','tp');fillTop('rsub','rtop')}if(sheet)fillTop('ss','st')}
 render();setInterval(tick,250);
