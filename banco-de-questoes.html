@@ -38,38 +38,31 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  return qs;
 }`,
     String.raw`function optionMarks(txt){
- const found=[],re=/(?:^|[\s([{])\(?\s*([A-Ea-e])\s*[).\-–—:]/g;let m;
- while((m=re.exec(String(txt||"")))!==null){const a=m[1].toUpperCase();if(!found.includes(a))found.push(a)}
+ const found=[];const re=/(?:^|[\s([{])\(?\s*([A-Ea-e])\s*[).\-–—:]/g;let m;
+ while((m=re.exec(txt))!==null){const a=m[1].toUpperCase();if(!found.includes(a))found.push(a)}
  return found;
 }
 function detect(L){
  const candidates=[];
- L.forEach((l,i)=>{
-  const m=MK.exec(String(l.t||""));if(!m)return;
-  const line=String(l.t||"").trim(),n=+m[1],explicit=QW.test(line);
-  if(n>=1&&n<=100&&(explicit||line.length>=3))candidates.push({n,i,explicit});
- });
+ L.forEach((l,i)=>{const m=MK.exec(l.t);if(!m)return;const n=+m[1];if(n>=1&&n<=999)candidates.push({n,i,explicit:QW.test(l.t)})});
  const qs=[];let lastIndex=-1,lastNum=0;
  for(let c=0;c<candidates.length;c++){
   const cur=candidates[c];if(cur.i<=lastIndex)continue;
-  const starts=!qs.length?(cur.n===1||cur.explicit):(cur.n===lastNum+1||(cur.explicit&&cur.n===1));
-  if(!starts)continue;
-  let hard=Math.min(L.length,cur.i+180);
+  let next=null;
   for(let k=c+1;k<candidates.length;k++){
-   const x=candidates[k];
-   if(x.n===cur.n+1||(x.explicit&&x.n===1)){hard=x.i;break}
+   const candidate=candidates[k];
+   if(candidate.explicit||candidate.n===1||candidate.n===cur.n+1){next=candidate;break}
   }
-  const letters=[],rows=[];let bodyChars=0,bodyRows=0,ordered=0,expected="A";
+  const hard=next?next.i:Math.min(L.length,cur.i+220);
+  const letters=new Set();let chars=0,rows=0;
   for(let j=cur.i+1;j<hard;j++){
-   const t=String(L[j].t||"");
-   const om=optionMarks(t),anchored=OPT.exec(t);
-   if(anchored){const a=(anchored[1]||anchored[2]).toUpperCase();if(!om.includes(a))om.push(a)}
-   if(om.length){
-    rows.push(j);
-    for(const a of om){if(!letters.includes(a))letters.push(a);if(a===expected){ordered++;expected=String.fromCharCode(expected.charCodeAt(0)+1)}}
-   }else if(t.trim().length>2){bodyChars+=t.length;bodyRows++}
+   const t=L[j].t||"";chars+=t.length;if(t.length>2)rows++;
+   optionMarks(t).forEach(a=>letters.add(a));
   }
-  if(letters.length<4||ordered<4||bodyChars<15||bodyRows<1)continue;
+  const hasOptions=letters.size>=2,hasBody=chars>=28&&rows>=2;
+  const sequential=!qs.length||cur.explicit||cur.n===1||cur.n===lastNum+1;
+  if(!sequential&&!(cur.n>lastNum&&(hasOptions||cur.explicit)))continue;
+  if(!cur.explicit&&!hasOptions&&!hasBody)continue;
   qs.push({n:cur.n,i:cur.i,seq:qs.length+1});lastIndex=cur.i;lastNum=cur.n;
  }
  return qs;
@@ -90,28 +83,30 @@ function detect(L){
          String.raw`function bounds(L,qs,B){
  const bs={};B.forEach(b=>b.qs.forEach(q=>bs[q.seq]=b));
  qs.forEach((q,k)=>{
-  const nx=qs[k+1],hard=nx?(bs[nx.seq]&&bs[nx.seq].qs[0]===nx?bs[nx.seq].start:nx.i):L.length;
-  const lim=Math.max(q.i,hard-1);q.s=q.i;q.base=bs[q.seq]||null;
-  const seen=[],rows=[];let expected="A",ordered=0;
+  const next=qs[k+1],hard=next?(bs[next.seq]&&bs[next.seq].qs[0]===next?bs[next.seq].start:next.i):L.length;
+  const lim=Math.max(q.i,hard-1);
+  q.s=q.i;q.base=bs[q.seq]||null;
+  let lastOption=-1,expected="A";const seen=new Set();
   for(let j=q.i+1;j<=lim;j++){
-   const t=String(L[j].t||""),m=OPT.exec(t),marks=[];
-   if(m)marks.push((m[1]||m[2]).toUpperCase());
-   else optionMarks(t).forEach(a=>marks.push(a));
-   if(marks.length){
-    rows.push(j);
-    for(const a of marks){if(!seen.includes(a))seen.push(a);if(a===expected){ordered++;expected=String.fromCharCode(expected.charCodeAt(0)+1)}}
+   const o=OPT.exec(L[j].t);
+   if(o){
+    const a=(o[1]||o[2]).toUpperCase();seen.add(a);
+    if(a===expected){lastOption=j;expected=String.fromCharCode(expected.charCodeAt(0)+1)}
+    else if(a==="A"){lastOption=j;expected="B"}
    }
+   const marks=optionMarks(L[j].t);
+   for(const a of marks){seen.add(a);if(a===expected){lastOption=j;expected=String.fromCharCode(expected.charCodeAt(0)+1)}}
   }
-  q.nopt=Math.min(5,seen.length);
-  const last=rows.length?rows[rows.length-1]:-1;
-  if(last<0){q.e=Math.min(lim,q.i+20);return}
-  let e=last;const h=Math.max(1,L[last].bot-L[last].top);
-  while(e<lim&&e-last<8){
-   const a=L[e],b=L[e+1];if(!b||a.p!==b.p||a.c!==b.c||MK.test(b.t)||OPT.test(b.t))break;
-   if(b.top-a.bot>Math.max(3,h*1.8)||(b.t.length>6&&b.t===b.t.toUpperCase()))break;
-   e++;
+  q.nopt=Math.min(5,Math.max(seen.size,expected.charCodeAt(0)-65));q.e=lim;
+  if(lastOption>=0){
+   let e=lastOption;const h=Math.max(1,L[lastOption].bot-L[lastOption].top);
+   while(e<lim&&e-lastOption<8){
+    const a=L[e],b=L[e+1];
+    if(a.p!==b.p||a.c!==b.c||b.top-a.bot>Math.max(2,h*1.5)||OPT.test(b.t)||MK.test(b.t)||(b.t.length>6&&b.t===b.t.toUpperCase()))break;
+    e++;
+   }
+   q.e=e;
   }
-  q.e=e;
  });
 }`],
     [String.raw`return G.map((g,k)=>{const{W,H,two}=P[g.p];return{p:g.p,x0:two?g.c*W/2:0,x1:two?(g.c+1)*W/2:W,y0:k?.045*H:Math.max(.045*H,L[g.s].top-5),y1:k<G.length-1?.955*H:Math.min(.955*H,L[g.e].bot+6)}});`,
@@ -126,7 +121,8 @@ function detect(L){
     if(!html.includes(before))throw new Error('Não encontrei um trecho esperado da ferramenta Importar PDF.');
     html=html.replace(before,after);
    }
-   const secureClaudeFunction = "async function ai(q,key,model){\n const images=[q.baseImg,q.img].filter(Boolean).map(u=>{\n  const m=/^data:(image\\/(?:jpeg|png|gif|webp));base64,([\\s\\S]+)$/i.exec(u);\n  if(!m)throw new Error(\"A imagem da questão está em formato inválido.\");\n  return {base64:m[2],mediaType:m[1].toLowerCase()};\n });\n if(!images.length)throw new Error(\"Não foi possível preparar a imagem da questão.\");\n const sys='Você classifica e comenta questões de concursos militares brasileiros. Responda SOMENTE um JSON: {\"d\",\"m\",\"t\",\"c\",\"f\",\"a\",\"n\",\"tm\",\"e\"}. d/m/t/c = disciplina, matéria, tópico e conteúdo específico: use EXATAMENTE os nomes da taxonomia abaixo (d→m→t→[c]); se nada servir, crie um nome curto e coerente. f = \"Fácil\"|\"Médio\"|\"Difícil\". a = letra correta (A-E). n = número de alternativas. tm = minutos estimados (1 a 6). e = explicação passo a passo em português (2 a 5 frases) dizendo por que a alternativa correta está certa. Taxonomia: '+JSON.stringify(TREE);\n const txt=(images.length>1?\"A primeira imagem é o texto-base; a última é a questão. \":\"A imagem é a questão. \")+(q.a>=0?\"Gabarito oficial: \"+LT[q.a]+\".\":\"\");\n const host=window.parent&&window.parent.parent;\n const client=host&&host.__estudosSupabaseClient;\n if(!client||!client.functions||typeof client.functions.invoke!==\"function\")throw new Error(\"Não encontrei a conexão da sua conta com o Supabase. Entre novamente no aplicativo e tente outra vez.\");\n for(let tr=0;tr<2;tr++){\n  try{\n   const result=await client.functions.invoke(\"claude-pdf-analyze\",{body:{images,prompt:sys+\"\\n\"+txt}});\n   if(result.error){let detail=result.error.message||\"Falha ao chamar o serviço seguro do Claude.\";try{const ctx=result.error.context;if(ctx&&typeof ctx.clone===\"function\"){const payload=await ctx.clone().json();detail=payload.error||payload.message||detail}}catch(e){}throw new Error(detail)}\n   const responseText=String(result.data&&result.data.text||\"\");\n   const start=responseText.indexOf(\"{\"),end=responseText.lastIndexOf(\"}\");\n   if(start<0||end<=start)throw new Error(\"O Claude não retornou uma classificação em JSON válida.\");\n   return JSON.parse(responseText.slice(start,end+1));\n  }catch(e){if(tr)throw e;await new Promise(r=>setTimeout(r,1200))}\n }\n}";
+
+   const secureClaudeFunction = "async function ai(q,key,model){\n const images=[q.baseImg,q.img].filter(Boolean).map(u=>{\n  const m=/^data:(image\\/(?:jpeg|png|gif|webp));base64,([\\s\\S]+)$/i.exec(u);\n  if(!m)throw new Error(\"A imagem da questão está em formato inválido.\");\n  return {base64:m[2],mediaType:m[1].toLowerCase()};\n });\n if(!images.length)throw new Error(\"Não foi possível preparar a imagem da questão.\");\n const sys='Classifique a questão pelo CONTEÚDO REAL do enunciado e das alternativas, não pela posição no PDF nem pelo cabeçalho anterior. Matemática deve ser Matemática mesmo quando estiver próxima da seção de Inglês; identifique idioma apenas quando o exercício exigir interpretação de língua inglesa. Responda SOMENTE um JSON: {\"d\",\"m\",\"t\",\"c\",\"f\",\"a\",\"n\",\"tm\",\"e\"}. d/m/t/c = disciplina, matéria, tópico e conteúdo específico: use EXATAMENTE os nomes da taxonomia abaixo (d→m→t→[c]); se nada servir, crie um nome curto e coerente. f = \"Fácil\"|\"Médio\"|\"Difícil\". a = letra correta (A-E). n = número de alternativas. tm = minutos estimados (1 a 6). e = explicação passo a passo em português (2 a 5 frases) dizendo por que a alternativa correta está certa. Se a imagem mostrar fórmulas, cálculos, símbolos matemáticos ou problemas numéricos, não classifique como Inglês apenas por conter palavras em inglês. Taxonomia: '+JSON.stringify(TREE);\n const txt=(images.length>1?\"A primeira imagem é o texto-base; a última é a questão. \":\"A imagem é a questão. \")+(q.a>=0?\"Gabarito oficial: \"+LT[q.a]+\".\":\"\");\n const host=window.parent&&window.parent.parent;\n const client=host&&host.__estudosSupabaseClient;\n if(!client||!client.functions||typeof client.functions.invoke!==\"function\")throw new Error(\"Não encontrei a conexão da sua conta com o Supabase. Entre novamente no aplicativo e tente outra vez.\");\n for(let tr=0;tr<2;tr++){\n  try{\n   const result=await client.functions.invoke(\"claude-pdf-analyze\",{body:{images,prompt:sys+\"\\n\"+txt}});\n   if(result.error){let detail=result.error.message||\"Falha ao chamar o serviço seguro do Claude.\";try{const ctx=result.error.context;if(ctx&&typeof ctx.clone===\"function\"){const payload=await ctx.clone().json();detail=payload.error||payload.message||detail}}catch(e){}throw new Error(detail)}\n   const responseText=String(result.data&&result.data.text||\"\");\n   const start=responseText.indexOf(\"{\"),end=responseText.lastIndexOf(\"}\");\n   if(start<0||end<=start)throw new Error(\"O Claude não retornou uma classificação em JSON válida.\");\n   return JSON.parse(responseText.slice(start,end+1));\n  }catch(e){if(tr)throw e;await new Promise(r=>setTimeout(r,1200))}\n }\n}";
    const aiStart=html.indexOf('async function ai(q,key,model){');
    const aiEnd=html.indexOf('/* ---------- persistência ---------- */',aiStart);
    if(aiStart<0||aiEnd<0)throw new Error('Não encontrei a função original de classificação.');
