@@ -18,7 +18,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  const bank=document.getElementById('bank');
  async function loadBankWithPdfFixes(){
   try{
-   const source=new URL('banco-de-questoes%20(2).html?v=20261123manual2',location.href);
+   const source=new URL('banco-de-questoes%20(2).html?v=20261123manual3',location.href);
    const response=await fetch(source,{cache:'no-store'});
    if(!response.ok)throw new Error('HTTP '+response.status);
    let html=await response.text();
@@ -85,7 +85,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
    const manualCropCode = String.raw`
 /* ---------- recorte manual de PDF ---------- */
 let MC=null,MCV={page:1,scale:1,mode:"q",group:"Texto de apoio 1",link:"",num:1,items:[],bases:{},drag:null,rect:null};
-function manualStyle(){if($("manual-crop-style"))return;const s=document.createElement("style");s.id="manual-crop-style";s.textContent=".ai{display:none!important}#mcwrap{display:flex;flex-direction:column;gap:10px;min-height:60vh}#mcbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#mcbar label{font-size:12px;color:#aaa}#mcbar input,#mcbar select{background:#171717;color:#fff;border:1px solid #444;border-radius:7px;padding:8px;max-width:180px}#mcstage{position:relative;overflow:auto;background:#222;display:flex;justify-content:center;align-items:flex-start;min-height:48vh;max-height:65vh;padding:8px}#mcpaper{position:relative;max-width:100%;line-height:0}#mcpdf{display:block;max-width:100%;height:auto}#mcover{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}#mcrect{position:absolute;border:2px solid #36a3ff;background:#36a3ff22;pointer-events:none;display:none}#mclist{display:flex;gap:8px;overflow:auto;padding:6px 0}#mclist img{height:92px;max-width:180px;object-fit:contain;background:#fff;border-radius:5px}#mcstatus{font-size:12px;color:#aaa}#mcbar button{background:#252525;color:#fff;border:1px solid #555;border-radius:7px;padding:8px 12px;cursor:pointer}";document.head.appendChild(s)}
+function manualStyle(){if($("manual-crop-style"))return;const s=document.createElement("style");s.id="manual-crop-style";s.textContent=".ai{display:none!important}#mcwrap{display:flex;flex-direction:column;gap:10px;min-height:60vh}#mcbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#mcbar label{font-size:12px;color:#aaa}#mcbar input,#mcbar select{background:#171717;color:#fff;border:1px solid #444;border-radius:7px;padding:8px;max-width:180px}#mcstage{position:relative;overflow:auto;background:#222;display:flex;justify-content:center;align-items:flex-start;min-height:70vh;max-height:82vh;padding:8px}#mcpaper{position:relative;max-width:100%;line-height:0}#mcpdf{display:block;max-width:100%;height:auto}#mcover{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}#mcrect{position:absolute;border:2px solid #36a3ff;background:#36a3ff22;pointer-events:none;display:none}#mclist{display:flex;gap:8px;overflow:auto;padding:6px 0}#mclist img{height:92px;max-width:180px;object-fit:contain;background:#fff;border-radius:5px}#mcstatus{font-size:12px;color:#aaa}#mcbar button{background:#252525;color:#fff;border:1px solid #555;border-radius:7px;padding:8px 12px;cursor:pointer}";document.head.appendChild(s)}
 function manualHome(){
  W={};MCV={page:1,scale:1,mode:"q",group:"Texto de apoio 1",link:"",num:1,items:[],bases:{},drag:null,rect:null};
  $("imb").innerHTML='<label class="dz" id="dz"><input type="file" id="imfi" accept=".pdf" hidden><span class="dzi">⇪</span><b id="dzn">Solte o PDF aqui ou clique para escolher</b><small id="dzs">O PDF será processado localmente no navegador. Nenhuma IA ou chave de API será usada.</small></label><div class="ig2"><label>Banca<input id="imB" placeholder="EEAR, AFA, ESA…"></label><label>Ano<input id="imA" type="number" min="1990" max="2100" placeholder="2025"></label><label>Nome da prova<input id="imN" placeholder="EEAR CFS · Prova"></label><label>Data da prova<input id="imD" placeholder="nov/2026"></label></div><label class="gb">Gabarito (opcional)<textarea id="imG" rows="2" placeholder="1-A 2-C 3-B…"></textarea></label><div id="ims2"></div>';
@@ -101,9 +101,14 @@ async function manualStart(){
  const pid=(()=>{let b=W.b+W.ano,k=b,n=2;while(PROVAS.some(p=>p.id===k)){k=b+"-"+n++}return k})();W.id=pid;MCV.num=1;manualStyle();manualView();
 }
 async function manualRender(){
- const pg=await MC.getPage(MCV.page),stage=$("mcstage"),paper=$("mcpaper"),cv=$("mcpdf"),over=$("mcover"),maxW=Math.max(320,stage.clientWidth-24),base=pg.getViewport({scale:1}),scale=Math.min(2.2,maxW/base.width)*MCV.scale,vp=pg.getViewport({scale});
- cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);cv.style.width=vp.width+"px";cv.style.height=vp.height+"px";await pg.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;
- over.width=cv.width;over.height=cv.height;over.style.width=cv.style.width;over.style.height=cv.style.height;paper.style.width=cv.style.width;paper.style.height=cv.style.height;$("mcpage").textContent="Página "+MCV.page+" / "+MC.numPages;
+ const pg=await MC.getPage(MCV.page),stage=$("mcstage"),paper=$("mcpaper"),cv=$("mcpdf"),over=$("mcover");
+ const original=pg.getViewport({scale:1}),rotation=original.width>original.height?90:0,base=pg.getViewport({scale:1,rotation});
+ const maxW=Math.max(280,stage.clientWidth-24),maxH=Math.max(320,stage.clientHeight-24);
+ const fit=Math.min(maxW/base.width,maxH/base.height),scale=Math.min(2.2,fit)*MCV.scale,vp=pg.getViewport({scale,rotation});
+ cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);cv.style.width=vp.width+"px";cv.style.height=vp.height+"px";
+ await pg.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;
+ over.width=cv.width;over.height=cv.height;over.style.width=cv.style.width;over.style.height=cv.style.height;paper.style.width=cv.style.width;paper.style.height=cv.style.height;
+ $("mcpage").textContent="Página "+MCV.page+" / "+MC.numPages;
 }
 function manualView(){
  $("imb").innerHTML='<div id="mcwrap"><div id="mcbar"><button id="mcprev">←</button><button id="mcnext">→</button><button id="mcminus">−</button><button id="mcplus">+</button><label>Tipo <select id="mcmode"><option value="q">Questão</option><option value="b">Texto de apoio</option></select></label><label id="mcglabel">Grupo <input id="mcgroup" value="Texto de apoio 1"></label><label id="mclabel">Vincular texto <select id="mclink"><option value="">Sem texto de apoio</option></select></label><span id="mcpage"></span></div><div id="mcstage"><div id="mcpaper"><canvas id="mcpdf"></canvas><canvas id="mcover"></canvas><div id="mcrect"></div></div></div><div id="mcstatus">Arraste o mouse sobre a página para marcar a área inteira da questão ou do texto de apoio.</div><div id="mclist"></div></div>';
