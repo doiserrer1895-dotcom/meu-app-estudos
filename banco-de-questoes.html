@@ -166,16 +166,19 @@ function detect(L){
     [String.raw`try{if(W.key){localStorage.setItem("bq-key",W.key);localStorage.setItem("bq-model",W.model)}}catch(e){}`,
      String.raw``]
    ];
+   const patchMisses=[];
    for(const [before,after] of patches){
-    if(!html.includes(before))throw new Error('Não encontrei um trecho esperado da ferramenta Importar PDF.');
+    if(!html.includes(before)){patchMisses.push(before.slice(0,90));continue}
     html=html.replace(before,after);
    }
+   if(!html.includes('client.functions.invoke("claude-pdf-analyze"'))throw new Error('A integração segura do Claude não foi aplicada ao código do Banco de Questões. Atualize o arquivo-fonte.');
+   if(!html.includes('Conectado com segurança pelo Supabase'))throw new Error('Não foi possível atualizar o painel de conexão do Claude.');
    html=html.replace(/<head([^>]*)>/i,'<head$1><base href="'+new URL('.',location.href).href+'">');
    bank.addEventListener('load',installBridge,{once:true});
    bank.srcdoc=html;
   }catch(error){
    console.error('Falha ao aplicar correções do Importar PDF:',error);
-   bank.srcdoc='<!doctype html><html lang="pt-BR"><meta charset="utf-8"><body style="margin:0;padding:24px;background:#080808;color:#fff;font:14px system-ui">Não foi possível carregar o Banco de Questões com as correções do Importar PDF. Atualize a página e tente novamente.</body></html>';
+   bank.srcdoc='<!doctype html><html lang="pt-BR"><meta charset="utf-8"><body style="margin:0;padding:24px;background:#080808;color:#fff;font:14px system-ui">Falha ao carregar o Banco de Questões: '+String(error&&error.message||error).replace(/[<>&]/g,'')+'. Atualize a página e tente novamente.</body></html>';
   }
  }
  const allowed=new Set(['eear-question-taxonomy-full','eear-question-taxonomy','eear-question-attempt']);
