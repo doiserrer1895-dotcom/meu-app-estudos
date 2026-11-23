@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Banco de Questões</title>
+<style>
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;background:#050505}
+#bank{display:block;width:100%;height:100%;min-height:100%;border:0;background:#050505}
+</style>
+</head>
+<body>
+<iframe id="bank" title="Banco de Questões EEAR" src="banco-de-questoes%20(2).html" allow="fullscreen"></iframe>
+<script>
+(function(){
+ const bank=document.getElementById('bank');
+ const allowed=new Set(['eear-question-taxonomy-full','eear-question-taxonomy','eear-question-attempt']);
+ window.addEventListener('message',function(event){
+  if(event.source===bank.contentWindow){
+   const data=event.data;
+   if(data&&allowed.has(data.type))window.parent.postMessage(data,location.origin);
+   return;
+  }
+  if(event.source===window.parent&&event.origin===location.origin){
+   const data=event.data;
+   if(data&&data.type==='app-question-filter'&&bank.contentWindow)bank.contentWindow.postMessage(data,location.origin);
+  }
+ });
+})();
+</script>
+</body>
+</html>
