@@ -19,11 +19,19 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  const allowed=new Set(['eear-question-taxonomy-full','eear-question-taxonomy','eear-question-attempt']);
  let bridgeInstalled=false;
  function installBridge(){
-  if(bridgeInstalled||!bank.contentWindow||!bank.contentDocument)return;
+  if(!bank.contentWindow||!bank.contentDocument)return;
   const doc=bank.contentDocument;
-  if(!doc.body)return;
-  bridgeInstalled=true;
+  if(!doc.documentElement||!doc.body)return;
   try{
+   let layout=doc.getElementById('question-bank-responsive-layout');
+   if(!layout){
+    layout=doc.createElement('style');
+    layout.id='question-bank-responsive-layout';
+    (doc.head||doc.documentElement).appendChild(layout);
+   }
+   layout.textContent='html,body{width:100%!important;max-width:100%!important;min-width:0!important;min-height:100%!important;margin:0!important;overflow-x:hidden!important}html{height:100%!important;overflow-y:auto!important}body{height:auto!important;min-height:100%!important;overflow-y:auto!important}#app,.app{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;transform:none!important;zoom:1!important;box-sizing:border-box!important;padding-left:clamp(10px,1.5vw,22px)!important;padding-right:clamp(10px,1.5vw,22px)!important}#app>*,.app>*{min-width:0!important;max-width:100%!important;box-sizing:border-box!important}img,svg,canvas{max-width:100%!important}';
+   if(bridgeInstalled)return;
+   bridgeInstalled=true;
    const bridge=doc.createElement('script');
    bridge.textContent=`
    (function(){
@@ -62,7 +70,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
     document.addEventListener('click',function(event){
      const button=event.target&&event.target.closest?event.target.closest('.opt'):null;
      if(!button||typeof Q==='undefined'||typeof ans==='undefined')return;
-     const index=Number(button.dataset.q),question=Q[index],chosen=Number(button.dataset.o);
+     const index=Number(button.dataset.q),question=Q[index];
      if(!question)return;
      setTimeout(function(){
       const selected=ans[index];
