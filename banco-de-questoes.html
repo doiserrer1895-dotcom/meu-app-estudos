@@ -23,7 +23,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
    if(!response.ok)throw new Error('HTTP '+response.status);
    let html=await response.text();
    const patches=[
-    [String.raw\`function detect(L){
+    [String.raw`function detect(L){
  const qs=[];let exp=1,last=-1;
  L.forEach((l,i)=>{
   const m=MK.exec(l.t);if(!m)return;const n=+m[1],w=QW.test(l.t);
@@ -34,8 +34,8 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
   if(ok){qs.push({n,i,seq:qs.length+1});exp=n+1;last=i}
  });
  return qs;
-}\`,
-    String.raw\`function optionMarks(txt){
+}`,
+    String.raw`function optionMarks(txt){
  const found=[];const re=/(?:^|[\\s([{])\\(?\\s*([A-Ea-e])\\s*[).\\-–—:]\\s*(?=\\S)/g;let m;
  while((m=re.exec(txt))!==null){const a=m[1].toUpperCase();if(!found.includes(a))found.push(a)}
  return found;
@@ -59,8 +59,8 @@ function detect(L){
   qs.push({n:cur.n,i:cur.i,seq:qs.length+1});lastIndex=cur.i;lastNum=cur.n;
  }
  return qs;
-}\`],
-    [String.raw\`function bounds(L,qs,B){
+}`],
+    [String.raw`function bounds(L,qs,B){
  const bs={};B.forEach(b=>b.qs.forEach(q=>bs[q.seq]=b));
  qs.forEach((q,k)=>{
   const nx=qs[k+1],hard=nx?(bs[nx.seq]&&bs[nx.seq].qs[0]===nx?bs[nx.seq].start:nx.i):L.length,lim=hard-1;
@@ -72,8 +72,8 @@ function detect(L){
    q.e=e}
   q.base=bs[q.seq]||null;
  });
-}\`,
-    String.raw\`function bounds(L,qs,B){
+}`,
+    String.raw`function bounds(L,qs,B){
  const bs={};B.forEach(b=>b.qs.forEach(q=>bs[q.seq]=b));
  qs.forEach((q,k)=>{
   const next=qs[k+1],hard=next?next.i:L.length;
@@ -86,9 +86,9 @@ function detect(L){
   q.e=lastOption>=0?lastOption:Math.max(q.i,hard-1);
   q.nopt=seen.size;
  });
-}\`],
-    [String.raw\`return G.map((g,k)=>{const{W,H,two}=P[g.p];return{p:g.p,x0:two?g.c*W/2:0,x1:two?(g.c+1)*W/2:W,y0:k?.045*H:Math.max(.045*H,L[g.s].top-5),y1:k<G.length-1?.955*H:Math.min(.955*H,L[g.e].bot+6)}});\`,
-     String.raw\`return G.map(g=>{const{W,H,two}=P[g.p];return{p:g.p,x0:two?g.c*W/2:0,x1:two?(g.c+1)*W/2:W,y0:Math.max(.045*H,L[g.s].top-7),y1:Math.min(.955*H,L[g.e].bot+8)}});\`],
+}`],
+    [String.raw`return G.map((g,k)=>{const{W,H,two}=P[g.p];return{p:g.p,x0:two?g.c*W/2:0,x1:two?(g.c+1)*W/2:W,y0:k?.045*H:Math.max(.045*H,L[g.s].top-5),y1:k<G.length-1?.955*H:Math.min(.955*H,L[g.e].bot+6)}});`,
+     String.raw`return G.map(g=>{const{W,H,two}=P[g.p];return{p:g.p,x0:two?g.c*W/2:0,x1:two?(g.c+1)*W/2:W,y0:Math.max(.045*H,L[g.s].top-7),y1:Math.min(.955*H,L[g.e].bot+8)}});`],
     ['n:q.nopt>=2?q.nopt:5','n:q.nopt>=4?Math.min(5,q.nopt):5']
    ];
    for(const [before,after] of patches){
