@@ -191,7 +191,7 @@ function detect(L){
 `;
    if(!aiPattern.test(html))throw new Error('Não encontrei a função de IA no arquivo-fonte.');
    html=html.replace(aiPattern,secureAi+'\n/* ---------- persistência ---------- */');
-   html=html.replace(/<div class="ig2">[\\s\\S]*?<\\/div><small>A chave fica só neste navegador e é enviada apenas para api\\.anthropic\\.com\\.<\\/small>/,
+   html=html.replace(/<div class="ig2">[\s\S]*?<\/div><small>A chave fica só neste navegador e é enviada apenas para api\.anthropic\.com\.<\/small>/,
     '<div class="ig2"><label>Conexão com Claude<input type="text" value="Conectado com segurança pelo Supabase" readonly></label><label>Modelo<input type="text" value="Claude Sonnet" readonly></label></div><small>A chave fica protegida no servidor. Você não precisa digitar nenhuma chave aqui.</small>');
    html=html.replace(/let key="",model="[^"]*",useAi=false;/,'let key="",model="claude-sonnet-4-5-20250929",useAi=true;');
    html=html.replace(/<head([^>]*)>/i,'<head$1><base href="'+new URL('.',location.href).href+'">');
