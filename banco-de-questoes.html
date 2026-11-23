@@ -4,8 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Banco de Questões</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<script>try{var __t=localStorage.getItem("app-theme-evolucao");if(__t==="light"||__t==="dark")document.documentElement.dataset.theme=__t}catch(e){}try{if(self!==top)document.documentElement.classList.add("emb")}catch(e){document.documentElement.classList.add("emb")}</script>
 <style>
 :root{--bg:#fff;--ink:#000;--mute:#6b6b6b;--line:#d9d9d9;--soft:#f3f3f3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--ink:#fff;--mute:#9a9a9a;--line:#2e2e2e;--soft:#141414;color-scheme:dark}}
@@ -165,6 +164,47 @@ main{padding:20px 24px 60px;min-width:0}
 .ig3{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:10px}
 .ig4{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}.ig4 label{width:120px}.ig4 details{flex:1;min-width:200px;font-size:13px}.ig4 summary{cursor:pointer;font-weight:600}.ig4 p{margin:6px 0 0;color:var(--mute)}
 @media (max-width:700px){.ir{grid-template-columns:1fr}.imd{max-height:96vh}.gb2{width:100%}}
+
+/* ===== Layout unificado com as outras abas: coluna central, cartões, leve ===== */
+:root{--card:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a0a0a;--card:#121212;--line:#303030;--soft:#1c1c1c;--mute:#a3a3a3}}
+:root[data-theme="dark"]{--bg:#0a0a0a;--card:#121212;--line:#303030;--soft:#1c1c1c;--mute:#a3a3a3}
+body{max-width:560px;margin:0 auto;padding:12px 14px calc(28px + env(safe-area-inset-bottom,0px));font-family:Inter,"Aptos","Segoe UI Variable","Segoe UI",Roboto,Arial,sans-serif;letter-spacing:-.012em;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.top{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:0;border:0;margin:0 0 10px}
+.crumb{grid-column:1/-1}
+.emb .crumb{display:none}
+.stats{display:contents}
+.stat{text-align:center;padding:12px 6px;border:1px solid var(--line);border-radius:18px;background:var(--card);line-height:1.15}
+.stat strong{font-size:22px}
+.ico.imp{grid-column:1/3;width:auto;height:42px;border-radius:14px}
+#theme{grid-column:3;width:100%;height:42px;border-radius:14px}
+.prog{border-radius:99px;overflow:hidden;margin:0 0 12px}
+.hero{padding:6px 2px 14px;border:0}
+.hero h1{font-size:clamp(26px,7vw,34px);line-height:1.05;letter-spacing:-.03em;background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--ink);animation:none}
+.hero p{font-size:14px;margin:6px 0 0;max-width:none}
+.marq{display:none}
+.dist{padding:16px;border:1px solid var(--line);border-radius:20px;background:var(--card);margin-bottom:12px}
+.dh{margin-bottom:12px}.dh b{font-size:30px}
+.dbar{height:12px}
+.dleg{gap:10px 16px;margin-top:14px}.lg{font-size:13px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;background:var(--card);margin-bottom:12px}
+.tb{padding:10px 8px;text-align:center}
+.wrap{display:block;min-height:0}
+aside{position:static;max-height:none;overflow:visible;border:1px solid var(--line);border-radius:20px;background:var(--card);padding:14px 16px;margin-bottom:12px}
+.fh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+aside h2{margin:0;font-size:14px}
+.ftog{width:34px;height:34px;flex:none;font-size:16px;line-height:1;transition:transform .2s}
+aside.fold .ftog{transform:rotate(180deg)}
+aside.fold #steps,aside.fold .clear{display:none}
+main{padding:0}
+.bar{margin:4px 2px 12px}
+.q{padding:16px;border-radius:20px;background:var(--card);margin-bottom:12px}
+.q:hover{transform:none;border-color:var(--line)}
+.more{display:block;width:100%;margin:4px 0 8px;padding:14px;border:1px solid var(--ink);border-radius:14px;background:none;font-weight:700}
+.more span{display:block;font-weight:400;font-size:12px;color:var(--mute)}
+.more:hover{background:var(--ink);color:var(--bg)}
+.provas{padding:0 0 20px}
+.pc,.empty,.imd{background:var(--card)}
 </style>
 </head>
 <body>
@@ -174,12 +214,12 @@ main{padding:20px 24px 60px;min-width:0}
     <div class="stat"><strong id="sStreak">0</strong><span>sequência</span></div>
     <div class="stat"><strong id="sAns">0</strong><span>respondidas</span></div>
     <div class="stat"><strong id="sAcc">0%</strong><span>de acerto</span></div>
-    <button class="ico imp" id="imp" title="Importar prova em PDF">⇪ Importar PDF</button><button class="ico" id="theme" aria-label="Alternar tema">◐</button>
+    <button class="ico imp" id="imp" title="Importar prova em PDF">⇪ Importar PDF</button><button class="ico" id="theme" aria-label="Alternar tema">Tema claro/escuro</button>
   </div>
 </header>
 <div class="prog"><i id="pg"></i></div>
 <section class="hero">
-  <h1>Banco de<br>Questões</h1>
+  <h1>Banco de Questões</h1>
   <p>Filtre por banca, disciplina, matéria, tópico e conteúdo específico. Cada escolha afunila a próxima, até chegar na questão certa.</p>
 </section>
 <div class="marq"><div id="mq"></div></div>
@@ -187,7 +227,7 @@ main{padding:20px 24px 60px;min-width:0}
 <nav class="tabs"><button class="tb on" data-v="q">Banco de questões</button><button class="tb" data-v="p">Provas antigas</button></nav>
 <div class="wrap" id="vq">
   <aside>
-    <h2>Filtros · escolha mais de uma opção</h2>
+    <div class="fh"><h2>Filtros · escolha mais de uma opção</h2><button class="ico ftog" id="ftog" aria-expanded="true" aria-controls="steps" title="Mostrar ou ocultar filtros">⌃</button></div>
     <div id="steps"></div>
     <button class="clear" id="clear">Limpar filtros</button>
   </aside>
@@ -210,7 +250,7 @@ const Q=[{"id":"FN2022-01","b":"FN","d":"Língua Portuguesa","m":"Crase e combin
 const K=["banca","disc","mat","top","cont","dif"];
 const L={banca:"Banca",disc:"Disciplina",mat:"Matéria",top:"Tópico",cont:"Conteúdo específico",dif:"Dificuldade"};
 const S={banca:[],disc:[],mat:[],top:[],cont:[],dif:[]};
-const ans={};let animIn=true;
+const ans={};let animIn=true;const PAGE=12;let shown=PAGE;
 if(Object.keys(TREE).length===1)S.disc=[Object.keys(TREE)[0]];
 const $=id=>document.getElementById(id);
 function opts(k){
@@ -224,7 +264,7 @@ function opts(k){
 function locked(k){return (k==="mat"&&!S.disc.length)||(k==="top"&&!S.mat.length)||(k==="cont"&&!S.top.length)}
 function pick(k,v){
  if(k==="disc"&&Object.keys(TREE).length===1)return;
- animIn=true;
+ animIn=true;shown=PAGE;
  const a=S[k],i=a.indexOf(v);
  if(i>=0)a.splice(i,1);else a.push(v);
  prune();
@@ -252,21 +292,24 @@ function renderSteps(){
   $("steps").appendChild(d);
  });
 }
+function cardHTML(q,n){
+  const i=Q.indexOf(q),done=ans[i]!==undefined;
+  return `<article class="q${animIn?" in":""}" data-dif="${q.f}" style="--d:${(n%PAGE)*50}ms"><div class="meta"><span class="bn">${q.b}</span><span class="dp"><span class="dots">${[0,1,2].map(x=>`<b class="${x<=DIF.indexOf(q.f)?"on":""}"></b>`).join("")}</span>${q.f}</span><button class="idb" data-id="${q.id}" title="Copiar ID">${q.id}</button><span class="mi">📅 ${q.dt}</span><span class="mi">⏱ ~${q.tm} min</span></div><div class="bc"><div class="dsc" data-d="${q.d}" style="--dcol:${dc(q.d)}"><small>Disciplina</small>${q.d}</div><div><small>Matéria</small>${q.m}</div><div><small>Tópico</small>${q.t}</div><div><small>Conteúdo específico</small>${q.c||"—"}</div></div>
+  ${q.x?`<details class="tx" open><summary>Texto-base</summary><img class="qi" loading="lazy" alt="Texto-base" src="${IMG[q.x]}"></details>`:""}
+  <img class="qi" loading="lazy" alt="Questão ${q.id}" src="${IMG[q.i]}">
+  <div class="lets">${[0,1,2,3,4].slice(0,q.n||5).map(j=>{let cls="opt";if(done){if(j===q.a)cls+=" ok";else if(j===ans[i])cls+=" no"}
+   return `<button class="${cls}" data-q="${i}" data-o="${j}" ${done?"disabled":""} aria-label="Alternativa ${"ABCDE"[j]}"><i>${"ABCDE"[j]}</i></button>`}).join("")}</div>
+  ${done?`<div class="exp"><b>${ans[i]===q.a?"Você acertou.":"Resposta correta: "+"ABCDE"[q.a]+"."}</b> ${q.e||""}</div>`:""}</article>`;
+
+}
+function moreBtn(r){return r.length>shown?`<button class="more" id="more">Mostrar mais <span>${Math.min(PAGE,r.length-shown)} de ${r.length-shown} restantes</span></button>`:""}
 function renderList(){
  const r=filtered();
  $("count").textContent=r.length+(r.length===1?" questão":" questões");
  const pv=PROVAS.find(x=>x.id===provaSel);const p=(pv?[pv.b+" "+pv.ano]:[]).concat(K.filter(k=>S[k].length).map(k=>S[k].join(" + ")));
  $("path").innerHTML=(p.length?p:["Todas as questões"]).map(x=>`<span>${x}</span>`).join("");
  if(!r.length){$("list").innerHTML=Q.length?'<div class="empty"><b>Nenhuma questão nesse filtro</b>Remova um filtro para ampliar a busca.</div>':'<div class="empty"><b>Banco ainda vazio</b>Os filtros já estão prontos. As questões aparecem aqui quando forem cadastradas.</div>';return}
- $("list").innerHTML=r.map((q,n)=>{
-  const i=Q.indexOf(q),done=ans[i]!==undefined;
-  return `<article class="q${animIn?" in":""}" data-dif="${q.f}" style="--d:${n*70}ms"><div class="meta"><span class="bn">${q.b}</span><span class="dp"><span class="dots">${[0,1,2].map(x=>`<b class="${x<=DIF.indexOf(q.f)?"on":""}"></b>`).join("")}</span>${q.f}</span><button class="idb" data-id="${q.id}" title="Copiar ID">${q.id}</button><span class="mi">📅 ${q.dt}</span><span class="mi">⏱ ~${q.tm} min</span></div><div class="bc"><div class="dsc" data-d="${q.d}" style="--dcol:${dc(q.d)}"><small>Disciplina</small>${q.d}</div><div><small>Matéria</small>${q.m}</div><div><small>Tópico</small>${q.t}</div><div><small>Conteúdo específico</small>${q.c||"—"}</div></div>
-  ${q.x?`<details class="tx" open><summary>Texto-base</summary><img class="qi" loading="lazy" alt="Texto-base" src="${IMG[q.x]}"></details>`:""}
-  <img class="qi" loading="lazy" alt="Questão ${q.id}" src="${IMG[q.i]}">
-  <div class="lets">${[0,1,2,3,4].slice(0,q.n||5).map(j=>{let cls="opt";if(done){if(j===q.a)cls+=" ok";else if(j===ans[i])cls+=" no"}
-   return `<button class="${cls}" data-q="${i}" data-o="${j}" ${done?"disabled":""} aria-label="Alternativa ${"ABCDE"[j]}"><i>${"ABCDE"[j]}</i></button>`}).join("")}</div>
-  ${done?`<div class="exp"><b>${ans[i]===q.a?"Você acertou.":"Resposta correta: "+"ABCDE"[q.a]+"."}</b> ${q.e||""}</div>`:""}</article>`;
- }).join("");
+ $("list").innerHTML=r.slice(0,shown).map(cardHTML).join("")+moreBtn(r);
  animIn=false;
 }
 function stats(){
@@ -305,7 +348,15 @@ $("list").addEventListener("click",e=>{
  $("sStreak").textContent=streak;
  bump("sAns");bump("sAcc");
 });
-$("clear").onclick=()=>{animIn=true;K.forEach(k=>S[k]=[]);if(Object.keys(TREE).length===1)S.disc=[Object.keys(TREE)[0]];provaSel=null;render()};
+$("clear").onclick=()=>{animIn=true;shown=PAGE;K.forEach(k=>S[k]=[]);if(Object.keys(TREE).length===1)S.disc=[Object.keys(TREE)[0]];provaSel=null;render()};
+document.addEventListener("click",e=>{
+ if(!e.target.closest("#more"))return;
+ const r=filtered(),from=shown;shown=Math.min(shown+PAGE,r.length);
+ $("more").remove();
+ $("list").insertAdjacentHTML("beforeend",r.slice(from,shown).map((q,n)=>cardHTML(q,n)).join("")+moreBtn(r));
+});
+$("ftog").onclick=()=>{const f=document.querySelector("aside").classList.toggle("fold");$("ftog").setAttribute("aria-expanded",String(!f))};
+addEventListener("storage",e=>{if(e.key==="app-theme-evolucao"&&(e.newValue==="light"||e.newValue==="dark"))document.documentElement.dataset.theme=e.newValue});
 $("mq").textContent=(BANCAS.join("  ✦  ")+"  ✦  ").repeat(8);
 $("theme").onclick=()=>{
  const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
@@ -346,7 +397,7 @@ document.addEventListener("click",e=>{
  const c=e.target.closest(".chip[data-pk]");
  if(c){const a=c.dataset.pk==="a",v=a?+c.dataset.v:c.dataset.v;const L2=a?pA:pB,ix=L2.indexOf(v);if(ix>=0)L2.splice(ix,1);else L2.push(v);renderProvas();return}
  const g=e.target.closest(".go");
- if(g){provaSel=g.dataset.p;animIn=true;view("q");render()}
+ if(g){provaSel=g.dataset.p;animIn=true;shown=PAGE;view("q");render()}
 });
 render();
 </script>
