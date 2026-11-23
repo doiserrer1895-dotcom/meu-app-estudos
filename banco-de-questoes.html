@@ -38,31 +38,38 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  return qs;
 }`,
     String.raw`function optionMarks(txt){
- const found=[];const re=/(?:^|[\s([{])\(?\s*([A-Ea-e])\s*[).\-–—:]/g;let m;
- while((m=re.exec(txt))!==null){const a=m[1].toUpperCase();if(!found.includes(a))found.push(a)}
+ const found=[],re=/(?:^|[\s([{])\(?\s*([A-Ea-e])\s*[).\-–—:]/g;let m;
+ while((m=re.exec(String(txt||"")))!==null){const a=m[1].toUpperCase();if(!found.includes(a))found.push(a)}
  return found;
 }
 function detect(L){
  const candidates=[];
- L.forEach((l,i)=>{const m=MK.exec(l.t);if(!m)return;const n=+m[1];if(n>=1&&n<=999)candidates.push({n,i,explicit:QW.test(l.t)})});
+ L.forEach((l,i)=>{
+  const m=MK.exec(String(l.t||""));if(!m)return;
+  const n=+m[1],explicit=QW.test(String(l.t||""));
+  if(n>=1&&n<=100)candidates.push({n,i,explicit});
+ });
  const qs=[];let lastIndex=-1,lastNum=0;
  for(let c=0;c<candidates.length;c++){
   const cur=candidates[c];if(cur.i<=lastIndex)continue;
-  let next=null;
+  const starts=!qs.length?(cur.n===1||cur.explicit):(cur.n===lastNum+1||(cur.explicit&&cur.n===1));
+  if(!starts)continue;
+  let hard=Math.min(L.length,cur.i+180);
   for(let k=c+1;k<candidates.length;k++){
-   const candidate=candidates[k];
-   if(candidate.explicit||candidate.n===1||candidate.n===cur.n+1){next=candidate;break}
+   const x=candidates[k];
+   if(x.n===cur.n+1||(x.explicit&&x.n===1)){hard=x.i;break}
   }
-  const hard=next?next.i:Math.min(L.length,cur.i+220);
-  const letters=new Set();let chars=0,rows=0;
+  const letters=[],rows=[];let bodyChars=0,bodyRows=0,ordered=0,expected="A";
   for(let j=cur.i+1;j<hard;j++){
-   const t=L[j].t||"";chars+=t.length;if(t.length>2)rows++;
-   optionMarks(t).forEach(a=>letters.add(a));
+   const t=String(L[j].t||"");
+   const om=optionMarks(t),anchored=OPT.exec(t);
+   if(anchored){const a=(anchored[1]||anchored[2]).toUpperCase();if(!om.includes(a))om.push(a)}
+   if(om.length){
+    rows.push(j);
+    for(const a of om){if(!letters.includes(a))letters.push(a);if(a===expected){ordered++;expected=String.fromCharCode(expected.charCodeAt(0)+1)}}
+   }else if(t.trim().length>2){bodyChars+=t.length;bodyRows++}
   }
-  const hasOptions=letters.size>=2,hasBody=chars>=28&&rows>=2;
-  const sequential=!qs.length||cur.explicit||cur.n===1||cur.n===lastNum+1;
-  if(!sequential&&!(cur.n>lastNum&&(hasOptions||cur.explicit)))continue;
-  if(!cur.explicit&&!hasOptions&&!hasBody)continue;
+  if(letters.length<4||ordered<4||bodyChars<25||bodyRows<2)continue;
   qs.push({n:cur.n,i:cur.i,seq:qs.length+1});lastIndex=cur.i;lastNum=cur.n;
  }
  return qs;
@@ -83,30 +90,28 @@ function detect(L){
          String.raw`function bounds(L,qs,B){
  const bs={};B.forEach(b=>b.qs.forEach(q=>bs[q.seq]=b));
  qs.forEach((q,k)=>{
-  const next=qs[k+1],hard=next?(bs[next.seq]&&bs[next.seq].qs[0]===next?bs[next.seq].start:next.i):L.length;
-  const lim=Math.max(q.i,hard-1);
-  q.s=q.i;q.base=bs[q.seq]||null;
-  let lastOption=-1,expected="A";const seen=new Set();
+  const nx=qs[k+1],hard=nx?(bs[nx.seq]&&bs[nx.seq].qs[0]===nx?bs[nx.seq].start:nx.i):L.length;
+  const lim=Math.max(q.i,hard-1);q.s=q.i;q.base=bs[q.seq]||null;
+  const seen=[],rows=[];let expected="A",ordered=0;
   for(let j=q.i+1;j<=lim;j++){
-   const o=OPT.exec(L[j].t);
-   if(o){
-    const a=(o[1]||o[2]).toUpperCase();seen.add(a);
-    if(a===expected){lastOption=j;expected=String.fromCharCode(expected.charCodeAt(0)+1)}
-    else if(a==="A"){lastOption=j;expected="B"}
+   const t=String(L[j].t||""),m=OPT.exec(t),marks=[];
+   if(m)marks.push((m[1]||m[2]).toUpperCase());
+   else optionMarks(t).forEach(a=>marks.push(a));
+   if(marks.length){
+    rows.push(j);
+    for(const a of marks){if(!seen.includes(a))seen.push(a);if(a===expected){ordered++;expected=String.fromCharCode(expected.charCodeAt(0)+1)}}
    }
-   const marks=optionMarks(L[j].t);
-   for(const a of marks){seen.add(a);if(a===expected){lastOption=j;expected=String.fromCharCode(expected.charCodeAt(0)+1)}}
   }
-  q.nopt=Math.min(5,Math.max(seen.size,expected.charCodeAt(0)-65));q.e=lim;
-  if(lastOption>=0){
-   let e=lastOption;const h=Math.max(1,L[lastOption].bot-L[lastOption].top);
-   while(e<lim&&e-lastOption<8){
-    const a=L[e],b=L[e+1];
-    if(a.p!==b.p||a.c!==b.c||b.top-a.bot>Math.max(2,h*1.5)||OPT.test(b.t)||MK.test(b.t)||(b.t.length>6&&b.t===b.t.toUpperCase()))break;
-    e++;
-   }
-   q.e=e;
+  q.nopt=Math.min(5,seen.length);
+  const last=rows.length?rows[rows.length-1]:-1;
+  if(last<0){q.e=Math.min(lim,q.i+20);return}
+  let e=last;const h=Math.max(1,L[last].bot-L[last].top);
+  while(e<lim&&e-last<8){
+   const a=L[e],b=L[e+1];if(!b||a.p!==b.p||a.c!==b.c||MK.test(b.t)||OPT.test(b.t))break;
+   if(b.top-a.bot>Math.max(3,h*1.8)||(b.t.length>6&&b.t===b.t.toUpperCase()))break;
+   e++;
   }
+  q.e=e;
  });
 }`],
     [String.raw`return G.map((g,k)=>{const{W,H,two}=P[g.p];return{p:g.p,x0:two?g.c*W/2:0,x1:two?(g.c+1)*W/2:W,y0:k?.045*H:Math.max(.045*H,L[g.s].top-5),y1:k<G.length-1?.955*H:Math.min(.955*H,L[g.e].bot+6)}});`,
