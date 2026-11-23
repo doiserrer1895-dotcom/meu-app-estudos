@@ -123,12 +123,12 @@ function detect(L){
  const host=window.parent&&window.parent.parent;
  const client=host&&host.__estudosSupabaseClient;
  if(!client||!client.functions)throw new Error("Conexão segura não encontrada. Entre na sua conta do aplicativo e tente novamente.");
- const prompt=sys+"\\n\\n"+txt+"\\n\\nResponda somente com o objeto JSON solicitado, sem markdown.";
+ const prompt=sys+"\n\n"+txt+"\n\nResponda somente com o objeto JSON solicitado, sem markdown.";
  for(let tr=0;tr<2;tr++){
   try{
-   const image=im[im.length-1];
-   if(!image)throw new Error("Imagem da questão não encontrada.");
-   const {data,error}=await client.functions.invoke("claude-pdf-analyze",{body:{imageBase64:image.source.data,mediaType:image.source.media_type,prompt}});
+   if(!im.length)throw new Error("Imagem da questão não encontrada.");
+   const images=im.map(image=>({base64:image.source.data,mediaType:image.source.media_type}));
+   const {data,error}=await client.functions.invoke("claude-pdf-analyze",{body:{images,prompt}});
    if(error)throw new Error(error.message||"Falha ao chamar o serviço seguro do Claude.");
    if(data&&data.error)throw new Error(data.error);
    const t=String(data&&data.text||""),j=JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1));
