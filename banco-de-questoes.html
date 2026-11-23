@@ -116,90 +116,17 @@ function detect(L){
  if(!d&&en>=3&&/\b(the|and|is|are|which|according|what|where|when|who|does|have|has|because|between|should|could|would)\b/.test(n))d=IN;`],
     [String.raw`const secs=[];L.forEach((l,i)=>{if(l.t.length<45&&l.t===l.t.toUpperCase()){const n=norm(l.t);const h=DH.find(d=>d[0].test(n));if(h)secs.push({i,d:h[1]})}});`,
      String.raw`const secs=[];L.forEach((l,i)=>{if(l.t.length<120){const n=norm(l.t).replace(/[:\-–—]+$/,"").trim();const h=DH.find(d=>d[0].test(n));if(h)secs.push({i,d:h[1]})}});`],
-    [String.raw`async function ai(q,key,model){
- const im=[q.baseImg,q.img].filter(Boolean).map(u=>({type:"image",source:{type:"base64",media_type:u.slice(5,u.indexOf(";")),data:u.split(",")[1]}}));
- const sys='Você classifica e comenta questões de concursos militares brasileiros. Responda SOMENTE um JSON: {"d","m","t","c","f","a","n","tm","e"}. d/m/t/c = disciplina, matéria, tópico e conteúdo específico: use EXATAMENTE os nomes da taxonomia abaixo (d→m→t→[c]); se nada servir, crie um nome curto e coerente. f = "Fácil"|"Médio"|"Difícil". a = letra correta (A-E). n = número de alternativas. tm = minutos estimados (1 a 6). e = explicação passo a passo em português (2 a 5 frases) dizendo por que a alternativa correta está certa. Taxonomia: '+JSON.stringify(TREE);
- const txt=(im.length>1?"A primeira imagem é o texto-base; a última é a questão. ":"A imagem é a questão. ")+(q.a>=0?"Gabarito oficial: "+LT[q.a]+".":"");
- const host=window.parent&&window.parent.parent;
- const client=host&&host.__estudosSupabaseClient;
- if(!client||!client.functions)throw new Error("Conexão segura não encontrada. Entre na sua conta do aplicativo e tente novamente.");
- const prompt=sys+"\n\n"+txt+"\n\nResponda somente com o objeto JSON solicitado, sem markdown.";
- for(let tr=0;tr<2;tr++){
-  try{
-   if(!im.length)throw new Error("Imagem da questão não encontrada.");
-   const images=im.map(image=>({base64:image.source.data,mediaType:image.source.media_type}));
-   const {data,error}=await client.functions.invoke("claude-pdf-analyze",{body:{images,prompt}});
-   if(error)throw new Error(error.message||"Falha ao chamar o serviço seguro do Claude.");
-   if(data&&data.error)throw new Error(data.error);
-   const t=String(data&&data.text||""),j=JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1));
-   return j;
-  }catch(e){if(tr)throw e;await new Promise(r=>setTimeout(r,1200))}
- }
-}`,String.raw`async function ai(q,key,model){
- const im=[q.baseImg,q.img].filter(Boolean).map(u=>({type:"image",source:{type:"base64",media_type:u.slice(5,u.indexOf(";")),data:u.split(",")[1]}}));
- const sys='Você classifica e comenta questões de concursos militares brasileiros. Responda SOMENTE um JSON: {"d","m","t","c","f","a","n","tm","e"}. d/m/t/c = disciplina, matéria, tópico e conteúdo específico: use EXATAMENTE os nomes da taxonomia abaixo (d→m→t→[c]); se nada servir, crie um nome curto e coerente. f = "Fácil"|"Médio"|"Difícil". a = letra correta (A-E). n = número de alternativas. tm = minutos estimados (1 a 6). e = explicação passo a passo em português (2 a 5 frases) dizendo por que a alternativa correta está certa. Taxonomia: '+JSON.stringify(TREE);
- const txt=(im.length>1?"A primeira imagem é o texto-base; a última é a questão. ":"A imagem é a questão. ")+(q.a>=0?"Gabarito oficial: "+LT[q.a]+".":"");
- const host=window.parent&&window.parent.parent;
- const client=host&&host.__estudosSupabaseClient;
- if(!client||!client.functions)throw new Error("Conexão segura não encontrada. Entre na sua conta do aplicativo e tente novamente.");
- const prompt=sys+"\\n\\n"+txt+"\\n\\nResponda somente com o objeto JSON solicitado, sem markdown.";
- for(let tr=0;tr<2;tr++){
-  try{
-   const image=im[im.length-1];
-   if(!image)throw new Error("Imagem da questão não encontrada.");
-   const {data,error}=await client.functions.invoke("claude-pdf-analyze",{body:{imageBase64:image.source.data,mediaType:image.source.media_type,prompt}});
-   if(error)throw new Error(error.message||"Falha ao chamar o serviço seguro do Claude.");
-   if(data&&data.error)throw new Error(data.error);
-   const t=String(data&&data.text||""),j=JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1));
-   return j;
-  }catch(e){if(tr)throw e;await new Promise(r=>setTimeout(r,1200))}
- }
-}`],
-    [String.raw`let key="",model="claude-sonnet-5-5",useAi=false;try{key=localStorage.getItem("bq-key")||"";model=localStorage.getItem("bq-model")||model;useAi=!!key}catch(e){}`,
-     String.raw`let key="",model="claude-sonnet-4-5-20250929",useAi=true;try{model="claude-sonnet-4-5-20250929"}catch(e){}`],
-    [String.raw`<div class="ig2"><label>Chave da API Anthropic<input id="imK" type="password" value="\${esc(key)}" placeholder="sk-ant-…" autocomplete="off"></label><label>Modelo<input id="imM" value="\${esc(model)}"></label></div><small>A chave fica só neste navegador e é enviada apenas para api.anthropic.com.</small>`,
-     String.raw`<div class="ig2"><label>Conexão com Claude<input type="text" value="Conectado com segurança pelo Supabase" readonly></label><label>Modelo<input type="text" value="Claude Sonnet" readonly></label></div><small>A chave da Anthropic fica protegida no servidor. Você não precisa digitar nem armazenar chave neste navegador.</small>`],
-    [String.raw`W.key=$("imK").value.trim();W.model=$("imM").value.trim();`,
-     String.raw`W.key="";W.model="claude-sonnet-4-5-20250929";`],
-    [String.raw`if(W.ai&&!W.key)return toast("Cole a chave da API ou desmarque a IA");`,
-     String.raw``],
-    [String.raw`try{if(W.key){localStorage.setItem("bq-key",W.key);localStorage.setItem("bq-model",W.model)}}catch(e){}`,
-     String.raw``]
    ];
-   const patchMisses=[];
    for(const [before,after] of patches){
-    if(!html.includes(before)){patchMisses.push(before.slice(0,90));continue}
+    if(!html.includes(before))throw new Error('Não encontrei um trecho esperado da ferramenta Importar PDF.');
     html=html.replace(before,after);
    }
-   const aiPattern=/async function ai\(q,key,model\)\{[\s\S]*?\n\}\n\/\* ---------- persistência ---------- \*\//;
-   const secureAi = String.raw`async function ai(q,key,model){
- const im=[q.baseImg,q.img].filter(Boolean).map(u=>({type:"image",source:{type:"base64",media_type:u.slice(5,u.indexOf(";")),data:u.split(",")[1]}}));
- const sys='Você classifica e comenta questões de concursos militares brasileiros. Responda SOMENTE um JSON: {"d","m","t","c","f","a","n","tm","e"}. d/m/t/c = disciplina, matéria, tópico e conteúdo específico: use EXATAMENTE os nomes da taxonomia abaixo (d→m→t→[c]); se nada servir, crie um nome curto e coerente. f = "Fácil"|"Médio"|"Difícil". a = letra correta (A-E). n = número de alternativas. tm = minutos estimados (1 a 6). e = explicação passo a passo em português (2 a 5 frases). Taxonomia: '+JSON.stringify(TREE);
- const txt=(im.length>1?"A primeira imagem é o texto-base; a última é a questão. ":"A imagem é a questão. ")+(q.a>=0?"Gabarito oficial: "+LT[q.a]+".":"");
- const client=window.parent&&window.parent.parent&&window.parent.parent.__estudosSupabaseClient;
- if(!client||!client.functions)throw new Error("Conexão segura não encontrada. Entre na conta do aplicativo.");
- const prompt=sys+"\\n\\n"+txt+"\\n\\nResponda somente com JSON válido, sem markdown.";
- for(let tr=0;tr<2;tr++){try{
-  if(!im.length)throw new Error("Imagem da questão não encontrada.");
-  const images=im.map(x=>({base64:x.source.data,mediaType:x.source.media_type}));
-  const {data,error}=await client.functions.invoke("claude-pdf-analyze",{body:{images,prompt}});
-  if(error)throw new Error(error.message||"Falha ao chamar Claude.");
-  if(data&&data.error)throw new Error(data.error);
-  const t=String(data&&data.text||""),j=JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1));return j;
- }catch(e){if(tr)throw e;await new Promise(r=>setTimeout(r,1200))}}
-}
-`;
-   if(!aiPattern.test(html))throw new Error('Não encontrei a função de IA no arquivo-fonte.');
-   html=html.replace(aiPattern,secureAi+'\n/* ---------- persistência ---------- */');
-   html=html.replace(/<div class="ig2">[\s\S]*?<\/div><small>A chave fica só neste navegador e é enviada apenas para api\.anthropic\.com\.<\/small>/,
-    '<div class="ig2"><label>Conexão com Claude<input type="text" value="Conectado com segurança pelo Supabase" readonly></label><label>Modelo<input type="text" value="Claude Sonnet" readonly></label></div><small>A chave fica protegida no servidor. Você não precisa digitar nenhuma chave aqui.</small>');
-   html=html.replace(/let key="",model="[^"]*",useAi=false;/,'let key="",model="claude-sonnet-4-5-20250929",useAi=true;');
    html=html.replace(/<head([^>]*)>/i,'<head$1><base href="'+new URL('.',location.href).href+'">');
    bank.addEventListener('load',installBridge,{once:true});
    bank.srcdoc=html;
   }catch(error){
    console.error('Falha ao aplicar correções do Importar PDF:',error);
-   bank.srcdoc='<!doctype html><html lang="pt-BR"><meta charset="utf-8"><body style="margin:0;padding:24px;background:#080808;color:#fff;font:14px system-ui">Falha ao carregar o Banco de Questões: '+String(error&&error.message||error).replace(/[<>&]/g,'')+'. Atualize a página e tente novamente.</body></html>';
+   bank.srcdoc='<!doctype html><html lang="pt-BR"><meta charset="utf-8"><body style="margin:0;padding:24px;background:#080808;color:#fff;font:14px system-ui">Não foi possível carregar o Banco de Questões com as correções do Importar PDF. Atualize a página e tente novamente.</body></html>';
   }
  }
  const allowed=new Set(['eear-question-taxonomy-full','eear-question-taxonomy','eear-question-attempt']);
