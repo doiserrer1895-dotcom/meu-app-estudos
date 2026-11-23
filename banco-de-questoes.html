@@ -23,6 +23,8 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
    if(!response.ok)throw new Error('HTTP '+response.status);
    let html=await response.text();
    const patches=[
+    [String.raw`const MK=/^\s*(?:QUEST[ÃA]O\s*[:\-–]?\s*)?(\d{1,3})\s*(?:[.)\-–—:º°]|(?=\s|$))/i,QW=/^\s*QUEST[ÃA]O\s*\d/i,OPT=/^\s*\(?\s*([A-Ea-e])\s*[).\-–]\s*\S/;`,String.raw`const MK=/^\s*(?:QUEST[ÃA]O\s*(?:N[º°o]\s*)?[:\-–]?\s*)?(\d{1,3})\s*(?:[.)\-–—:º°]|(?=\s|$))/i,QW=/^\s*QUEST[ÃA]O\s*(?:N[º°o]\s*)?\d/i,OPT=/^\s*(?:\(\s*([A-Ea-e])\s*\)|([A-Ea-e])\s*[).\-–—:])\s*\S/;`],
+    [String.raw`const DH=[[/^lingua portuguesa|^portugues/,"Língua Portuguesa"],[/^matematica/,"Matemática"],[/^fisica/,"Física"],[/^(lingua )?ingles|^english/,"Inglês"]];`,String.raw`const DH=[[/^(?:(?:conhecimentos|prova|parte|secao|questoes?)\s+(?:de\s+)?)?(?:lingua\s+)?portugues(?:a)?\b/,"Língua Portuguesa"],[/^(?:(?:conhecimentos|prova|parte|secao|questoes?)\s+(?:de\s+)?)?matematica\b/,"Matemática"],[/^(?:(?:conhecimentos|prova|parte|secao|questoes?)\s+(?:de\s+)?)?fisica\b/,"Física"],[/^(?:(?:conhecimentos|prova|parte|secao|questoes?)\s+(?:de\s+)?)?(?:lingua\s+)?ingles(?:a)?\b|^english\b/,"Inglês"]];`],
     [String.raw`function detect(L){
  const qs=[];let exp=1,last=-1;
  L.forEach((l,i)=>{
@@ -43,19 +45,20 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
 function detect(L){
  const candidates=[];
  L.forEach((l,i)=>{const m=MK.exec(l.t);if(!m)return;const n=+m[1];if(n>=1&&n<=999)candidates.push({n,i,explicit:QW.test(l.t)})});
- const byIndex=new Map(candidates.map(x=>[x.i,x]));
  const qs=[];let lastIndex=-1,lastNum=0;
  for(let c=0;c<candidates.length;c++){
   const cur=candidates[c];if(cur.i<=lastIndex)continue;
-  const letters=new Set(optionMarks(L[cur.i].t));let end=Math.min(L.length,cur.i+100);
-  for(let j=cur.i+1;j<end;j++){
-   const candidate=byIndex.get(j);
-   if(candidate&&letters.size>=2)break;
-   optionMarks(L[j].t).forEach(a=>letters.add(a));
+  let next=null;
+  for(let k=c+1;k<candidates.length;k++){
+   const candidate=candidates[k];
+   if(candidate.explicit||candidate.n===1||candidate.n>cur.n){next=candidate;break}
   }
-  if(letters.size<2)continue;
+  const hard=next?next.i:Math.min(L.length,cur.i+160);
+  const letters=new Set();
+  for(let j=cur.i+1;j<hard;j++)optionMarks(L[j].t).forEach(a=>letters.add(a));
+  const hasOptions=letters.size>=2||(cur.explicit&&letters.size>=1);
   const sequential=!qs.length||cur.n===lastNum+1||cur.n===1||cur.explicit||cur.n>lastNum;
-  if(!sequential)continue;
+  if(!sequential||(!cur.explicit&&!hasOptions))continue;
   qs.push({n:cur.n,i:cur.i,seq:qs.length+1});lastIndex=cur.i;lastNum=cur.n;
  }
  return qs;
@@ -76,25 +79,38 @@ function detect(L){
     String.raw`function bounds(L,qs,B){
  const bs={};B.forEach(b=>b.qs.forEach(q=>bs[q.seq]=b));
  qs.forEach((q,k)=>{
-  const next=qs[k+1],hard=next?next.i:L.length;
+  const next=qs[k+1],hard=next?(bs[next.seq]&&bs[next.seq].qs[0]===next?bs[next.seq].start:next.i):L.length,lim=Math.max(q.i,hard-1);
   q.s=q.i;q.base=bs[q.seq]||null;
-  let lastOption=-1;const seen=new Set();
-  for(let j=q.i;j<hard;j++){
+  let lastOption=-1;const seen=new Set();let expected="A",sequence=0;
+  for(let j=q.i+1;j<=lim;j++){
+   const o=OPT.exec(L[j].t);
+   if(o){
+    const a=(o[1]||o[2]).toUpperCase();seen.add(a);
+    if(a==="A"){sequence=1;expected="B";lastOption=j}
+    else if(a===expected){sequence++;expected=String.fromCharCode(expected.charCodeAt(0)+1);lastOption=j}
+   }
    const marks=optionMarks(L[j].t);
-   if(marks.length){lastOption=j;marks.forEach(a=>seen.add(a))}
+   if(marks.length>=2){marks.forEach(a=>seen.add(a));sequence=Math.max(sequence,marks.length);lastOption=j}
   }
-  q.e=lastOption>=0?lastOption:Math.max(q.i,hard-1);
-  q.nopt=seen.size;
+  q.nopt=Math.min(5,Math.max(seen.size,sequence));q.e=lim;
+  if(lastOption>=0){
+   let e=lastOption;const h=Math.max(1,L[lastOption].bot-L[lastOption].top);
+   while(e<lim&&e-lastOption<8){
+    const a=L[e],b=L[e+1];
+    if(a.p!==b.p||a.c!==b.c||b.top-a.bot>Math.max(2,h*1.5)||OPT.test(b.t)||MK.test(b.t)||(b.t.length>6&&b.t===b.t.toUpperCase()))break;
+    e++;
+   }
+   q.e=e;
+  }
  });
 }`],
     [String.raw`return G.map((g,k)=>{const{W,H,two}=P[g.p];return{p:g.p,x0:two?g.c*W/2:0,x1:two?(g.c+1)*W/2:W,y0:k?.045*H:Math.max(.045*H,L[g.s].top-5),y1:k<G.length-1?.955*H:Math.min(.955*H,L[g.e].bot+6)}});`,
      String.raw`return G.map(g=>{const{W,H,two}=P[g.p];return{p:g.p,x0:two?g.c*W/2:0,x1:two?(g.c+1)*W/2:W,y0:Math.max(.045*H,L[g.s].top-7),y1:Math.min(.955*H,L[g.e].bot+8)}});`],
-    ['n:q.nopt>=2?q.nopt:5','n:q.nopt>=4?Math.min(5,q.nopt):5'],
     [String.raw`if(!d&&(n.match(/\b(the|of|and|is|that|with|are|was|which|according)\b/g)||[]).length>6)d=IN;`,
-     String.raw`const en=(n.match(/\b(the|of|and|is|that|with|are|was|which|according|what|where|when|who|does|do|has|have|your|you|they|their|this|these|those|from|for|not)\b/g)||[]).length;
- if(!d&&en>=3&&/\b(the|and|is|are|which|according|what|where|when|who|does|have|has)\b/.test(n))d=IN;`],
+     String.raw`const en=(n.match(/\b(the|of|and|is|that|with|are|was|were|which|according|what|where|when|who|does|do|did|has|have|had|your|you|they|their|this|these|those|from|for|not|because|between|should|could|would|than|then|also|each|some|many|most|must|can|will|its|into|over|under|there|here|been|being|such|both|only|same)\b/g)||[]).length;
+ if(!d&&en>=3&&/\b(the|and|is|are|which|according|what|where|when|who|does|have|has|because|between|should|could|would)\b/.test(n))d=IN;`],
     [String.raw`const secs=[];L.forEach((l,i)=>{if(l.t.length<45&&l.t===l.t.toUpperCase()){const n=norm(l.t);const h=DH.find(d=>d[0].test(n));if(h)secs.push({i,d:h[1]})}});`,
-     String.raw`const secs=[];L.forEach((l,i)=>{if(l.t.length<60){const n=norm(l.t).replace(/[:\-–—]+$/,"").trim();const h=DH.find(d=>d[0].test(n));if(h)secs.push({i,d:h[1]})}});`],
+     String.raw`const secs=[];L.forEach((l,i)=>{if(l.t.length<120){const n=norm(l.t).replace(/[:\-–—]+$/,"").trim();const h=DH.find(d=>d[0].test(n));if(h)secs.push({i,d:h[1]})}});`],
    ];
    for(const [before,after] of patches){
     if(!html.includes(before))throw new Error('Não encontrei um trecho esperado da ferramenta Importar PDF.');
