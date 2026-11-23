@@ -17,7 +17,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  'use strict';
  const bank=document.getElementById('bank');
  const allowed=new Set(['eear-question-taxonomy-full','eear-question-taxonomy','eear-question-attempt']);
- let bridgeInstalled=false;
+ let bridgeInstalled=false,pendingFilter=null;
  function installBridge(){
   if(!bank.contentWindow||!bank.contentDocument)return;
   const doc=bank.contentDocument;
@@ -40,7 +40,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
     const family=s=>norm(s).replace(/\\s+(?:[123]|i{1,3})$/i,'').trim();
     function canonical(s){return norm(s)}
     function publishTaxonomy(){
-     if(typeof TREE==='undefined')return;
+     if(typeof TREE==='undefined'||!TREE||typeof TREE!=='object')return false;
      const hierarchy={},taxonomy={};
      Object.keys(TREE).forEach(key=>{
       const subject=String(key||'').trim(),tree=TREE[key]||{};
@@ -49,6 +49,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
      });
      window.parent.postMessage({type:'eear-question-taxonomy-full',hierarchy},location.origin);
      window.parent.postMessage({type:'eear-question-taxonomy',taxonomy},location.origin);
+     return true;
     }
     window.addEventListener('message',function(event){
      if(event.source!==window.parent||event.origin!==location.origin)return;
@@ -81,10 +82,13 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
       window.parent.postMessage({type:'eear-question-attempt',attempt},location.origin);
      },0);
     },true);
-    publishTaxonomy();
+    let taxonomyAttempts=0;
+    const taxonomyTimer=setInterval(function(){if(publishTaxonomy()||++taxonomyAttempts>=80)clearInterval(taxonomyTimer)},250);
    })();
    `;
    (doc.head||doc.documentElement).appendChild(bridge);
+   window.parent.postMessage({type:'eear-question-bank-ready'},location.origin);
+   if(pendingFilter){bank.contentWindow.postMessage(pendingFilter,location.origin);pendingFilter=null;}
   }catch(error){bridgeInstalled=false;console.error('Falha ao instalar integração do Banco de Questões:',error)}
  }
  bank.addEventListener('load',installBridge);
@@ -96,7 +100,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
   }
   if(event.source===window.parent&&event.origin===location.origin){
    const data=event.data;
-   if(data&&data.type==='app-question-filter'&&bank.contentWindow)bank.contentWindow.postMessage(data,location.origin);
+   if(data&&data.type==='app-question-filter'&&bank.contentWindow){if(bridgeInstalled)bank.contentWindow.postMessage(data,location.origin);else pendingFilter=data;}
   }
  });
 })();
