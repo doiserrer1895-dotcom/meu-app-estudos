@@ -18,7 +18,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  const bank=document.getElementById('bank');
  async function loadBankWithPdfFixes(){
   try{
-   const source=new URL('banco-de-questoes%20(2).html?v=20261123j',location.href);
+   const source=new URL('banco-de-questoes%20(2).html?v=20261123manual1',location.href);
    const response=await fetch(source,{cache:'no-store'});
    if(!response.ok)throw new Error('HTTP '+response.status);
    let html=await response.text();
@@ -82,6 +82,61 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
     html=html.replace(before,after);
    }
 
+   const manualCropCode = String.raw`
+/* ---------- recorte manual de PDF ---------- */
+let MC=null,MCV={page:1,scale:1,mode:"q",group:"Texto de apoio 1",link:"",num:1,items:[],bases:{},drag:null,rect:null};
+function manualStyle(){if($("manual-crop-style"))return;const s=document.createElement("style");s.id="manual-crop-style";s.textContent=".ai{display:none!important}#mcwrap{display:flex;flex-direction:column;gap:10px;min-height:60vh}#mcbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#mcbar label{font-size:12px;color:#aaa}#mcbar input,#mcbar select{background:#171717;color:#fff;border:1px solid #444;border-radius:7px;padding:8px;max-width:180px}#mcstage{position:relative;overflow:auto;background:#222;display:flex;justify-content:center;align-items:flex-start;min-height:48vh;max-height:65vh;padding:8px}#mcpaper{position:relative;max-width:100%;line-height:0}#mcpdf{display:block;max-width:100%;height:auto}#mcover{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}#mcrect{position:absolute;border:2px solid #36a3ff;background:#36a3ff22;pointer-events:none;display:none}#mclist{display:flex;gap:8px;overflow:auto;padding:6px 0}#mclist img{height:92px;max-width:180px;object-fit:contain;background:#fff;border-radius:5px}#mcstatus{font-size:12px;color:#aaa}#mcbar button{background:#252525;color:#fff;border:1px solid #555;border-radius:7px;padding:8px 12px;cursor:pointer}";document.head.appendChild(s)}
+function manualHome(){
+ W={};MCV={page:1,scale:1,mode:"q",group:"Texto de apoio 1",link:"",num:1,items:[],bases:{},drag:null,rect:null};
+ $("imb").innerHTML='<label class="dz" id="dz"><input type="file" id="imfi" accept=".pdf" hidden><span class="dzi">⇪</span><b id="dzn">Solte o PDF aqui ou clique para escolher</b><small id="dzs">O PDF será processado localmente no navegador. Nenhuma IA ou chave de API será usada.</small></label><div class="ig2"><label>Banca<input id="imB" placeholder="EEAR, AFA, ESA…"></label><label>Ano<input id="imA" type="number" min="1990" max="2100" placeholder="2025"></label><label>Nome da prova<input id="imN" placeholder="EEAR CFS · Prova"></label><label>Data da prova<input id="imD" placeholder="nov/2026"></label></div><label class="gb">Gabarito (opcional)<textarea id="imG" rows="2" placeholder="1-A 2-C 3-B…"></textarea></label><div id="ims2"></div>';
+ foot('<button class="go" id="immanual" disabled>Visualizar e recortar PDF</button>');
+ const f=$("imfi"),dz=$("dz"),pick=file=>{if(!file)return;if(!/\.pdf$/i.test(file.name))return toast("Selecione um arquivo PDF");W.file=file;$("dzn").textContent=file.name;$("dzs").textContent=kb(file.size)+" · pronto para visualizar";$("immanual").disabled=false;const nm=file.name.toUpperCase(),b=BANCAS.find(x=>nm.includes(x)),y=(nm.match(/20\d\d/)||[])[0];if(b&&!$("imB").value)$("imB").value=b;if(y&&!$("imA").value)$("imA").value=y;if(!$("imN").value)$("imN").value=file.name.replace(/\.pdf$/i,"").replace(/[_]+/g," ")};
+ f.onchange=()=>pick(f.files[0]);["dragover","dragenter"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add("on")}));["dragleave","drop"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove("on")}));dz.addEventListener("drop",e=>pick(e.dataTransfer.files[0]));
+ $("immanual").onclick=()=>{W.b=$("imB").value.trim().toUpperCase();W.ano=+$("imA").value;W.nome=$("imN").value.trim();W.dt=$("imD").value.trim()||String(W.ano||"");W.gab=$("imG").value;if(!W.b||!W.ano)return toast("Informe a banca e o ano");manualStart().catch(e=>{console.error(e);$("imb").innerHTML='<div class="empty"><b>Não foi possível abrir o PDF</b>'+esc(e.message)+'</div>';foot('<button class="go" id="mcretry">Voltar</button>');$("mcretry").onclick=manualHome})};
+ saved();
+}
+async function manualStart(){
+ foot("");prog(0,"Abrindo PDF…");await loadLib();try{const t=await(await fetch(WORKER)).text();pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([t],{type:"text/javascript"}))}catch(e){pdfjsLib.GlobalWorkerOptions.workerSrc=WORKER}
+ cache.clear();MC=await pdfjsLib.getDocument({data:new Uint8Array(await W.file.arrayBuffer())}).promise;
+ const pid=(()=>{let b=W.b+W.ano,k=b,n=2;while(PROVAS.some(p=>p.id===k)){k=b+"-"+n++}return k})();W.id=pid;MCV.num=1;manualStyle();manualView();
+}
+async function manualRender(){
+ const pg=await MC.getPage(MCV.page),stage=$("mcstage"),paper=$("mcpaper"),cv=$("mcpdf"),over=$("mcover"),maxW=Math.max(320,stage.clientWidth-24),base=pg.getViewport({scale:1}),scale=Math.min(2.2,maxW/base.width)*MCV.scale,vp=pg.getViewport({scale});
+ cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);cv.style.width=vp.width+"px";cv.style.height=vp.height+"px";await pg.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;
+ over.width=cv.width;over.height=cv.height;over.style.width=cv.style.width;over.style.height=cv.style.height;paper.style.width=cv.style.width;paper.style.height=cv.style.height;$("mcpage").textContent="Página "+MCV.page+" / "+MC.numPages;
+}
+function manualView(){
+ $("imb").innerHTML='<div id="mcwrap"><div id="mcbar"><button id="mcprev">←</button><button id="mcnext">→</button><button id="mcminus">−</button><button id="mcplus">+</button><label>Tipo <select id="mcmode"><option value="q">Questão</option><option value="b">Texto de apoio</option></select></label><label id="mcglabel">Grupo <input id="mcgroup" value="Texto de apoio 1"></label><label id="mclabel">Vincular texto <select id="mclink"><option value="">Sem texto de apoio</option></select></label><span id="mcpage"></span></div><div id="mcstage"><div id="mcpaper"><canvas id="mcpdf"></canvas><canvas id="mcover"></canvas><div id="mcrect"></div></div></div><div id="mcstatus">Arraste o mouse sobre a página para marcar a área inteira da questão ou do texto de apoio.</div><div id="mclist"></div></div>';
+ foot('<button class="idb" id="mcback">← Voltar</button><button class="idb" id="mcadd">Adicionar recorte</button><button class="go" id="mcfinish">Revisar e importar (0)</button>');
+ $("mcprev").onclick=()=>{if(MCV.page>1){MCV.page--;manualRender()}};$("mcnext").onclick=()=>{if(MCV.page<MC.numPages){MCV.page++;manualRender()}};$("mcminus").onclick=()=>{MCV.scale=Math.max(.5,MCV.scale-.15);manualRender()};$("mcplus").onclick=()=>{MCV.scale=Math.min(2.5,MCV.scale+.15);manualRender()};
+ $("mcmode").onchange=e=>{MCV.mode=e.target.value;$("mcglabel").style.display=e.target.value==="b"?"":"none";$("mclabel").style.display=e.target.value==="q"?"":"none"};
+ $("mcgroup").oninput=e=>MCV.group=e.target.value;$("mclink").onchange=e=>MCV.link=e.target.value;$("mcback").onclick=manualHome;$("mcadd").onclick=manualAdd;$("mcfinish").onclick=manualFinish;
+ const ov=$("mcover"),rect=$("mcrect");
+ ov.onpointerdown=e=>{const b=ov.getBoundingClientRect(),x=(e.clientX-b.left)*ov.width/b.width,y=(e.clientY-b.top)*ov.height/b.height;MCV.drag={x,y};MCV.rect=null;rect.style.display="block";ov.setPointerCapture(e.pointerId)};
+ ov.onpointermove=e=>{if(!MCV.drag)return;const b=ov.getBoundingClientRect(),x=(e.clientX-b.left)*ov.width/b.width,y=(e.clientY-b.top)*ov.height/b.height,a=MCV.drag;MCV.rect={x:Math.min(a.x,x),y:Math.min(a.y,y),w:Math.abs(x-a.x),h:Math.abs(y-a.y)};Object.assign(rect.style,{left:MCV.rect.x/ov.width*100+"%",top:MCV.rect.y/ov.height*100+"%",width:MCV.rect.w/ov.width*100+"%",height:MCV.rect.h/ov.height*100+"%"})};ov.onpointerup=()=>MCV.drag=null;
+ manualRender();manualList();
+}
+function manualAdd(){
+ const r=MCV.rect,src=$("mcpdf");if(!r||r.w<18||r.h<18)return toast("Arraste para marcar uma área maior da página");
+ const c=document.createElement("canvas");c.width=Math.round(r.w);c.height=Math.round(r.h);c.getContext("2d").drawImage(src,r.x,r.y,r.w,r.h,0,0,c.width,c.height);const img=c.toDataURL("image/webp",.9);
+ if(MCV.mode==="b"){const name=($("mcgroup").value||"Texto de apoio "+(Object.keys(MCV.bases).length+1)).trim(),key=W.id+"-T"+(Object.keys(MCV.bases).length+1);MCV.bases[key]={name,img};MCV.link=key;toast("Texto de apoio salvo: "+name)}
+ else{const n=MCV.num++;MCV.items.push({num:n,img,x:MCV.link||"",baseImg:MCV.link&&MCV.bases[MCV.link]?MCV.bases[MCV.link].img:null,page:MCV.page});toast("Questão "+n+" recortada")}
+ MCV.rect=null;$("mcrect").style.display="none";manualList();$("mcfinish").textContent="Revisar e importar ("+MCV.items.length+")";
+}
+function manualList(){
+ const sel=$("mclink");if(sel){const old=MCV.link;sel.innerHTML='<option value="">Sem texto de apoio</option>'+Object.entries(MCV.bases).map(([k,v])=>'<option value="'+esc(k)+'">'+esc(v.name)+'</option>').join("");sel.value=old}
+ const el=$("mclist");if(!el)return;el.innerHTML=MCV.items.map(q=>'<div><img src="'+q.img+'" title="Questão '+q.num+'"><small>Questão '+q.num+'</small></div>').join("")+Object.values(MCV.bases).map(b=>'<div><img src="'+b.img+'" title="'+esc(b.name)+'"><small>'+esc(b.name)+'</small></div>').join("");
+}
+function manualFinish(){
+ if(!MCV.items.length)return toast("Recorte pelo menos uma questão");
+ const gab=parseGab(W.gab||""),bi={};R=MCV.items.map((q,i)=>({id:W.id+"-"+String(i+1).padStart(2,"0"),num:q.num,img:q.img,baseImg:q.baseImg,x:q.x,d:"",m:"",t:"",c:"",f:"Médio",a:-1,n:5,tm:1,e:"",src:"",flag:"recorte manual"}));
+ gab.forEach(([n,a])=>{const q=R.find(x=>x.num===n);if(q)q.a=a});Object.keys(MCV.bases).forEach(k=>bi[k]=MCV.bases[k].img);R.forEach(q=>{if(q.x)q.baseImg=bi[q.x]||q.baseImg});review();
+}
+home=manualHome;
+`;
+   const sourceMarker='/* ---------- início ---------- */';
+   if(!html.includes(sourceMarker))throw new Error('Não encontrei o ponto de integração do recorte manual.');
+   html=html.replace(sourceMarker,manualCropCode+'\\n'+sourceMarker);
    const secureClaudeFunction = "async function ai(q,key,model){\n const images=[q.baseImg,q.img].filter(Boolean).map(u=>{\n  const m=/^data:(image\\/(?:jpeg|png|gif|webp));base64,([\\s\\S]+)$/i.exec(u);\n  if(!m)throw new Error(\"A imagem da questão está em formato inválido.\");\n  return {base64:m[2],mediaType:m[1].toLowerCase()};\n });\n if(!images.length)throw new Error(\"Não foi possível preparar a imagem da questão.\");\n const sys='Classifique a questão pelo CONTEÚDO REAL do enunciado e das alternativas, não pela posição no PDF nem pelo cabeçalho anterior. Matemática deve ser Matemática mesmo quando estiver próxima da seção de Inglês; identifique idioma apenas quando o exercício exigir interpretação de língua inglesa. Responda SOMENTE um JSON: {\"d\",\"m\",\"t\",\"c\",\"f\",\"a\",\"n\",\"tm\",\"e\"}. d/m/t/c = disciplina, matéria, tópico e conteúdo específico: use EXATAMENTE os nomes da taxonomia abaixo (d→m→t→[c]); se nada servir, crie um nome curto e coerente. f = \"Fácil\"|\"Médio\"|\"Difícil\". a = letra correta (A-E). n = número de alternativas. tm = minutos estimados (1 a 6). e = explicação passo a passo em português (2 a 5 frases) dizendo por que a alternativa correta está certa. Se a imagem mostrar fórmulas, cálculos, símbolos matemáticos ou problemas numéricos, não classifique como Inglês apenas por conter palavras em inglês. Taxonomia: '+JSON.stringify(TREE);\n const txt=(images.length>1?\"A primeira imagem é o texto-base; a última é a questão. \":\"A imagem é a questão. \")+(q.a>=0?\"Gabarito oficial: \"+LT[q.a]+\".\":\"\");\n const host=window.parent&&window.parent.parent;\n const client=host&&host.__estudosSupabaseClient;\n if(!client||!client.functions||typeof client.functions.invoke!==\"function\")throw new Error(\"Não encontrei a conexão da sua conta com o Supabase. Entre novamente no aplicativo e tente outra vez.\");\n for(let tr=0;tr<2;tr++){\n  try{\n   const result=await client.functions.invoke(\"claude-pdf-analyze\",{body:{images,prompt:sys+\"\\n\"+txt}});\n   if(result.error){let detail=result.error.message||\"Falha ao chamar o serviço seguro do Claude.\";try{const ctx=result.error.context;if(ctx&&typeof ctx.clone===\"function\"){const payload=await ctx.clone().json();detail=payload.error||payload.message||detail}}catch(e){}throw new Error(detail)}\n   const responseText=String(result.data&&result.data.text||\"\");\n   const start=responseText.indexOf(\"{\"),end=responseText.lastIndexOf(\"}\");\n   if(start<0||end<=start)throw new Error(\"O Claude não retornou uma classificação em JSON válida.\");\n   return JSON.parse(responseText.slice(start,end+1));\n  }catch(e){if(tr)throw e;await new Promise(r=>setTimeout(r,1200))}\n }\n}";
    const aiStart=html.indexOf('async function ai(q,key,model){');
    const aiEnd=html.indexOf('/* ---------- persistência ---------- */',aiStart);
