@@ -89,7 +89,12 @@ function detect(L){
 }`],
     [String.raw`return G.map((g,k)=>{const{W,H,two}=P[g.p];return{p:g.p,x0:two?g.c*W/2:0,x1:two?(g.c+1)*W/2:W,y0:k?.045*H:Math.max(.045*H,L[g.s].top-5),y1:k<G.length-1?.955*H:Math.min(.955*H,L[g.e].bot+6)}});`,
      String.raw`return G.map(g=>{const{W,H,two}=P[g.p];return{p:g.p,x0:two?g.c*W/2:0,x1:two?(g.c+1)*W/2:W,y0:Math.max(.045*H,L[g.s].top-7),y1:Math.min(.955*H,L[g.e].bot+8)}});`],
-    ['n:q.nopt>=2?q.nopt:5','n:q.nopt>=4?Math.min(5,q.nopt):5']
+    ['n:q.nopt>=2?q.nopt:5','n:q.nopt>=4?Math.min(5,q.nopt):5'],
+    [String.raw`if(!d&&(n.match(/\b(the|of|and|is|that|with|are|was|which|according)\b/g)||[]).length>6)d=IN;`,
+     String.raw`const en=(n.match(/\b(the|of|and|is|that|with|are|was|which|according|what|where|when|who|does|do|has|have|your|you|they|their|this|these|those|from|for|not)\b/g)||[]).length;
+ if(!d&&en>=3&&/\b(the|and|is|are|which|according|what|where|when|who|does|have|has)\b/.test(n))d=IN;`],
+    [String.raw`const secs=[];L.forEach((l,i)=>{if(l.t.length<45&&l.t===l.t.toUpperCase()){const n=norm(l.t);const h=DH.find(d=>d[0].test(n));if(h)secs.push({i,d:h[1]})}});`,
+     String.raw`const secs=[];L.forEach((l,i)=>{if(l.t.length<60){const n=norm(l.t).replace(/[:\-–—]+$/,"").trim();const h=DH.find(d=>d[0].test(n));if(h)secs.push({i,d:h[1]})}});`],
    ];
    for(const [before,after] of patches){
     if(!html.includes(before))throw new Error('Não encontrei um trecho esperado da ferramenta Importar PDF.');
