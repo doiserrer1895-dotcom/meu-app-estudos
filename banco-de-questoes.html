@@ -36,7 +36,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  return qs;
 }`,
     String.raw`function optionMarks(txt){
- const found=[];const re=/(?:^|[\\s([{])\\(?\\s*([A-Ea-e])\\s*[).\\-–—:]\\s*(?=\\S)/g;let m;
+ const found=[];const re=/(?:^|[\s([{])\(?\s*([A-Ea-e])\s*[).\-–—:]\s*(?=\S)/g;let m;
  while((m=re.exec(txt))!==null){const a=m[1].toUpperCase();if(!found.includes(a))found.push(a)}
  return found;
 }
