@@ -116,7 +116,6 @@ function detect(L){
  if(!d&&en>=3&&/\b(the|and|is|are|which|according|what|where|when|who|does|have|has|because|between|should|could|would)\b/.test(n))d=IN;`],
     [String.raw`const secs=[];L.forEach((l,i)=>{if(l.t.length<45&&l.t===l.t.toUpperCase()){const n=norm(l.t);const h=DH.find(d=>d[0].test(n));if(h)secs.push({i,d:h[1]})}});`,
      String.raw`const secs=[];L.forEach((l,i)=>{if(l.t.length<120){const n=norm(l.t).replace(/[:\-–—]+$/,"").trim();const h=DH.find(d=>d[0].test(n));if(h)secs.push({i,d:h[1]})}});`],
-   ];
     [String.raw\`async function ai(q,key,model){
  const im=[q.baseImg,q.img].filter(Boolean).map(u=>({type:"image",source:{type:"base64",media_type:u.slice(5,u.indexOf(";")),data:u.split(",")[1]}}));
  const sys='Você classifica e comenta questões de concursos militares brasileiros. Responda SOMENTE um JSON: {"d","m","t","c","f","a","n","tm","e"}. d/m/t/c = disciplina, matéria, tópico e conteúdo específico: use EXATAMENTE os nomes da taxonomia abaixo (d→m→t→[c]); se nada servir, crie um nome curto e coerente. f = "Fácil"|"Médio"|"Difícil". a = letra correta (A-E). n = número de alternativas. tm = minutos estimados (1 a 6). e = explicação passo a passo em português (2 a 5 frases) dizendo por que a alternativa correta está certa. Taxonomia: '+JSON.stringify(TREE);
@@ -166,6 +165,7 @@ function detect(L){
      String.raw\`\`],
     [String.raw\`try{if(W.key){localStorage.setItem("bq-key",W.key);localStorage.setItem("bq-model",W.model)}}catch(e){}\`,
      String.raw\`\`]
+   ];
    for(const [before,after] of patches){
     if(!html.includes(before))throw new Error('Não encontrei um trecho esperado da ferramenta Importar PDF.');
     html=html.replace(before,after);
