@@ -121,6 +121,41 @@ function detect(L){
     if(!html.includes(before))throw new Error('Não encontrei um trecho esperado da ferramenta Importar PDF.');
     html=html.replace(before,after);
    }
+   function replaceOnce(re,replacement,label){
+    const matches=html.match(re);
+    if(!matches||matches.length!==1)throw new Error('Integração segura: trecho '+label+' encontrado '+(matches?matches.length:0)+' vezes.');
+    html=html.replace(re,replacement);
+   }
+   const secureClaudeFunction=String.raw\`async function ai(q,key,model){
+ const images=[q.baseImg,q.img].filter(Boolean).map(u=>{
+  const m=/^data:(image\\/(?:jpeg|png|gif|webp));base64,([\\s\\S]+)$/i.exec(u);
+  if(!m)throw new Error("A imagem da questão está em formato inválido.");
+  return {base64:m[2],mediaType:m[1].toLowerCase()};
+ });
+ if(!images.length)throw new Error("Não foi possível preparar a imagem da questão.");
+ const sys='Você classifica e comenta questões de concursos militares brasileiros. Responda SOMENTE um JSON: {"d","m","t","c","f","a","n","tm","e"}. d/m/t/c = disciplina, matéria, tópico e conteúdo específico: use EXATAMENTE os nomes da taxonomia abaixo (d→m→t→[c]); se nada servir, crie um nome curto e coerente. f = "Fácil"|"Médio"|"Difícil". a = letra correta (A-E). n = número de alternativas. tm = minutos estimados (1 a 6). e = explicação passo a passo em português (2 a 5 frases) dizendo por que a alternativa correta está certa. Taxonomia: '+JSON.stringify(TREE);
+ const txt=(images.length>1?"A primeira imagem é o texto-base; a última é a questão. ":"A imagem é a questão. ")+(q.a>=0?"Gabarito oficial: "+LT[q.a]+".":"");
+ const host=window.parent&&window.parent.parent;
+ const client=host&&host.__estudosSupabaseClient;
+ if(!client||!client.functions||typeof client.functions.invoke!=="function")throw new Error("Não encontrei a conexão da sua conta com o Supabase. Entre novamente no aplicativo e tente outra vez.");
+ for(let tr=0;tr<2;tr++){
+  try{
+   const result=await client.functions.invoke("claude-pdf-analyze",{body:{images,prompt:sys+"\\n"+txt}});
+   if(result.error)throw new Error(result.error.message||"Falha ao chamar o serviço seguro do Claude.");
+   const responseText=String(result.data&&result.data.text||"");
+   const start=responseText.indexOf("{"),end=responseText.lastIndexOf("}");
+   if(start<0||end<=start)throw new Error("O Claude não retornou uma classificação em JSON válida.");
+   return JSON.parse(responseText.slice(start,end+1));
+  }catch(e){if(tr)throw e;await new Promise(r=>setTimeout(r,1200))}
+ }
+}\`;
+   replaceOnce(/async function ai\\(q,key,model\\)\\{[\\s\\S]*?\\n\\}\
+\\/\\* ---------- persistência ---------- \\*\\//,secureClaudeFunction+'\\n/* ---------- persistência ---------- */','função de IA');
+   replaceOnce(/W=\\{\\};let key="",model="claude-sonnet-5-5",useAi=false;try\\{[\\s\\S]*?\\}\\n \\$\\("imb"\\)\\.innerHTML=/,'W={};let useAi=true;\\n $("imb").innerHTML=','configuração inicial da IA');
+   replaceOnce(/<div class="ig2"><label>Chave da API Anthropic[\\s\\S]*?api\\.anthropic\\.com\\.<\\/small>/,'<small>A classificação é feita pelo Claude usando a chave protegida no servidor. Você não precisa informar nem armazenar chave neste navegador.</small>','campo da chave');
+   replaceOnce(/W\\.ai=\\$\\("imU"\\)\\.checked;W\\.key=\\$\\("imK"\\)\\.value\\.trim\\(\\);W\\.model=\\$\\("imM"\\)\\.value\\.trim\\(\\);/,'W.ai=$("imU").checked;','leitura da chave');
+   replaceOnce(/if\\(W\\.ai&&!W\\.key\\)return toast\\("Cole a chave da API ou desmarque a IA"\\);/,'','validação da chave');
+   replaceOnce(/try\\{if\\(W\\.key\\)\\{localStorage\\.setItem\\("bq-key",W\\.key\\);localStorage\\.setItem\\("bq-model",W\\.model\\)\\}\\}catch\\(e\\)\\{\\}/,'','armazenamento local da chave');
    html=html.replace(/<head([^>]*)>/i,'<head$1><base href="'+new URL('.',location.href).href+'">');
    bank.addEventListener('load',installBridge,{once:true});
    bank.srcdoc=html;
