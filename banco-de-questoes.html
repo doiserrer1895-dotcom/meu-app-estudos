@@ -14,8 +14,78 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
 <iframe id="bank" title="Banco de Questões EEAR" src="banco-de-questoes%20(2).html" allow="fullscreen"></iframe>
 <script>
 (function(){
+ 'use strict';
  const bank=document.getElementById('bank');
  const allowed=new Set(['eear-question-taxonomy-full','eear-question-taxonomy','eear-question-attempt']);
+ let bridgeInstalled=false;
+ function installBridge(){
+  if(bridgeInstalled||!bank.contentWindow||!bank.contentDocument)return;
+  const doc=bank.contentDocument;
+  if(!doc.body)return;
+  bridgeInstalled=true;
+  try{
+   const bridge=doc.createElement('script');
+   bridge.textContent=`
+   (function(){
+    'use strict';
+    const norm=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();
+    function canonical(s){
+     const n=norm(s).replace(/\\s+/g,' ');
+     if(n==='lingua portuguesa'||n==='portugues')return 'Português';
+     if(/^matematica(?:\\s*[123])?$/.test(n))return 'Matemática';
+     if(/^fisica(?:\\s*[123])?$/.test(n))return 'Física';
+     if(n==='ingles')return 'Inglês';
+     return s;
+    }
+    function publishTaxonomy(){
+     if(typeof TREE==='undefined')return;
+     const hierarchy={},taxonomy={};
+     Object.keys(TREE).forEach(key=>{
+      const subject=canonical(key),tree=TREE[key]||{};
+      hierarchy[subject]=tree;
+      taxonomy[subject]=[...new Set(Object.values(tree).flatMap(node=>Object.keys(node||{})))];
+     });
+     window.parent.postMessage({type:'eear-question-taxonomy-full',hierarchy},location.origin);
+     window.parent.postMessage({type:'eear-question-taxonomy',taxonomy},location.origin);
+    }
+    window.addEventListener('message',function(event){
+     if(event.source!==window.parent||event.origin!==location.origin)return;
+     const msg=event.data;
+     if(!msg||msg.type!=='app-question-filter'||!msg.filter||typeof S==='undefined')return;
+     const f=msg.filter,disc=Object.keys(TREE||{}).find(k=>canonical(k)===canonical(f.subject));
+     S.banca=[];S.disc=disc?[disc]:[];S.mat=f.matter?[f.matter]:[];
+     S.top=f.content?[f.content]:[];S.cont=f.specific?[f.specific]:[];S.dif=[];
+     provaSel=null;
+     if(typeof prune==='function')prune();
+     if(typeof render==='function')render();
+    });
+    document.addEventListener('click',function(event){
+     const button=event.target&&event.target.closest?event.target.closest('.opt'):null;
+     if(!button||typeof Q==='undefined'||typeof ans==='undefined')return;
+     const index=Number(button.dataset.q),question=Q[index],chosen=Number(button.dataset.o);
+     if(!question)return;
+     setTimeout(function(){
+      const selected=ans[index];
+      if(selected===undefined)return;
+      const attempt={
+       source:'banco',
+       subject:String(question.d||'').trim(),
+       topic:String(question.t||question.m||'Geral').trim(),
+       correct:selected===question.a,
+       questionId:String(question.id||''),
+       eventId:'bq-'+String(question.id||index)+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),
+       date:new Date().toISOString().slice(0,10)
+      };
+      window.parent.postMessage({type:'eear-question-attempt',attempt},location.origin);
+     },0);
+    },true);
+    publishTaxonomy();
+   })();
+   `;
+   (doc.head||doc.documentElement).appendChild(bridge);
+  }catch(error){bridgeInstalled=false;console.error('Falha ao instalar integração do Banco de Questões:',error)}
+ }
+ bank.addEventListener('load',installBridge);
  window.addEventListener('message',function(event){
   if(event.source===bank.contentWindow){
    const data=event.data;
