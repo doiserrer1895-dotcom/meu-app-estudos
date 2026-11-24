@@ -18,7 +18,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  const bank=document.getElementById('bank');
  async function loadBankWithPdfFixes(){
   try{
-   const source=new URL('banco-de-questoes%20(2).html?v=20261123manual10',location.href);
+   const source=new URL('banco-de-questoes%20(2).html?v=20261123manual11',location.href);
    const response=await fetch(source,{cache:'no-store'});
    if(!response.ok)throw new Error('HTTP '+response.status);
    let html=await response.text();
@@ -82,6 +82,14 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
     if(!html.includes(before))throw new Error('Não encontrei um trecho esperado da ferramenta Importar PDF.');
     html=html.replace(before,after);
    }
+   const bankSaveBefore='const save=()=>idb("readwrite",X).catch(()=>toast("Não foi possível salvar no navegador. Use Exportar para guardar."));';
+   const bankSaveAfter='const save=()=>idb("readwrite",X).then(()=>{try{window.parent.postMessage({type:"eear-question-bank-data",data:X},location.origin)}catch(e){}}).catch(()=>toast("Não foi possível salvar no navegador. Use Exportar para guardar."));';
+   if(!html.includes(bankSaveBefore))throw new Error("Não encontrei a função de salvamento do Banco de Questões.");
+   html=html.replace(bankSaveBefore,bankSaveAfter);
+   const bankLoadBefore='idb("readonly").then(x=>{if(x&&x.Q){X=Object.assign(X,x);merge({Q:x.Q,IMG:x.IMG,PROVAS:x.PROVAS,TREE:x.TREE},false);render()}}).catch(()=>{});';
+   const bankLoadAfter='idb("readonly").then(x=>{if(x&&x.Q){X=Object.assign(X,x);merge({Q:x.Q,IMG:x.IMG,PROVAS:x.PROVAS,TREE:x.TREE},false);render()}try{window.parent.postMessage({type:"eear-question-bank-ready"},location.origin);window.parent.postMessage({type:"eear-question-bank-data",data:X},location.origin)}catch(e){}}).catch(()=>{try{window.parent.postMessage({type:"eear-question-bank-ready"},location.origin)}catch(e){}});';
+   if(!html.includes(bankLoadBefore))throw new Error("Não encontrei a inicialização do banco local.");
+   html=html.replace(bankLoadBefore,bankLoadAfter);
 
    const manualCropCode = String.raw`
 /* ---------- recorte manual de PDF ---------- */
@@ -145,17 +153,23 @@ function manualFinish(){
  gab.forEach(([n,a])=>{const q=R.find(x=>x.num===n);if(q)q.a=a});Object.keys(MCV.bases).forEach(k=>bi[k]=MCV.bases[k].img);R.forEach(q=>{if(q.x)q.baseImg=bi[q.x]||q.baseImg});review();
 }
 home=manualHome;
-const mobileClearStyle=document.createElement("style");
-mobileClearStyle.textContent="#clear-mobile{display:none!important}@media(max-width:860px){#clear-mobile{display:block!important;width:calc(100% - 24px);margin:8px 12px 0}}";
-document.head.appendChild(mobileClearStyle);
-const originalClear=$("clear"),filterToggle=$("ftog");
-if(originalClear&&filterToggle&&!$("clear-mobile")){
- const mobileClear=originalClear.cloneNode(true);
- mobileClear.id="clear-mobile";
- mobileClear.type="button";
- mobileClear.addEventListener("click",()=>originalClear.click());
- filterToggle.insertAdjacentElement("afterend",mobileClear);
-}
+const resetAnswerButton=document.createElement("button");
+resetAnswerButton.id="reset-answers";
+resetAnswerButton.type="button";
+resetAnswerButton.className="clear";
+resetAnswerButton.textContent="Zerar respostas";
+resetAnswerButton.style.cssText="display:block;width:auto;margin:8px 0 12px;padding:9px 14px";
+const filterToggle=$("ftog");
+if(filterToggle&&!$("reset-answers"))filterToggle.insertAdjacentElement("afterend",resetAnswerButton);
+const resetAnswers=()=>{const keys=Object.keys(ans);if(!keys.length){toast("Não há respostas para zerar");return}keys.forEach(k=>delete ans[k]);streak=0;$("sStreak").textContent="0";render();toast("Respostas zeradas")};
+resetAnswerButton.addEventListener("click",resetAnswers);
+window.addEventListener("message",function(event){
+ if(event.origin!==location.origin||event.source!==window.parent||!event.data||event.data.type!=="app-question-bank-restore")return;
+ const incoming=event.data.data;
+ if(!incoming||!Array.isArray(incoming.Q)||!Array.isArray(incoming.PROVAS))return;
+ merge(incoming,true);save();render();
+});
+
 `;
    const sourceMarker='/* ---------- início ---------- */';
    if(!html.includes(sourceMarker))throw new Error('Não encontrei o ponto de integração do recorte manual.');
