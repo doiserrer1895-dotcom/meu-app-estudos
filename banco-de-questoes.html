@@ -156,11 +156,11 @@ home=manualHome;
 const resetAnswerButton=document.createElement("button");
 resetAnswerButton.id="reset-answers";
 resetAnswerButton.type="button";
-resetAnswerButton.className="clear";
 resetAnswerButton.textContent="Zerar respostas";
-resetAnswerButton.style.cssText="display:block;width:auto;margin:8px 0 12px;padding:9px 14px";
-const filterToggle=$("ftog");
-if(filterToggle&&!$("reset-answers"))filterToggle.insertAdjacentElement("afterend",resetAnswerButton);
+resetAnswerButton.title="Zerar respostas marcadas";
+resetAnswerButton.style.cssText="display:inline-flex;align-items:center;width:auto;margin:0 0 0 6px;padding:5px 8px;font-size:11px;line-height:1.2;border:1px solid #555;border-radius:6px;background:#252525;color:#ddd;cursor:pointer;vertical-align:middle";
+const importPdfButton=[...document.querySelectorAll("button")].find(b=>/importar\s+pdf/i.test((b.textContent||"").trim()));
+if(importPdfButton&&!$("reset-answers"))importPdfButton.insertAdjacentElement("afterend",resetAnswerButton);
 const resetAnswers=()=>{const keys=Object.keys(ans);if(!keys.length){toast("Não há respostas para zerar");return}keys.forEach(k=>delete ans[k]);streak=0;$("sStreak").textContent="0";render();toast("Respostas zeradas")};
 resetAnswerButton.addEventListener("click",resetAnswers);
 window.addEventListener("message",function(event){
