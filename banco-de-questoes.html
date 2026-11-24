@@ -18,11 +18,11 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  const bank=document.getElementById('bank');
  async function loadBankWithPdfFixes(){
   try{
-   const source=new URL('banco-de-questoes%20(2).html?v=20261123manual9',location.href);
+   const source=new URL('banco-de-questoes%20(2).html?v=20261123manual10',location.href);
    const response=await fetch(source,{cache:'no-store'});
    if(!response.ok)throw new Error('HTTP '+response.status);
    let html=await response.text();
-   html=html.replaceAll('.qi{display:block;max-width:100%;height:auto;','.qi{display:block;width:100%;max-width:100%;height:auto;');
+   html=html.replaceAll('.qi{display:block;max-width:100%;height:auto;','.qi{display:block;width:100%!important;max-width:100%!important;height:auto!important;');
    const patches=[
     [String.raw`const MK=/^\s*(?:QUEST[ÃA]O\s*[:\-–]?\s*)?(\d{1,3})\s*(?:[.)\-–—:º°]|(?=\s|$))/i,QW=/^\s*QUEST[ÃA]O\s*\d/i,OPT=/^\s*\(?\s*([A-Ea-e])\s*[).\-–]\s*\S/;`,String.raw`const MK=/^\s*(?:QUEST[ÃA]O\s*[:\-–]?\s*)?(\d{1,3})\s*(?:[.)\-–—:º°]|(?=\s|$))/i,QW=/^\s*QUEST[ÃA]O\s*\d/i,OPT=/^\s*\(?\s*([A-Ea-e])\s*[).\-–]\s*\S/;`],
     [String.raw`const DH=[[/^lingua portuguesa|^portugues/,"Língua Portuguesa"],[/^matematica/,"Matemática"],[/^fisica/,"Física"],[/^(lingua )?ingles|^english/,"Inglês"]];`,String.raw`const DH=[[/^lingua portuguesa|^portugues/,"Língua Portuguesa"],[/^matematica/,"Matemática"],[/^fisica/,"Física"],[/^(lingua )?ingles|^english/,"Inglês"]];`],
@@ -145,6 +145,17 @@ function manualFinish(){
  gab.forEach(([n,a])=>{const q=R.find(x=>x.num===n);if(q)q.a=a});Object.keys(MCV.bases).forEach(k=>bi[k]=MCV.bases[k].img);R.forEach(q=>{if(q.x)q.baseImg=bi[q.x]||q.baseImg});review();
 }
 home=manualHome;
+const mobileClearStyle=document.createElement("style");
+mobileClearStyle.textContent="#clear-mobile{display:none!important}@media(max-width:860px){#clear-mobile{display:block!important;width:calc(100% - 24px);margin:8px 12px 0}}";
+document.head.appendChild(mobileClearStyle);
+const originalClear=$("clear"),filterToggle=$("ftog");
+if(originalClear&&filterToggle&&!$("clear-mobile")){
+ const mobileClear=originalClear.cloneNode(true);
+ mobileClear.id="clear-mobile";
+ mobileClear.type="button";
+ mobileClear.addEventListener("click",()=>originalClear.click());
+ filterToggle.insertAdjacentElement("afterend",mobileClear);
+}
 `;
    const sourceMarker='/* ---------- início ---------- */';
    if(!html.includes(sourceMarker))throw new Error('Não encontrei o ponto de integração do recorte manual.');
