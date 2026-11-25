@@ -405,7 +405,13 @@ resetAnswerButton.addEventListener("click",resetAnswers);
   if(k==="d"){el("m").value="";el("t").value="";el("c").value=""}
   if(k==="m"){el("t").value="";el("c").value=""}
   if(k==="t")el("c").value="";
-  ["d","m","t","c"].filter(x=>x!==k).forEach(x=>el("name-"+x).value="");refreshOptions();
+  ["d","m","t","c"].filter(x=>x!==k).forEach(x=>el("name-"+x).value="");
+  refreshOptions();
+  ["d","m","t","c"].forEach(level=>{
+   const box=el("newbox-"+level),active=el("action").value==="add"&&el(level).value===NEW;
+   box.style.display=active?"block":"none";
+  });
+  if(el(k).value===NEW){const field=el("name-"+k);field.value="";field.focus();}
  }));
  trigger.addEventListener("click",openEditor);
  el("cancel").addEventListener("click",closeEditor);
