@@ -78,10 +78,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
     [String.raw`if(!d&&(n.match(/\b(the|of|and|is|that|with|are|was|which|according)\b/g)||[]).length>6)d=IN;`,String.raw`if(!d&&(n.match(/\b(the|of|and|is|that|with|are|was|which|according)\b/g)||[]).length>6)d=IN;`],
     [String.raw`const secs=[];L.forEach((l,i)=>{if(l.t.length<45&&l.t===l.t.toUpperCase()){const n=norm(l.t);const h=DH.find(d=>d[0].test(n));if(h)secs.push({i,d:h[1]})}});`,String.raw`const secs=[];L.forEach((l,i)=>{if(l.t.length<45&&l.t===l.t.toUpperCase()){const n=norm(l.t);const h=DH.find(d=>d[0].test(n));if(h)secs.push({i,d:h[1]})}});`],
    ];
-   for(const [before,after] of patches){
-    if(!html.includes(before))throw new Error('Não encontrei um trecho esperado da ferramenta Importar PDF.');
-    html=html.replace(before,after);
-   }
+   // Os pares acima são idênticos; não é necessário varrer e recriar o HTML para aplicá-los.
    const bankSaveBefore='const save=()=>idb("readwrite",X).catch(()=>toast("Não foi possível salvar no navegador. Use Exportar para guardar."));';
    const bankSaveAfter='let bankSyncTimer=null;const save=()=>idb("readwrite",X).then(()=>{clearTimeout(bankSyncTimer);bankSyncTimer=setTimeout(()=>{try{window.parent.postMessage({type:"eear-question-bank-data",data:X},location.origin)}catch(e){}},1800)}).catch(()=>toast("Não foi possível salvar no navegador. Use Exportar para guardar."));';
    if(!html.includes(bankSaveBefore))throw new Error("Não encontrei a função de salvamento do Banco de Questões.");
