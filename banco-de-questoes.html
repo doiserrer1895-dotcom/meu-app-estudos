@@ -164,7 +164,67 @@ function manualFinish(){
  const gab=parseGab(W.gab||""),classes=MCV.classifications||{};R=MCV.items.map((q,i)=>{const cl=classes[q.num]||{};return {id:W.id+"-"+String(i+1).padStart(2,"0"),num:q.num,img:q.img,baseImg:q.baseImg,x:Array.isArray(q.x)?q.x.join(","):q.x,d:cl.d||"",m:cl.m||"",t:cl.t||"",c:cl.c||"",f:"Médio",a:-1,n:5,tm:1,e:"",src:"",flag:"recorte manual"}});
  gab.forEach(([n,a])=>{const q=R.find(x=>x.num===n);if(q)q.a=a});review();
 }
+
 home=manualHome;
+/* Classificação múltipla e gerenciador de taxonomia na revisão do PDF */
+const originalReview=review;
+function multiOptions(field,q){
+ const d=q.d||"",m=q.m||"",t=q.t||"";
+ if(field==="d")return Object.keys(TREE);
+ if(field==="m")return Object.keys(TREE[d]||{});
+ if(field==="t")return Object.keys((TREE[d]||{})[m]||{});
+ return ((TREE[d]||{})[m]||{})[t]||[];
+}
+function rowH(q,k){
+ const fields=["d","m","t","c"],names={d:"Disciplina",m:"Matéria",t:"Tópico",c:"Conteúdo específico"};
+ const escv=s=>esc(s);
+ let extra="";
+ fields.forEach(f=>{
+  const vals=Array.isArray(q[f+"_multi"])?q[f+"_multi"]:[];
+  extra+='<div data-multi-list="'+f+'" style="display:flex;flex-direction:column;gap:5px;margin-top:5px">'+vals.map((v,i)=>'<div style="display:flex;gap:5px"><select data-multi-field="'+f+'" data-multi-index="'+i+'" style="flex:1;min-width:0;background:#171717;color:#fff;border:1px solid #555;border-radius:6px;padding:6px"><option value="">Selecionar '+names[f].toLowerCase()+'</option>'+multiOptions(f,q).map(x=>'<option value="'+escv(x)+'"'+(x===v?' selected':'')+'>'+escv(x)+'</option>').join("")+'</select><button type="button" class="idb" data-remove-multi="'+f+'" data-multi-index="'+i+'">×</button></div>').join("")+'</div>';
+ });
+ let fieldsHtml=fields.map(f=>'<label>'+names[f]+' <button type="button" class="idb" data-add-multi="'+f+'" style="padding:2px 7px;margin-left:4px" title="Adicionar outra classificação">+</button><input data-f="'+f+'" list="dl'+f+k+'" value="'+escv(q[f]||"")+'"><datalist id="dl'+f+k+'">'+(f==="d"?Object.keys(TREE):multiOptions(f,q)).map(x=>'<option value="'+escv(x)+'">').join("")+'</datalist>'+extraFor(f)+'</label>').join("");
+ function extraFor(f){return extra.split('@@'+f+'@@')[1]||""}
+ extra="";fields.forEach(f=>{const vals=Array.isArray(q[f+"_multi"])?q[f+"_multi"]:[];extra+='@@'+f+'@@<div data-multi-list="'+f+'" style="display:flex;flex-direction:column;gap:5px;margin-top:5px">'+vals.map((v,i)=>'<div style="display:flex;gap:5px"><select data-multi-field="'+f+'" data-multi-index="'+i+'" style="flex:1;min-width:0;background:#171717;color:#fff;border:1px solid #555;border-radius:6px;padding:6px"><option value="">Selecionar '+names[f].toLowerCase()+'</option>'+multiOptions(f,q).map(x=>'<option value="'+escv(x)+'"'+(x===v?' selected':'')+'>'+escv(x)+'</option>').join("")+'</select><button type="button" class="idb" data-remove-multi="'+f+'" data-multi-index="'+i+'">×</button></div>').join("")+'</div>'});
+ fieldsHtml=fields.map(f=>'<label>'+names[f]+' <button type="button" class="idb" data-add-multi="'+f+'" style="padding:2px 7px;margin-left:4px">+</button><input data-f="'+f+'" list="dl'+f+k+'" value="'+escv(q[f]||"")+'"><datalist id="dl'+f+k+'">'+(f==="d"?Object.keys(TREE):multiOptions(f,q)).map(x=>'<option value="'+escv(x)+'">').join("")+'</datalist>'+extraFor(f)+'</label>').join("");
+ return '<div class="ir'+(q.del?' gone':'')+'" data-k="'+k+'"><div class="ith"><img src="'+q.img+'" alt="Questão '+q.num+'"></div><div class="if"><div class="ihd"><b>'+q.id+'</b><span class="tag">nº '+q.num+'</span>'+(q.x?'<span class="tag dif">com texto-base</span>':'')+'<span class="tag">'+escv(q.flag)+'</span>'+(q.src?'<span class="tag">resposta: '+q.src+'</span>':'')+'<button class="idb" data-del="'+k+'">Descartar</button></div><div class="ig3">'+fieldsHtml+'</div><div class="ig4"><label>Dificuldade<select data-f="f">'+DIF.map(x=>'<option'+(x===q.f?' selected':'')+'>'+x+'</option>').join("")+'</select></label><label>Resposta<select data-f="a"><option value="-1">—</option>'+[0,1,2,3,4].map(i=>'<option value="'+i+'"'+(q.a===i?' selected':'')+'>'+LT[i]+'</option>').join("")+'</select></label><label>Alternativas<select data-f="n">'+[2,3,4,5].map(i=>'<option value="'+i+'"'+(q.n===i?' selected':'')+'>'+i+'</option>').join("")+'</select></label><button type="button" class="idb" data-open-taxonomy style="align-self:end">＋ Gerenciar conteúdos</button>'+(q.e?'<details><summary>Explicação</summary><p>'+escv(q.e)+'</p></details>':'')+'</div><div data-taxonomy-panel style="display:none;margin-top:10px;padding:12px;border:1px solid #444;border-radius:9px;background:#111"><b>Adicionar à taxonomia do banco</b><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px"><label>Disciplina<input data-tax="d" value="'+escv(q.d||"")+'"></label><label>Matéria<input data-tax="m" value="'+escv(q.m||"")+'"></label><label>Tópico<input data-tax="t" value="'+escv(q.t||"")+'"></label><label>Conteúdo específico<input data-tax="c" value="'+escv(q.c||"")+'"></label></div><button type="button" class="idb" data-save-taxonomy style="margin-top:8px">Salvar conteúdo na taxonomia</button><small style="display:block;color:#aaa;margin-top:6px">O novo item ficará disponível nas próximas classificações.</small></div></div></div>';
+}
+function review(){
+ originalReview();
+ const host=$("rvl");if(!host)return;
+ host.onclick=function(e){
+  const row=e.target.closest(".ir");if(!row)return;const k=+row.dataset.k,q=R[k];
+  const add=e.target.closest("[data-add-multi]");
+  if(add){const f=add.dataset.addMulti,vals=q[f+"_multi"]||(q[f+"_multi"]=[]),available=multiOptions(f,q).filter(x=>!vals.includes(x));if(!available.length)return toast("Não há outro item cadastrado para selecionar");vals.push(available[0]);row.outerHTML=rowH(q,k);return}
+  const rem=e.target.closest("[data-remove-multi]");
+  if(rem){const f=rem.dataset.removeMulti;q[f+"_multi"].splice(+rem.dataset.multiIndex,1);row.outerHTML=rowH(q,k);return}
+  if(e.target.closest("[data-open-taxonomy]")){const p=row.querySelector("[data-taxonomy-panel]");p.style.display=p.style.display==="none"?"block":"none";return}
+  if(e.target.closest("[data-save-taxonomy]")){
+   const v={};row.querySelectorAll("[data-tax]").forEach(el=>v[el.dataset.tax]=el.value.trim());
+   if(!v.d||!v.m||!v.t)return toast("Informe disciplina, matéria e tópico");
+   addTree(v.d,v.m,v.t,v.c);const tuple=[v.d,v.m,v.t,v.c];if(!X.TREE.some(a=>a.join("|")===tuple.join("|")))X.TREE.push(tuple);
+   q.d=v.d;q.m=v.m;q.t=v.t;if(v.c)q.c=v.c;save();row.outerHTML=rowH(q,k);dl(k);toast("Conteúdo salvo na taxonomia do banco");
+   const hierarchy=JSON.parse(JSON.stringify(TREE)),taxonomy={};Object.keys(TREE).forEach(d=>taxonomy[d]=[...new Set(Object.values(TREE[d]||{}).flatMap(node=>Object.keys(node||{})))]);
+   window.parent.postMessage({type:"eear-question-taxonomy-full",hierarchy},location.origin);window.parent.postMessage({type:"eear-question-taxonomy",taxonomy},location.origin);return;
+  }
+  const del=e.target.closest("[data-del]");if(del){q.del=true;row.remove();upd()}
+ };
+ host.onchange=function(e){const sel=e.target.closest("[data-multi-field]");if(!sel)return;const row=sel.closest(".ir"),q=R[+row.dataset.k],f=sel.dataset.multiField,i=+sel.dataset.multiIndex;q[f+"_multi"]=q[f+"_multi"]||[];q[f+"_multi"][i]=sel.value};
+ host.oninput=function(e){if(!e.target.matches("[data-f]"))return;const k=+e.target.closest(".ir").dataset.k,q=R[k],f=e.target.dataset.f;q[f]=(f==="a"||f==="n")?+e.target.value:e.target.value;if("dmt".includes(f))dl(k);upd()};
+ const ok=$("rvok");if(ok)ok.onclick=commit;
+}
+function commit(){
+ const a=R.filter(q=>!q.del);if(a.some(q=>!q.d||!q.m||!q.t))return toast("Preencha disciplina, matéria e tópico");
+ const pv={id:W.id,b:W.b,ano:W.ano,nome:W.nome||W.b+" "+W.ano,n:a.length},x={Q:[],IMG:{},PROVAS:[pv],TREE:[]};
+ a.forEach(q=>{
+  const r={id:q.id,b:W.b,d:q.d,m:q.m,t:q.t,c:q.c,f:q.f,dt:W.dt,tm:q.tm,i:q.id,a:q.a,prova:W.id};
+  ["d","m","t","c"].forEach(f=>{const vals=[...new Set((q[f+"_multi"]||[]).filter(Boolean))];if(vals.length)r[f+"_multi"]=vals});
+  if(q.n!==5)r.n=q.n;if(q.x){r.x=q.x;x.IMG[q.x]=q.baseImg}if(q.e)r.e=q.e;x.Q.push(r);x.IMG[q.id]=q.img;x.TREE.push([q.d,q.m,q.t,q.c]);
+  ["d","m","t","c"].forEach(f=>(q[f+"_multi"]||[]).filter(Boolean).forEach(v=>{if(f==="d")x.TREE.push([v,"","",""]);else if(f==="m")x.TREE.push([q.d,v,"",""]);else if(f==="t")x.TREE.push([q.d,q.m,v,""]);else x.TREE.push([q.d,q.m,q.t,v])}));
+ });
+ merge(x,true);save();render();$("imo").hidden=true;toast(a.length+" questões adicionadas ao banco");view("p");
+}
+
 const resetAnswerButton=document.createElement("button");
 resetAnswerButton.id="reset-answers";
 resetAnswerButton.type="button";
