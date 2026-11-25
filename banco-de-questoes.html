@@ -387,7 +387,7 @@ window.addEventListener("message",function(event){
    bank.srcdoc='<!doctype html><html lang="pt-BR"><meta charset="utf-8"><body style="margin:0;padding:24px;background:#080808;color:#fff;font:14px system-ui">Não foi possível carregar o Banco de Questões com as correções do Importar PDF. Atualize a página e tente novamente.</body></html>';
   }
  }
- const allowed=new Set(['eear-question-bank-data','eear-question-taxonomy-full','eear-question-taxonomy','eear-question-attempt']);
+ const allowed=new Set(['eear-question-bank-ready','eear-question-bank-data','eear-question-taxonomy-full','eear-question-taxonomy','eear-question-attempt']);
  let bridgeInstalled=false,pendingFilter=null,pendingParentMessage=null;
  function installBridge(){
   if(!bank.contentWindow||!bank.contentDocument)return;
@@ -458,7 +458,7 @@ window.addEventListener("message",function(event){
    })();
    `;
    (doc.head||doc.documentElement).appendChild(bridge);
-   window.parent.postMessage({type:'eear-question-bank-ready'},location.origin);
+   // O aviso de pronto agora vem do banco interno, depois da leitura do IndexedDB.
    if(pendingFilter){bank.contentWindow.postMessage(pendingFilter,location.origin);pendingFilter=null;}if(pendingParentMessage){bank.contentWindow.postMessage(pendingParentMessage,location.origin);pendingParentMessage=null;}
   }catch(error){bridgeInstalled=false;console.error('Falha ao instalar integração do Banco de Questões:',error)}
  }
