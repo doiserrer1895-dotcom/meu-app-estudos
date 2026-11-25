@@ -16,6 +16,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
 (function(){
  'use strict';
  const bank=document.getElementById('bank');
+ let questionImageData='',questionImageIndex=new Map();
  async function loadBankWithPdfFixes(){
   try{
    const source=new URL('banco-de-questoes%20(2).html?v=20261123manual11',location.href);
@@ -91,6 +92,27 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
    if(!html.includes(bankLoadBefore))throw new Error("Não encontrei a inicialização do banco local.");
    html=html.replace(bankLoadBefore,bankLoadAfter);
 
+   const imageStart=html.indexOf('const IMG=');
+   const imageValueStart=imageStart+'const IMG='.length;
+   const imageEnd=html.indexOf(';\nconst Q=',imageValueStart);
+   if(imageStart<0||imageEnd<0)throw new Error('Não encontrei o bloco de imagens do banco.');
+   questionImageData=html.slice(imageValueStart,imageEnd);
+   const imagePattern=/"([^"\\]+)":"data:image\/[^"]+"/g;
+   let imageMatch;
+   while((imageMatch=imagePattern.exec(questionImageData))){
+    const valueStart=imageMatch.index+imageMatch[0].indexOf(':"')+2;
+    const valueEnd=imageMatch.index+imageMatch[0].length-1;
+    questionImageIndex.set(imageMatch[1],[valueStart,valueEnd]);
+   }
+   if(!questionImageIndex.size)throw new Error('Não consegui indexar as imagens do banco.');
+   html=html.slice(0,imageStart)+'const IMG={};'+html.slice(imageEnd+1);
+   const baseImageAttr='src="'+'$'+'{IMG[q.i]}'+'"';
+   const supportImageAttr='src="'+'$'+'{IMG[q.x]}'+'"';
+   if(!html.includes(baseImageAttr)||!html.includes(supportImageAttr))throw new Error('Não encontrei os pontos de exibição das imagens.');
+   html=html.replace(supportImageAttr,'data-img-key="'+'$'+'{q.x}'+'"');
+   html=html.replace(baseImageAttr,'data-img-key="'+'$'+'{q.i}'+'"');
+   const lazyImageLoader='<script>(function(){const requested=new WeakSet();const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(!entry.isIntersecting)return;const img=entry.target,key=img.dataset.imgKey;if(!key||requested.has(img))return;requested.add(img);observer.unobserve(img);window.parent.postMessage({type:"eear-question-image-request",key},location.origin)}),{rootMargin:"450px 0px"});const scan=()=>document.querySelectorAll("img[data-img-key]").forEach(img=>observer.observe(img));new MutationObserver(scan).observe(document.documentElement,{childList:true,subtree:true});window.addEventListener("message",event=>{if(event.source!==window.parent||event.origin!==location.origin)return;const msg=event.data;if(!msg||msg.type!=="eear-question-image-response")return;document.querySelectorAll("img[data-img-key]").forEach(img=>{if(img.dataset.imgKey===msg.key){img.src=msg.src;delete img.dataset.imgKey}})});scan()})();</script>';
+   html=html.replace('</body>',lazyImageLoader+'</body>');
    const manualCropCode = String.raw`
 /* ---------- recorte manual de PDF ---------- */
 let MC=null,MCV={page:1,scale:1,mode:"q",group:"Texto de apoio 1",links:[""],num:1,items:[],bases:{},classifications:{},drag:null,rect:null};
@@ -517,6 +539,11 @@ window.addEventListener("message",function(event){
  window.addEventListener('message',function(event){
   if(event.source===bank.contentWindow){
    const data=event.data;
+   if(data&&data.type==='eear-question-image-request'&&typeof data.key==='string'){
+    const range=questionImageIndex.get(data.key);
+    if(range){const src=questionImageData.slice(range[0],range[1]);bank.contentWindow.postMessage({type:'eear-question-image-response',key:data.key,src},location.origin)}
+    return;
+   }
    if(data&&allowed.has(data.type))window.parent.postMessage(data,location.origin);
    return;
   }
