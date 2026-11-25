@@ -175,7 +175,7 @@ function multiOptions(field,q){
  if(field==="t")return Object.keys((TREE[d]||{})[m]||{});
  return ((TREE[d]||{})[m]||{})[t]||[];
 }
-function rowH(q,k){
+rowH=function(q,k){
  const fields=["d","m","t","c"],names={d:"Disciplina",m:"Matéria",t:"Tópico",c:"Conteúdo específico"};
  const escv=s=>esc(s);
  let extra="";
@@ -184,12 +184,12 @@ function rowH(q,k){
   extra+='<div data-multi-list="'+f+'" style="display:flex;flex-direction:column;gap:5px;margin-top:5px">'+vals.map((v,i)=>'<div style="display:flex;gap:5px"><select data-multi-field="'+f+'" data-multi-index="'+i+'" style="flex:1;min-width:0;background:#171717;color:#fff;border:1px solid #555;border-radius:6px;padding:6px"><option value="">Selecionar '+names[f].toLowerCase()+'</option>'+multiOptions(f,q).map(x=>'<option value="'+escv(x)+'"'+(x===v?' selected':'')+'>'+escv(x)+'</option>').join("")+'</select><button type="button" class="idb" data-remove-multi="'+f+'" data-multi-index="'+i+'">×</button></div>').join("")+'</div>';
  });
  let fieldsHtml=fields.map(f=>'<label>'+names[f]+' <button type="button" class="idb" data-add-multi="'+f+'" style="padding:2px 7px;margin-left:4px" title="Adicionar outra classificação">+</button><input data-f="'+f+'" list="dl'+f+k+'" value="'+escv(q[f]||"")+'"><datalist id="dl'+f+k+'">'+(f==="d"?Object.keys(TREE):multiOptions(f,q)).map(x=>'<option value="'+escv(x)+'">').join("")+'</datalist>'+extraFor(f)+'</label>').join("");
- function extraFor(f){return extra.split('@@'+f+'@@')[1]||""}
+ function extraFor(f){const a=extra.split('@@'+f+'@@')[1]||"";return a.split(/@@[dmtc]@@/)[0]||""}
  extra="";fields.forEach(f=>{const vals=Array.isArray(q[f+"_multi"])?q[f+"_multi"]:[];extra+='@@'+f+'@@<div data-multi-list="'+f+'" style="display:flex;flex-direction:column;gap:5px;margin-top:5px">'+vals.map((v,i)=>'<div style="display:flex;gap:5px"><select data-multi-field="'+f+'" data-multi-index="'+i+'" style="flex:1;min-width:0;background:#171717;color:#fff;border:1px solid #555;border-radius:6px;padding:6px"><option value="">Selecionar '+names[f].toLowerCase()+'</option>'+multiOptions(f,q).map(x=>'<option value="'+escv(x)+'"'+(x===v?' selected':'')+'>'+escv(x)+'</option>').join("")+'</select><button type="button" class="idb" data-remove-multi="'+f+'" data-multi-index="'+i+'">×</button></div>').join("")+'</div>'});
  fieldsHtml=fields.map(f=>'<label>'+names[f]+' <button type="button" class="idb" data-add-multi="'+f+'" style="padding:2px 7px;margin-left:4px">+</button><input data-f="'+f+'" list="dl'+f+k+'" value="'+escv(q[f]||"")+'"><datalist id="dl'+f+k+'">'+(f==="d"?Object.keys(TREE):multiOptions(f,q)).map(x=>'<option value="'+escv(x)+'">').join("")+'</datalist>'+extraFor(f)+'</label>').join("");
  return '<div class="ir'+(q.del?' gone':'')+'" data-k="'+k+'"><div class="ith"><img src="'+q.img+'" alt="Questão '+q.num+'"></div><div class="if"><div class="ihd"><b>'+q.id+'</b><span class="tag">nº '+q.num+'</span>'+(q.x?'<span class="tag dif">com texto-base</span>':'')+'<span class="tag">'+escv(q.flag)+'</span>'+(q.src?'<span class="tag">resposta: '+q.src+'</span>':'')+'<button class="idb" data-del="'+k+'">Descartar</button></div><div class="ig3">'+fieldsHtml+'</div><div class="ig4"><label>Dificuldade<select data-f="f">'+DIF.map(x=>'<option'+(x===q.f?' selected':'')+'>'+x+'</option>').join("")+'</select></label><label>Resposta<select data-f="a"><option value="-1">—</option>'+[0,1,2,3,4].map(i=>'<option value="'+i+'"'+(q.a===i?' selected':'')+'>'+LT[i]+'</option>').join("")+'</select></label><label>Alternativas<select data-f="n">'+[2,3,4,5].map(i=>'<option value="'+i+'"'+(q.n===i?' selected':'')+'>'+i+'</option>').join("")+'</select></label><button type="button" class="idb" data-open-taxonomy style="align-self:end">＋ Gerenciar conteúdos</button>'+(q.e?'<details><summary>Explicação</summary><p>'+escv(q.e)+'</p></details>':'')+'</div><div data-taxonomy-panel style="display:none;margin-top:10px;padding:12px;border:1px solid #444;border-radius:9px;background:#111"><b>Adicionar à taxonomia do banco</b><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px"><label>Disciplina<input data-tax="d" value="'+escv(q.d||"")+'"></label><label>Matéria<input data-tax="m" value="'+escv(q.m||"")+'"></label><label>Tópico<input data-tax="t" value="'+escv(q.t||"")+'"></label><label>Conteúdo específico<input data-tax="c" value="'+escv(q.c||"")+'"></label></div><button type="button" class="idb" data-save-taxonomy style="margin-top:8px">Salvar conteúdo na taxonomia</button><small style="display:block;color:#aaa;margin-top:6px">O novo item ficará disponível nas próximas classificações.</small></div></div></div>';
-}
-function review(){
+};
+review=function(){
  originalReview();
  const host=$("rvl");if(!host)return;
  host.onclick=function(e){
@@ -212,8 +212,8 @@ function review(){
  host.onchange=function(e){const sel=e.target.closest("[data-multi-field]");if(!sel)return;const row=sel.closest(".ir"),q=R[+row.dataset.k],f=sel.dataset.multiField,i=+sel.dataset.multiIndex;q[f+"_multi"]=q[f+"_multi"]||[];q[f+"_multi"][i]=sel.value};
  host.oninput=function(e){if(!e.target.matches("[data-f]"))return;const k=+e.target.closest(".ir").dataset.k,q=R[k],f=e.target.dataset.f;q[f]=(f==="a"||f==="n")?+e.target.value:e.target.value;if("dmt".includes(f))dl(k);upd()};
  const ok=$("rvok");if(ok)ok.onclick=commit;
-}
-function commit(){
+};
+commit=function(){
  const a=R.filter(q=>!q.del);if(a.some(q=>!q.d||!q.m||!q.t))return toast("Preencha disciplina, matéria e tópico");
  const pv={id:W.id,b:W.b,ano:W.ano,nome:W.nome||W.b+" "+W.ano,n:a.length},x={Q:[],IMG:{},PROVAS:[pv],TREE:[]};
  a.forEach(q=>{
@@ -223,7 +223,7 @@ function commit(){
   ["d","m","t","c"].forEach(f=>(q[f+"_multi"]||[]).filter(Boolean).forEach(v=>{if(f==="d")x.TREE.push([v,"","",""]);else if(f==="m")x.TREE.push([q.d,v,"",""]);else if(f==="t")x.TREE.push([q.d,q.m,v,""]);else x.TREE.push([q.d,q.m,q.t,v])}));
  });
  merge(x,true);save();render();$("imo").hidden=true;toast(a.length+" questões adicionadas ao banco");view("p");
-}
+};
 
 const resetAnswerButton=document.createElement("button");
 resetAnswerButton.id="reset-answers";
