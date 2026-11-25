@@ -195,7 +195,7 @@ review=function(){
  host.onclick=function(e){
   const row=e.target.closest(".ir");if(!row)return;const k=+row.dataset.k,q=R[k];
   const add=e.target.closest("[data-add-multi]");
-  if(add){const f=add.dataset.addMulti,vals=q[f+"_multi"]||(q[f+"_multi"]=[]),available=multiOptions(f,q).filter(x=>!vals.includes(x));if(!available.length)return toast("Não há outro item cadastrado para selecionar");vals.push(available[0]);row.outerHTML=rowH(q,k);return}
+  if(add){const f=add.dataset.addMulti,vals=q[f+"_multi"]||(q[f+"_multi"]=[]),available=multiOptions(f,q).filter(x=>!vals.includes(x));if(!available.length)return toast("Não há outro item cadastrado para selecionar");vals.push("");row.outerHTML=rowH(q,k);return}
   const rem=e.target.closest("[data-remove-multi]");
   if(rem){const f=rem.dataset.removeMulti;q[f+"_multi"].splice(+rem.dataset.multiIndex,1);row.outerHTML=rowH(q,k);return}
   if(e.target.closest("[data-open-taxonomy]")){const p=row.querySelector("[data-taxonomy-panel]");p.style.display=p.style.display==="none"?"block":"none";return}
