@@ -16,10 +16,9 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
 (function(){
  'use strict';
  const bank=document.getElementById('bank');
- let questionImageData='',questionImageIndex=new Map();
  async function loadBankWithPdfFixes(){
   try{
-   const source=new URL('banco-de-questoes%20(2).html?v=20261125recovery1',location.href);
+   const source=new URL('banco-de-questoes%20(2).html?v=20261123manual10',location.href);
    const response=await fetch(source,{cache:'no-store'});
    if(!response.ok)throw new Error('HTTP '+response.status);
    let html=await response.text();
@@ -83,47 +82,18 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
     if(!html.includes(before))throw new Error('Não encontrei um trecho esperado da ferramenta Importar PDF.');
     html=html.replace(before,after);
    }
-   const bankSaveBefore='const save=()=>idb("readwrite",X).catch(()=>toast("Não foi possível salvar no navegador. Use Exportar para guardar."));';
-   const bankSaveAfter='let bankSyncTimer=null;const save=()=>idb("readwrite",X).then(()=>{clearTimeout(bankSyncTimer);bankSyncTimer=setTimeout(()=>{try{window.parent.postMessage({type:"eear-question-bank-data",data:X},location.origin)}catch(e){}},1800)}).catch(()=>toast("Não foi possível salvar no navegador. Use Exportar para guardar."));';
-   if(!html.includes(bankSaveBefore))throw new Error("Não encontrei a função de salvamento do Banco de Questões.");
-   html=html.replace(bankSaveBefore,bankSaveAfter);
-   const bankLoadBefore='idb("readonly").then(x=>{if(x&&x.Q){X=Object.assign(X,x);merge({Q:x.Q,IMG:x.IMG,PROVAS:x.PROVAS,TREE:x.TREE},false);render()}}).catch(()=>{});';
-   const bankLoadAfter='idb("readonly").then(x=>{if(x&&x.Q){X=Object.assign(X,x);merge({Q:x.Q,IMG:x.IMG,PROVAS:x.PROVAS,TREE:x.TREE},false);if(x.TREE_FULL&&window.__applyQuestionBankTaxonomy)window.__applyQuestionBankTaxonomy(x.TREE_FULL);render()}try{window.parent.postMessage({type:"eear-question-bank-ready"},location.origin)}catch(e){}}).catch(()=>{try{window.parent.postMessage({type:"eear-question-bank-ready"},location.origin)}catch(e){}});';
-   if(!html.includes(bankLoadBefore))throw new Error("Não encontrei a inicialização do banco local.");
-   html=html.replace(bankLoadBefore,bankLoadAfter);
 
-   const imageStart=html.indexOf('const IMG=');
-   const imageValueStart=imageStart+'const IMG='.length;
-   const imageEnd=html.indexOf(';\nconst Q=',imageValueStart);
-   if(imageStart<0||imageEnd<0)throw new Error('Não encontrei o bloco de imagens do banco.');
-   questionImageData=html.slice(imageValueStart,imageEnd);
-   const imagePattern=/"([^"\\]+)":"data:image\/[^"]+"/g;
-   let imageMatch;
-   while((imageMatch=imagePattern.exec(questionImageData))){
-    const valueStart=imageMatch.index+imageMatch[0].indexOf(':"')+2;
-    const valueEnd=imageMatch.index+imageMatch[0].length-1;
-    questionImageIndex.set(imageMatch[1],[valueStart,valueEnd]);
-   }
-   if(!questionImageIndex.size)throw new Error('Não consegui indexar as imagens do banco.');
-   html=html.slice(0,imageStart)+'const IMG={};'+html.slice(imageEnd+1);
-   const baseImageAttr='src="'+'$'+'{IMG[q.i]}'+'"';
-   const supportImageAttr='src="'+'$'+'{IMG[q.x]}'+'"';
-   if(!html.includes(baseImageAttr)||!html.includes(supportImageAttr))throw new Error('Não encontrei os pontos de exibição das imagens.');
-   html=html.replace(supportImageAttr,'data-img-key="'+'$'+'{q.x}'+'"');
-   html=html.replace(baseImageAttr,'data-img-key="'+'$'+'{q.i}'+'"');
-   const lazyImageLoader='<script>(function(){const requested=new WeakSet();const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(!entry.isIntersecting)return;const img=entry.target,key=img.dataset.imgKey;if(!key||requested.has(img))return;requested.add(img);observer.unobserve(img);window.parent.postMessage({type:"eear-question-image-request",key},location.origin)}),{rootMargin:"450px 0px"});const scan=()=>document.querySelectorAll("img[data-img-key]").forEach(img=>observer.observe(img));new MutationObserver(scan).observe(document.documentElement,{childList:true,subtree:true});window.addEventListener("message",event=>{if(event.source!==window.parent||event.origin!==location.origin)return;const msg=event.data;if(!msg||msg.type!=="eear-question-image-response")return;document.querySelectorAll("img[data-img-key]").forEach(img=>{if(img.dataset.imgKey===msg.key){img.src=msg.src;delete img.dataset.imgKey}})});scan()})();<\\/script>';
-   html=html.replace('</body>',lazyImageLoader+'</body>');
    const manualCropCode = String.raw`
 /* ---------- recorte manual de PDF ---------- */
-let MC=null,MCV={page:1,scale:1,mode:"q",group:"Texto de apoio 1",links:[""],num:1,items:[],bases:{},classifications:{},drag:null,rect:null};
+let MC=null,MCV={page:1,scale:1,mode:"q",group:"Texto de apoio 1",link:"",num:1,items:[],bases:{},drag:null,rect:null};
 function manualStyle(){if($("manual-crop-style"))return;const s=document.createElement("style");s.id="manual-crop-style";s.textContent=".ai{display:none!important}#mcwrap{display:flex;flex-direction:column;gap:10px;min-height:60vh}#mcbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#mcbar label{font-size:12px;color:#aaa}#mcbar input,#mcbar select{background:#171717;color:#fff;border:1px solid #444;border-radius:7px;padding:8px;max-width:180px}#mcstage{position:relative;overflow:auto;background:#222;display:flex;justify-content:center;align-items:flex-start;min-height:70vh;max-height:82vh;padding:8px}#mcpaper{position:relative;max-width:100%;line-height:0}#mcpdf{display:block;max-width:100%;height:auto}#mcover{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}#mcrect{position:absolute;border:2px solid #36a3ff;background:#36a3ff22;pointer-events:none;display:none}#mclist{display:flex;gap:8px;overflow:auto;padding:6px 0}#mclist img{height:92px;max-width:180px;object-fit:contain;background:#fff;border-radius:5px}#mcstatus{font-size:12px;color:#aaa}#mcbar button{background:#252525;color:#fff;border:1px solid #555;border-radius:7px;padding:8px 12px;cursor:pointer}";document.head.appendChild(s)}
 function manualHome(){
- W={};MCV={page:1,scale:1,mode:"q",group:"Texto de apoio 1",links:[""],num:1,items:[],bases:{},classifications:{},drag:null,rect:null};
- $("imb").innerHTML='<label class="dz" id="dz"><input type="file" id="imfi" accept=".pdf" hidden><span class="dzi">⇪</span><b id="dzn">Solte o PDF aqui ou clique para escolher</b><small id="dzs">O PDF será processado localmente no navegador. Nenhuma IA ou chave de API será usada.</small></label><div class="ig2"><label>Banca<input id="imB" placeholder="EEAR, AFA, ESA…"></label><label>Ano<input id="imA" type="number" min="1990" max="2100" placeholder="2025"></label><label>Nome da prova<input id="imN" placeholder="EEAR CFS · Prova"></label><label>Data da prova<input id="imD" placeholder="nov/2026"></label></div><label class="gb">Gabarito (opcional)<textarea id="imG" rows="2" placeholder="1-A 2-C 3-B…"></textarea></label><label class="gb">Classificação das questões (opcional)<small style="display:block;color:#999;font-weight:400;margin:4px 0 6px">Cole uma linha por questão, nesta ordem: número | disciplina | matéria | tópico | conteúdo específico. Exemplo: 1 | Matemática | Álgebra | Equações | Equação do 1º grau</small><textarea id="imClass" rows="5" placeholder="1 | Matemática | Álgebra | Equações | Equação do 1º grau&#10;2 | Inglês | Gramática | Verb to be | Forma afirmativa"></textarea></label><div id="ims2"></div>';
+ W={};MCV={page:1,scale:1,mode:"q",group:"Texto de apoio 1",link:"",num:1,items:[],bases:{},drag:null,rect:null};
+ $("imb").innerHTML='<label class="dz" id="dz"><input type="file" id="imfi" accept=".pdf" hidden><span class="dzi">⇪</span><b id="dzn">Solte o PDF aqui ou clique para escolher</b><small id="dzs">O PDF será processado localmente no navegador. Nenhuma IA ou chave de API será usada.</small></label><div class="ig2"><label>Banca<input id="imB" placeholder="EEAR, AFA, ESA…"></label><label>Ano<input id="imA" type="number" min="1990" max="2100" placeholder="2025"></label><label>Nome da prova<input id="imN" placeholder="EEAR CFS · Prova"></label><label>Data da prova<input id="imD" placeholder="nov/2026"></label></div><label class="gb">Gabarito (opcional)<textarea id="imG" rows="2" placeholder="1-A 2-C 3-B…"></textarea></label><div id="ims2"></div>';
  foot('<button class="go" id="immanual" disabled>Visualizar e recortar PDF</button>');
  const f=$("imfi"),dz=$("dz"),pick=file=>{if(!file)return;if(!/\.pdf$/i.test(file.name))return toast("Selecione um arquivo PDF");W.file=file;$("dzn").textContent=file.name;$("dzs").textContent=kb(file.size)+" · pronto para visualizar";$("immanual").disabled=false;const nm=file.name.toUpperCase(),b=BANCAS.find(x=>nm.includes(x)),y=(nm.match(/20\d\d/)||[])[0];if(b&&!$("imB").value)$("imB").value=b;if(y&&!$("imA").value)$("imA").value=y;if(!$("imN").value)$("imN").value=file.name.replace(/\.pdf$/i,"").replace(/[_]+/g," ")};
  f.onchange=()=>pick(f.files[0]);["dragover","dragenter"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add("on")}));["dragleave","drop"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove("on")}));dz.addEventListener("drop",e=>pick(e.dataTransfer.files[0]));
- $("immanual").onclick=()=>{W.b=$("imB").value.trim().toUpperCase();W.ano=+$("imA").value;W.nome=$("imN").value.trim();W.dt=$("imD").value.trim()||String(W.ano||"");W.gab=$("imG").value;MCV.classifications=parseClassifications($("imClass").value);if(!W.b||!W.ano)return toast("Informe a banca e o ano");manualStart().catch(e=>{console.error(e);$("imb").innerHTML='<div class="empty"><b>Não foi possível abrir o PDF</b>'+esc(e.message)+'</div>';foot('<button class="go" id="mcretry">Voltar</button>');$("mcretry").onclick=manualHome})};
+ $("immanual").onclick=()=>{W.b=$("imB").value.trim().toUpperCase();W.ano=+$("imA").value;W.nome=$("imN").value.trim();W.dt=$("imD").value.trim()||String(W.ano||"");W.gab=$("imG").value;if(!W.b||!W.ano)return toast("Informe a banca e o ano");manualStart().catch(e=>{console.error(e);$("imb").innerHTML='<div class="empty"><b>Não foi possível abrir o PDF</b>'+esc(e.message)+'</div>';foot('<button class="go" id="mcretry">Voltar</button>');$("mcretry").onclick=manualHome})};
  saved();
 }
 async function manualStart(){
@@ -142,11 +112,11 @@ async function manualRender(){
  $("mcpage").textContent="Página "+MCV.page+" / "+MC.numPages;
 }
 function manualView(){
- $("imb").innerHTML='<div id="mcwrap"><div id="mcbar"><button id="mcprev">←</button><button id="mcnext">→</button><button id="mcminus">−</button><button id="mcplus">+</button><label>Tipo <select id="mcmode"><option value="q">Questão</option><option value="b">Texto de apoio</option></select></label><label id="mcglabel">Grupo <input id="mcgroup" value="Texto de apoio 1"></label><div id="mclabel"><div id="mclinks"></div><button type="button" id="mcaddlink">+ Vincular texto</button></div><span id="mcpage"></span></div><div id="mcstage"><div id="mcpaper"><canvas id="mcpdf"></canvas><canvas id="mcover"></canvas><div id="mcrect"></div></div></div><div id="mcstatus">Arraste o mouse sobre a página para marcar a área inteira da questão ou do texto de apoio.</div><div id="mclist"></div></div>';
+ $("imb").innerHTML='<div id="mcwrap"><div id="mcbar"><button id="mcprev">←</button><button id="mcnext">→</button><button id="mcminus">−</button><button id="mcplus">+</button><label>Tipo <select id="mcmode"><option value="q">Questão</option><option value="b">Texto de apoio</option></select></label><label id="mcglabel">Grupo <input id="mcgroup" value="Texto de apoio 1"></label><label id="mclabel">Vincular texto <select id="mclink"><option value="">Sem texto de apoio</option></select></label><span id="mcpage"></span></div><div id="mcstage"><div id="mcpaper"><canvas id="mcpdf"></canvas><canvas id="mcover"></canvas><div id="mcrect"></div></div></div><div id="mcstatus">Arraste o mouse sobre a página para marcar a área inteira da questão ou do texto de apoio.</div><div id="mclist"></div></div>';
  foot('<button class="idb" id="mcback">← Voltar</button><button class="idb" id="mcadd">Adicionar recorte</button><button class="go" id="mcfinish">Revisar e importar (0)</button>');
  $("mcprev").onclick=()=>{if(MCV.page>1){MCV.page--;manualRender()}};$("mcnext").onclick=()=>{if(MCV.page<MC.numPages){MCV.page++;manualRender()}};$("mcminus").onclick=()=>{MCV.scale=Math.max(.5,MCV.scale-.15);manualRender()};$("mcplus").onclick=()=>{MCV.scale=Math.min(2.5,MCV.scale+.15);manualRender()};
  $("mcmode").onchange=e=>{MCV.mode=e.target.value;$("mcglabel").style.display=e.target.value==="b"?"":"none";$("mclabel").style.display=e.target.value==="q"?"":"none"};
- $("mcgroup").oninput=e=>MCV.group=e.target.value;$("mcaddlink").onclick=()=>{MCV.links.push("");renderTextLinks()};$("mcback").onclick=manualHome;$("mcadd").onclick=manualAdd;$("mcfinish").onclick=manualFinish;renderTextLinks();
+ $("mcgroup").oninput=e=>MCV.group=e.target.value;$("mclink").onchange=e=>MCV.link=e.target.value;$("mcback").onclick=manualHome;$("mcadd").onclick=manualAdd;$("mcfinish").onclick=manualFinish;
  const ov=$("mcover"),rect=$("mcrect");
  ov.onpointerdown=e=>{const b=ov.getBoundingClientRect(),x=(e.clientX-b.left)*ov.width/b.width,y=(e.clientY-b.top)*ov.height/b.height;MCV.drag={x,y};MCV.rect=null;rect.style.display="block";ov.setPointerCapture(e.pointerId)};
  ov.onpointermove=e=>{if(!MCV.drag)return;const b=ov.getBoundingClientRect(),x=(e.clientX-b.left)*ov.width/b.width,y=(e.clientY-b.top)*ov.height/b.height,a=MCV.drag;MCV.rect={x:Math.min(a.x,x),y:Math.min(a.y,y),w:Math.abs(x-a.x),h:Math.abs(y-a.y)};Object.assign(rect.style,{left:MCV.rect.x/ov.width*100+"%",top:MCV.rect.y/ov.height*100+"%",width:MCV.rect.w/ov.width*100+"%",height:MCV.rect.h/ov.height*100+"%"})};ov.onpointerup=()=>MCV.drag=null;
@@ -161,285 +131,35 @@ async function manualAdd(){
  if(w<24||h<24){hi.width=1;hi.height=1;return toast("A área selecionada ficou pequena demais")}
  const c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d",{alpha:false});ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";ctx.drawImage(hi,x,y,w,h,0,0,w,h);
  const img=c.toDataURL("image/webp",.98);hi.width=1;hi.height=1;
- if(MCV.mode==="b"){const name=($("mcgroup").value||"Texto de apoio "+(Object.keys(MCV.bases).length+1)).trim(),key=W.id+"-T"+(Object.keys(MCV.bases).length+1);MCV.bases[key]={name,img,order:Object.keys(MCV.bases).length+1};MCV.links[MCV.links.length-1]=key;renderTextLinks();toast("Texto de apoio salvo: "+name)}
- else{const links=MCV.links.filter((key,i)=>key&&MCV.bases[key]&&MCV.links.indexOf(key)===i);const baseImg=await combineSupportTexts(links);const n=MCV.num++;MCV.items.push({num:n,img,x:links,baseImg,page:MCV.page});toast("Questão "+n+" recortada em alta resolução")}
+ if(MCV.mode==="b"){const name=($("mcgroup").value||"Texto de apoio "+(Object.keys(MCV.bases).length+1)).trim(),key=W.id+"-T"+(Object.keys(MCV.bases).length+1);MCV.bases[key]={name,img};MCV.link=key;toast("Texto de apoio salvo: "+name)}
+ else{const n=MCV.num++;MCV.items.push({num:n,img,x:MCV.link||"",baseImg:MCV.link&&MCV.bases[MCV.link]?MCV.bases[MCV.link].img:null,page:MCV.page});toast("Questão "+n+" recortada em alta resolução")}
  MCV.rect=null;$("mcrect").style.display="none";manualList();$("mcfinish").textContent="Revisar e importar ("+MCV.items.length+")";
 }
-function renderTextLinks(){
- const host=$("mclinks");if(!host)return;host.innerHTML=MCV.links.map((value,i)=>'<label style="display:inline-flex;flex-direction:column;gap:4px;margin:0 6px 6px 0;font-size:12px;color:#aaa">Vincular texto '+(i+1)+'<select data-text-link="'+i+'" style="min-width:170px"><option value="">Sem texto de apoio</option>'+Object.entries(MCV.bases).sort((a,b)=>(a[1].order||0)-(b[1].order||0)).map(([k,v])=>'<option value="'+esc(k)+'">'+esc(v.name)+'</option>').join("")+'</select></label>').join("");
- host.querySelectorAll("select[data-text-link]").forEach(sel=>{const i=Number(sel.dataset.textLink);sel.value=MCV.links[i]||"";sel.onchange=()=>{MCV.links[i]=sel.value}});
- const add=$("mcaddlink");if(add)add.disabled=Object.keys(MCV.bases).length===0;
-}
 function manualList(){
- renderTextLinks();const el=$("mclist");if(!el)return;el.innerHTML=MCV.items.map(q=>'<div><img src="'+q.img+'" title="Questão '+q.num+'"><small>Questão '+q.num+' · '+(q.x||[]).map(k=>MCV.bases[k]?.name||"").filter(Boolean).join(" + ") +'</small></div>').join("")+Object.values(MCV.bases).sort((a,b)=>(a.order||0)-(b.order||0)).map(b=>'<div><img src="'+b.img+'" title="'+esc(b.name)+'"><small>'+esc(b.name)+'</small></div>').join("");
-}
-async function combineSupportTexts(keys){
- if(!keys.length)return null;const imgs=[];for(const key of keys){const src=MCV.bases[key]?.img;if(!src)continue;const im=new Image();im.src=src;await new Promise((resolve,reject)=>{im.onload=resolve;im.onerror=reject});imgs.push(im)}if(!imgs.length)return null;
- const width=Math.max(...imgs.map(im=>im.naturalWidth)),height=imgs.reduce((sum,im)=>sum+Math.round(im.naturalHeight*width/im.naturalWidth),0);if(width>30000||height>30000||width*height>180000000)throw new Error("Os textos vinculados ficaram grandes demais para combinar. Reduza a área dos recortes.");
- const canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;const ctx=canvas.getContext("2d",{alpha:false});ctx.fillStyle="#fff";ctx.fillRect(0,0,width,height);let y=0;for(const im of imgs){const h=Math.round(im.naturalHeight*width/im.naturalWidth);ctx.drawImage(im,0,y,width,h);y+=h}const result=canvas.toDataURL("image/webp",.98);canvas.width=1;canvas.height=1;return result;
-}
-function parseClassifications(raw){
- const out={};String(raw||"").split(/\r?\n/).forEach(line=>{const v=line.trim();if(!v)return;const parts=v.split(/[|;\t]/).map(x=>x.trim());if(parts.length<5)return;const m=parts[0].match(/(?:quest[aã]o\s*)?(\d{1,3})\s*[-:.)]?/i);if(!m)return;const n=Number(m[1]);if(!n)return;out[n]={d:parts[1],m:parts[2],t:parts[3],c:parts.slice(4).join(" | ")} });return out;
+ const sel=$("mclink");if(sel){const old=MCV.link;sel.innerHTML='<option value="">Sem texto de apoio</option>'+Object.entries(MCV.bases).map(([k,v])=>'<option value="'+esc(k)+'">'+esc(v.name)+'</option>').join("");sel.value=old}
+ const el=$("mclist");if(!el)return;el.innerHTML=MCV.items.map(q=>'<div><img src="'+q.img+'" title="Questão '+q.num+'"><small>Questão '+q.num+'</small></div>').join("")+Object.values(MCV.bases).map(b=>'<div><img src="'+b.img+'" title="'+esc(b.name)+'"><small>'+esc(b.name)+'</small></div>').join("");
 }
 function manualFinish(){
  if(!MCV.items.length)return toast("Recorte pelo menos uma questão");
- const gab=parseGab(W.gab||""),classes=MCV.classifications||{};R=MCV.items.map((q,i)=>{const cl=classes[q.num]||{};return {id:W.id+"-"+String(i+1).padStart(2,"0"),num:q.num,img:q.img,baseImg:q.baseImg,x:Array.isArray(q.x)?q.x.join(","):q.x,d:cl.d||"",m:cl.m||"",t:cl.t||"",c:cl.c||"",f:"Médio",a:-1,n:5,tm:1,e:"",src:"",flag:"recorte manual"}});
- gab.forEach(([n,a])=>{const q=R.find(x=>x.num===n);if(q)q.a=a});review();
+ const gab=parseGab(W.gab||""),bi={};R=MCV.items.map((q,i)=>({id:W.id+"-"+String(i+1).padStart(2,"0"),num:q.num,img:q.img,baseImg:q.baseImg,x:q.x,d:"",m:"",t:"",c:"",f:"Médio",a:-1,n:5,tm:1,e:"",src:"",flag:"recorte manual"}));
+ gab.forEach(([n,a])=>{const q=R.find(x=>x.num===n);if(q)q.a=a});Object.keys(MCV.bases).forEach(k=>bi[k]=MCV.bases[k].img);R.forEach(q=>{if(q.x)q.baseImg=bi[q.x]||q.baseImg});review();
 }
-
 home=manualHome;
-/* Classificação múltipla e gerenciador de taxonomia na revisão do PDF */
-const originalReview=review;
-function multiOptions(field,q){
- const d=q.d||"",m=q.m||"",t=q.t||"";
- if(field==="d")return Object.keys(TREE);
- if(field==="m")return Object.keys(TREE[d]||{});
- if(field==="t")return Object.keys((TREE[d]||{})[m]||{});
- return ((TREE[d]||{})[m]||{})[t]||[];
+const mobileClearStyle=document.createElement("style");
+mobileClearStyle.textContent="#clear-mobile{display:none!important}@media(max-width:860px){#clear-mobile{display:block!important;width:calc(100% - 24px);margin:8px 12px 0}}";
+document.head.appendChild(mobileClearStyle);
+const originalClear=$("clear"),filterToggle=$("ftog");
+if(originalClear&&filterToggle&&!$("clear-mobile")){
+ const mobileClear=originalClear.cloneNode(true);
+ mobileClear.id="clear-mobile";
+ mobileClear.type="button";
+ mobileClear.addEventListener("click",()=>originalClear.click());
+ filterToggle.insertAdjacentElement("afterend",mobileClear);
 }
-rowH=function(q,k){
- const fields=["d","m","t","c"],names={d:"Disciplina",m:"Matéria",t:"Tópico",c:"Conteúdo específico"};
- const escv=s=>esc(s);
- let extra="";
- fields.forEach(f=>{
-  const vals=Array.isArray(q[f+"_multi"])?q[f+"_multi"]:[];
-  extra+='<div data-multi-list="'+f+'" style="display:flex;flex-direction:column;gap:5px;margin-top:5px">'+vals.map((v,i)=>'<div style="display:flex;gap:5px"><select data-multi-field="'+f+'" data-multi-index="'+i+'" style="flex:1;min-width:0;background:#171717;color:#fff;border:1px solid #555;border-radius:6px;padding:6px"><option value="">Selecionar '+names[f].toLowerCase()+'</option>'+multiOptions(f,q).map(x=>'<option value="'+escv(x)+'"'+(x===v?' selected':'')+'>'+escv(x)+'</option>').join("")+'</select><button type="button" class="idb" data-remove-multi="'+f+'" data-multi-index="'+i+'">×</button></div>').join("")+'</div>';
- });
- let fieldsHtml=fields.map(f=>'<label>'+names[f]+' <button type="button" class="idb" data-add-multi="'+f+'" style="padding:2px 7px;margin-left:4px" title="Adicionar outra classificação">+</button><input data-f="'+f+'" list="dl'+f+k+'" value="'+escv(q[f]||"")+'"><datalist id="dl'+f+k+'">'+(f==="d"?Object.keys(TREE):multiOptions(f,q)).map(x=>'<option value="'+escv(x)+'">').join("")+'</datalist>'+extraFor(f)+'</label>').join("");
- function extraFor(f){const a=extra.split('@@'+f+'@@')[1]||"";return a.split(/@@[dmtc]@@/)[0]||""}
- extra="";fields.forEach(f=>{const vals=Array.isArray(q[f+"_multi"])?q[f+"_multi"]:[];extra+='@@'+f+'@@<div data-multi-list="'+f+'" style="display:flex;flex-direction:column;gap:5px;margin-top:5px">'+vals.map((v,i)=>'<div style="display:flex;gap:5px"><select data-multi-field="'+f+'" data-multi-index="'+i+'" style="flex:1;min-width:0;background:#171717;color:#fff;border:1px solid #555;border-radius:6px;padding:6px"><option value="">Selecionar '+names[f].toLowerCase()+'</option>'+multiOptions(f,q).map(x=>'<option value="'+escv(x)+'"'+(x===v?' selected':'')+'>'+escv(x)+'</option>').join("")+'</select><button type="button" class="idb" data-remove-multi="'+f+'" data-multi-index="'+i+'">×</button></div>').join("")+'</div>'});
- fieldsHtml=fields.map(f=>'<label>'+names[f]+' <button type="button" class="idb" data-add-multi="'+f+'" style="padding:2px 7px;margin-left:4px">+</button><input data-f="'+f+'" list="dl'+f+k+'" value="'+escv(q[f]||"")+'"><datalist id="dl'+f+k+'">'+(f==="d"?Object.keys(TREE):multiOptions(f,q)).map(x=>'<option value="'+escv(x)+'">').join("")+'</datalist>'+extraFor(f)+'</label>').join("");
- return '<div class="ir'+(q.del?' gone':'')+'" data-k="'+k+'"><div class="ith"><img src="'+q.img+'" alt="Questão '+q.num+'"></div><div class="if"><div class="ihd"><b>'+q.id+'</b><span class="tag">nº '+q.num+'</span>'+(q.x?'<span class="tag dif">com texto-base</span>':'')+'<span class="tag">'+escv(q.flag)+'</span>'+(q.src?'<span class="tag">resposta: '+q.src+'</span>':'')+'<button class="idb" data-del="'+k+'">Descartar</button></div><div class="ig3">'+fieldsHtml+'</div><div class="ig4"><label>Dificuldade<select data-f="f">'+DIF.map(x=>'<option'+(x===q.f?' selected':'')+'>'+x+'</option>').join("")+'</select></label><label>Resposta<select data-f="a"><option value="-1">—</option>'+[0,1,2,3,4].map(i=>'<option value="'+i+'"'+(q.a===i?' selected':'')+'>'+LT[i]+'</option>').join("")+'</select></label><label>Alternativas<select data-f="n">'+[2,3,4,5].map(i=>'<option value="'+i+'"'+(q.n===i?' selected':'')+'>'+i+'</option>').join("")+'</select></label><button type="button" class="idb" data-open-taxonomy style="align-self:end">＋ Gerenciar conteúdos</button>'+(q.e?'<details><summary>Explicação</summary><p>'+escv(q.e)+'</p></details>':'')+'</div><div data-taxonomy-panel style="display:none;margin-top:10px;padding:12px;border:1px solid #444;border-radius:9px;background:#111"><b>Adicionar à taxonomia do banco</b><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px"><label>Disciplina<input data-tax="d" value="'+escv(q.d||"")+'"></label><label>Matéria<input data-tax="m" value="'+escv(q.m||"")+'"></label><label>Tópico<input data-tax="t" value="'+escv(q.t||"")+'"></label><label>Conteúdo específico<input data-tax="c" value="'+escv(q.c||"")+'"></label></div><button type="button" class="idb" data-save-taxonomy style="margin-top:8px">Salvar conteúdo na taxonomia</button><small style="display:block;color:#aaa;margin-top:6px">O novo item ficará disponível nas próximas classificações.</small></div></div></div>';
-};
-review=function(){
- originalReview();
- const host=$("rvl");if(!host)return;
- host.onclick=function(e){
-  const row=e.target.closest(".ir");if(!row)return;const k=+row.dataset.k,q=R[k];
-  const add=e.target.closest("[data-add-multi]");
-  if(add){const f=add.dataset.addMulti,vals=q[f+"_multi"]||(q[f+"_multi"]=[]),available=multiOptions(f,q).filter(x=>!vals.includes(x));if(!available.length)return toast("Não há outro item cadastrado para selecionar");vals.push("");row.outerHTML=rowH(q,k);return}
-  const rem=e.target.closest("[data-remove-multi]");
-  if(rem){const f=rem.dataset.removeMulti;q[f+"_multi"].splice(+rem.dataset.multiIndex,1);row.outerHTML=rowH(q,k);return}
-  if(e.target.closest("[data-open-taxonomy]")){const p=row.querySelector("[data-taxonomy-panel]");p.style.display=p.style.display==="none"?"block":"none";return}
-  if(e.target.closest("[data-save-taxonomy]")){
-   const v={};row.querySelectorAll("[data-tax]").forEach(el=>v[el.dataset.tax]=el.value.trim());
-   if(!v.d||!v.m||!v.t)return toast("Informe disciplina, matéria e tópico");
-   addTree(v.d,v.m,v.t,v.c);const tuple=[v.d,v.m,v.t,v.c];if(!X.TREE.some(a=>a.join("|")===tuple.join("|")))X.TREE.push(tuple);
-   q.d=v.d;q.m=v.m;q.t=v.t;if(v.c)q.c=v.c;save();row.outerHTML=rowH(q,k);dl(k);toast("Conteúdo salvo na taxonomia do banco");
-   const hierarchy=JSON.parse(JSON.stringify(TREE)),taxonomy={};Object.keys(TREE).forEach(d=>taxonomy[d]=[...new Set(Object.values(TREE[d]||{}).flatMap(node=>Object.keys(node||{})))]);
-   window.parent.postMessage({type:"eear-question-taxonomy-full",hierarchy},location.origin);window.parent.postMessage({type:"eear-question-taxonomy",taxonomy},location.origin);return;
-  }
-  const del=e.target.closest("[data-del]");if(del){q.del=true;row.remove();upd()}
- };
- host.onchange=function(e){const sel=e.target.closest("[data-multi-field]");if(!sel)return;const row=sel.closest(".ir"),q=R[+row.dataset.k],f=sel.dataset.multiField,i=+sel.dataset.multiIndex;q[f+"_multi"]=q[f+"_multi"]||[];q[f+"_multi"][i]=sel.value};
- host.oninput=function(e){if(!e.target.matches("[data-f]"))return;const k=+e.target.closest(".ir").dataset.k,q=R[k],f=e.target.dataset.f;q[f]=(f==="a"||f==="n")?+e.target.value:e.target.value;if("dmt".includes(f))dl(k);upd()};
- const ok=$("rvok");if(ok)ok.onclick=commit;
-};
-commit=function(){
- const a=R.filter(q=>!q.del);if(a.some(q=>!q.d||!q.m||!q.t))return toast("Preencha disciplina, matéria e tópico");
- const pv={id:W.id,b:W.b,ano:W.ano,nome:W.nome||W.b+" "+W.ano,n:a.length},x={Q:[],IMG:{},PROVAS:[pv],TREE:[]};
- a.forEach(q=>{
-  const r={id:q.id,b:W.b,d:q.d,m:q.m,t:q.t,c:q.c,f:q.f,dt:W.dt,tm:q.tm,i:q.id,a:q.a,prova:W.id};
-  ["d","m","t","c"].forEach(f=>{const vals=[...new Set((q[f+"_multi"]||[]).filter(Boolean))];if(vals.length)r[f+"_multi"]=vals});
-  if(q.n!==5)r.n=q.n;if(q.x){r.x=q.x;x.IMG[q.x]=q.baseImg}if(q.e)r.e=q.e;x.Q.push(r);x.IMG[q.id]=q.img;x.TREE.push([q.d,q.m,q.t,q.c]);
-  ["d","m","t","c"].forEach(f=>(q[f+"_multi"]||[]).filter(Boolean).forEach(v=>{if(f==="d")x.TREE.push([v,"","",""]);else if(f==="m")x.TREE.push([q.d,v,"",""]);else if(f==="t")x.TREE.push([q.d,q.m,v,""]);else x.TREE.push([q.d,q.m,q.t,v])}));
- });
- merge(x,true);save();render();$("imo").hidden=true;toast(a.length+" questões adicionadas ao banco");view("p");
-};
-
-const resetAnswerButton=document.createElement("button");
-resetAnswerButton.id="reset-answers";
-resetAnswerButton.type="button";
-resetAnswerButton.textContent="Zerar respostas";
-resetAnswerButton.title="Zerar respostas marcadas";
-resetAnswerButton.style.cssText="display:inline-flex;align-items:center;width:auto;margin:0 0 0 6px;padding:5px 8px;font-size:11px;line-height:1.2;border:1px solid #555;border-radius:6px;background:#252525;color:#ddd;cursor:pointer;vertical-align:middle";
-const importPdfButton=[...document.querySelectorAll("button")].find(b=>/importar\s+pdf/i.test((b.textContent||"").trim()));
-if(importPdfButton&&!$("reset-answers"))importPdfButton.insertAdjacentElement("afterend",resetAnswerButton);
-const resetAnswers=()=>{const keys=Object.keys(ans);if(!keys.length){toast("Não há respostas para zerar");return}keys.forEach(k=>delete ans[k]);streak=0;$("sStreak").textContent="0";render();toast("Respostas zeradas")};
-resetAnswerButton.addEventListener("click",resetAnswers);
-
-/* Editor da taxonomia: adiciona e renomeia itens em cada nível. */
-(function(){
- const cloneTaxTree=()=>JSON.parse(JSON.stringify(TREE));
- function applyTaxonomySnapshot(snapshot){
-  if(!snapshot||typeof snapshot!=="object"||Array.isArray(snapshot))return;
-  Object.keys(TREE).forEach(k=>delete TREE[k]);
-  Object.assign(TREE,JSON.parse(JSON.stringify(snapshot)));
- }
- const originalTaxAddTree=addTree;
- addTree=function(d,m,t,c){
-  originalTaxAddTree(d,m,t,c);
-  if(X&&X.TREE_FULL)X.TREE_FULL=cloneTaxTree();
- };
- const style=document.createElement("style");
- style.textContent="#tax-edit-trigger{margin-left:7px;padding:3px 7px;border:1px solid #555;border-radius:6px;background:#202020;color:#ddd;font-size:13px;line-height:1;cursor:pointer;vertical-align:middle}#tax-edit-modal{position:fixed;inset:0;z-index:99999;background:#000b;display:none;align-items:center;justify-content:center;padding:16px}#tax-edit-card{width:min(480px,100%);max-height:90vh;overflow:auto;background:#111;color:#eee;border:1px solid #444;border-radius:12px;padding:16px;box-shadow:0 18px 55px #0009}#tax-edit-card h3{margin:0 0 12px;font-size:17px}#tax-edit-card label{display:block;margin:10px 0 5px;color:#bbb;font-size:12px}#tax-edit-card select,#tax-edit-card input{width:100%;padding:10px;border:1px solid #555;border-radius:7px;background:#1c1c1c;color:#fff}#tax-edit-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}#tax-edit-actions button{padding:8px 12px;border:1px solid #555;border-radius:7px;background:#242424;color:#eee;cursor:pointer}#tax-edit-actions #tax-edit-save{background:#eee;color:#111;border-color:#eee}#tax-edit-newrow{display:flex;gap:7px;align-items:center}#tax-edit-newrow input{flex:1;min-width:0}.tax-edit-newrow{display:flex;gap:7px;align-items:center}.tax-edit-newrow input{flex:1;min-width:0}.tax-edit-newrow button{white-space:nowrap;padding:8px 12px;border:1px solid #eee;border-radius:7px;background:#eee;color:#111;cursor:pointer}#tax-edit-note{font-size:11px;color:#999;margin-top:8px}";
- document.head.appendChild(style);
- const heading=document.querySelector("#vq aside h2");
- if(!heading||document.getElementById("tax-edit-trigger"))return;
- const trigger=document.createElement("button");
- trigger.id="tax-edit-trigger";trigger.type="button";trigger.title="Adicionar ou renomear conteúdos";trigger.setAttribute("aria-label","Adicionar ou renomear conteúdos");trigger.textContent="✎";
- heading.appendChild(trigger);
- const modal=document.createElement("div");modal.id="tax-edit-modal";
- modal.innerHTML='<section id="tax-edit-card" role="dialog" aria-modal="true" aria-labelledby="tax-edit-title"><h3 id="tax-edit-title">Gerenciar conteúdos</h3><label for="tax-edit-action">Ação</label><select id="tax-edit-action"><option value="add">Adicionar novo</option><option value="rename">Renomear existente</option></select><div id="tax-edit-rename-level" style="display:none"><label for="tax-edit-level">O que deseja renomear?</label><select id="tax-edit-level"><option value="d">Disciplina</option><option value="m">Matéria</option><option value="t">Tópico</option><option value="c">Conteúdo específico</option></select></div><div id="tax-edit-path"><div class="tax-edit-field" id="tax-edit-wrap-d"><label for="tax-edit-d">Disciplina</label><select id="tax-edit-d"></select><div class="tax-edit-newbox" id="tax-edit-newbox-d" style="display:none"><label for="tax-edit-name-d">Nome da nova disciplina</label><div class="tax-edit-newrow"><input id="tax-edit-name-d" maxlength="120" placeholder="Digite o nome"><button type="button" data-add-level="d">Adicionar</button></div></div></div><div class="tax-edit-field" id="tax-edit-wrap-m" style="display:none"><label for="tax-edit-m">Matéria</label><select id="tax-edit-m"></select><div class="tax-edit-newbox" id="tax-edit-newbox-m" style="display:none"><label for="tax-edit-name-m">Nome da nova matéria</label><div class="tax-edit-newrow"><input id="tax-edit-name-m" maxlength="120" placeholder="Digite o nome"><button type="button" data-add-level="m">Adicionar</button></div></div></div><div class="tax-edit-field" id="tax-edit-wrap-t" style="display:none"><label for="tax-edit-t">Tópico</label><select id="tax-edit-t"></select><div class="tax-edit-newbox" id="tax-edit-newbox-t" style="display:none"><label for="tax-edit-name-t">Nome do novo tópico</label><div class="tax-edit-newrow"><input id="tax-edit-name-t" maxlength="120" placeholder="Digite o nome"><button type="button" data-add-level="t">Adicionar</button></div></div></div><div class="tax-edit-field" id="tax-edit-wrap-c" style="display:none"><label for="tax-edit-c">Conteúdo específico</label><select id="tax-edit-c"></select><div class="tax-edit-newbox" id="tax-edit-newbox-c" style="display:none"><label for="tax-edit-name-c">Nome do novo conteúdo específico</label><div class="tax-edit-newrow"><input id="tax-edit-name-c" maxlength="120" placeholder="Digite o nome"><button type="button" data-add-level="c">Adicionar</button></div></div></div></div><div id="tax-edit-renamebox" style="display:none"><label for="tax-edit-rename-name">Novo nome</label><input id="tax-edit-rename-name" maxlength="120" placeholder="Digite o novo nome"></div><div id="tax-edit-note">Escolha a disciplina para começar.</div><div id="tax-edit-actions"><button type="button" id="tax-edit-cancel">Fechar</button><button type="button" id="tax-edit-save" style="display:none">Salvar alteração</button></div></section>';
- document.body.appendChild(modal);
- const el=id=>document.getElementById("tax-edit-"+id),NEW="__CREATE_NEW__";
- const levels={d:"disciplina",m:"matéria",t:"tópico",c:"conteúdo específico"};
- const fill=(node,values,placeholder,createOption)=>{
-  node.innerHTML='<option value="">'+placeholder+'</option>'+(createOption?'<option value="'+NEW+'">＋ Criar novo</option>':"")+values.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("");
- };
- function selectedPath(){return {d:el("d").value,m:el("m").value,t:el("t").value,c:el("c").value}}
- function currentLevelKey(){return el("level").value}
- function currentTargetSelect(){return el(currentLevelKey())}
- function updateVisibility(){
-  const action=el("action").value,level=action==="rename"?currentLevelKey():"",p=selectedPath();
-  el("rename-level").style.display=action==="rename"?"block":"none";
-  el("renamebox").style.display=action==="rename"?"block":"none";
-  el("save").style.display=action==="rename"?"inline-block":"none";
-  ["d","m","t","c"].forEach((k,i)=>{
-   const show=i===0||(i===1&&!!p.d&&p.d!==NEW)||(i===2&&!!p.m&&p.m!==NEW)||(i===3&&!!p.t&&p.t!==NEW);
-   el("wrap-"+k).style.display=show?"block":"none";
-   el("newbox-"+k).style.display=action==="add"&&el(k).value===NEW?"block":"none";
-  });
-  if(action==="rename"){
-   ["d","m","t","c"].forEach(k=>{
-    const show=k==="d"||(k==="m"&&level!=="d")||(k==="t"&&["t","c"].includes(level))||(k==="c"&&level==="c");
-    el("wrap-"+k).style.display=show?"block":"none";
-    el("newbox-"+k).style.display="none";
-   });
-   const v=currentTargetSelect().value;el("rename-name").value=v&&v!==NEW?v:"";
-   el("note").textContent="Selecione o item existente e informe o novo nome.";
-  }else el("note").textContent="Escolha a disciplina e avance pela hierarquia. Em cada lista, “＋ Criar novo” abre o campo e o botão Adicionar logo abaixo.";
- }
- function refreshOptions(){
-  const p=selectedPath(),action=el("action").value,rename=action==="rename",level=rename?currentLevelKey():"";
-  fill(el("d"),Object.keys(TREE),"Escolha a disciplina",!rename);
-  if(p.d)el("d").value=p.d;
-  const d=el("d").value;
-  fill(el("m"),d&&d!==NEW?Object.keys(TREE[d]||{}):[],"Escolha a matéria",!rename);
-  if(p.m)el("m").value=p.m;
-  const m=el("m").value;
-  fill(el("t"),d&&d!==NEW&&m&&m!==NEW?Object.keys((TREE[d]||{})[m]||{}):[],"Escolha o tópico",!rename);
-  if(p.t)el("t").value=p.t;
-  const t=el("t").value;
-  fill(el("c"),d&&d!==NEW&&m&&m!==NEW&&t&&t!==NEW?((TREE[d]||{})[m]||{})[t]||[]:[],"Escolha o conteúdo específico",!rename);
-  if(p.c)el("c").value=p.c;
-  updateVisibility();
- }
- function openEditor(){
-  el("action").value="add";el("level").value="d";
-  ["d","m","t","c"].forEach(k=>el(k).value="");
-  ["d","m","t","c"].forEach(k=>el("name-"+k).value="");
-  el("rename-name").value="";refreshOptions();modal.style.display="flex";
- }
- function closeEditor(){modal.style.display="none"}
- function addTuple(d,m,t,c){
-  const row=[d,m,t,c].filter((v,i)=>v||i===0&&d);
-  if(!Array.isArray(X.TREE))X.TREE=[];
-  if(!X.TREE.some(x=>x.length===row.length&&x.every((v,i)=>v===row[i])))X.TREE.push(row);
- }
- function addSelected(level){
-  const p=selectedPath(),target=el(level);
-  if(target.value!==NEW)return toast("Selecione “＋ Criar novo” nessa lista");
-  const name=el("name-"+level).value.trim();
-  if(!name)return toast("Digite o nome que deseja adicionar");
-  if(level!=="d"&&(!p.d||p.d===NEW))return toast("Escolha primeiro a disciplina");
-  if(["t","c"].includes(level)&&(!p.m||p.m===NEW))return toast("Escolha primeiro a matéria");
-  if(level==="c"&&(!p.t||p.t===NEW))return toast("Escolha primeiro o tópico");
-  let exists=false;
-  if(level==="d")exists=!!TREE[name];
-  if(level==="m")exists=!!(TREE[p.d]&&TREE[p.d][name]);
-  if(level==="t")exists=!!(TREE[p.d]&&TREE[p.d][p.m]&&TREE[p.d][p.m][name]);
-  if(level==="c")exists=!!((TREE[p.d]&&TREE[p.d][p.m]&&TREE[p.d][p.m][p.t])||[]).includes(name);
-  if(exists)return toast("Esse nome já existe nesse nível");
-  if(level==="d"){addTree(name);addTuple(name)}
-  if(level==="m"){addTree(p.d,name);addTuple(p.d,name)}
-  if(level==="t"){addTree(p.d,p.m,name);addTuple(p.d,p.m,name)}
-  if(level==="c"){addTree(p.d,p.m,p.t,name);addTuple(p.d,p.m,p.t,name)}
-  X.TREE_FULL=cloneTaxTree();save();prune();render();
-  toast(levels[level].charAt(0).toUpperCase()+levels[level].slice(1)+" adicionada");
-  ["d","m","t","c"].forEach(k=>{if(k===level)el(k).value=name;else if(({m:["d"],t:["d","m"],c:["d","m","t"]}[level]||[]).includes(k)){} });
-  if(level==="d"){el("d").value=name;el("m").value="";el("t").value="";el("c").value=""}
-  if(level==="m"){el("d").value=p.d;el("m").value=name;el("t").value="";el("c").value=""}
-  if(level==="t"){el("d").value=p.d;el("m").value=p.m;el("t").value=name;el("c").value=""}
-  if(level==="c"){el("d").value=p.d;el("m").value=p.m;el("t").value=p.t;el("c").value=name}
-  ["d","m","t","c"].forEach(k=>el("name-"+k).value="");
-  refreshOptions();
- }
- function renameSelected(){
-  const p=selectedPath(),level=currentLevelKey(),target=currentTargetSelect(),old=target.value,next=el("rename-name").value.trim();
-  if(!old||old===NEW)return toast("Selecione o item que deseja renomear");
-  if(!next)return toast("Digite o novo nome");
-  if(next===old){closeEditor();return}
-  if(level!=="d"&&(!p.d||p.d===NEW)||(["t","c"].includes(level)&&(!p.m||p.m===NEW))||(level==="c"&&(!p.t||p.t===NEW)))return toast("Selecione o caminho completo");
-  let collision=false;
-  if(level==="d")collision=!!TREE[next];
-  if(level==="m")collision=!!(TREE[p.d]&&TREE[p.d][next]);
-  if(level==="t")collision=!!(TREE[p.d]&&TREE[p.d][p.m]&&TREE[p.d][p.m][next]);
-  if(level==="c")collision=!!((TREE[p.d]&&TREE[p.d][p.m]&&TREE[p.d][p.m][p.t])||[]).includes(next);
-  if(collision)return toast("Já existe um item com esse nome nesse nível");
-  if(level==="d"){TREE[next]=TREE[p.d];delete TREE[p.d]}
-  if(level==="m"){TREE[p.d][next]=TREE[p.d][p.m];delete TREE[p.d][p.m]}
-  if(level==="t"){TREE[p.d][p.m][next]=TREE[p.d][p.m][p.t];delete TREE[p.d][p.m][p.t]}
-  if(level==="c"){const a=TREE[p.d][p.m][p.t],i=a.indexOf(old);if(i>=0)a[i]=next}
-  const idx={d:0,m:1,t:2,c:3}[level];
-  X.TREE=(Array.isArray(X.TREE)?X.TREE:[]).map(row=>{
-   const a=[...row],matches=(level==="d"||a[0]===p.d)&&(level==="d"||level==="m"||a[1]===p.m)&&(level==="d"||level==="m"||level==="t"||a[2]===p.t);
-   if(matches&&a[idx]===old)a[idx]=next;return a;
-  });
-  Q.forEach(q=>{
-   if(level==="d"&&q.d===old)q.d=next;
-   if(level==="m"&&q.d===p.d&&q.m===old)q.m=next;
-   if(level==="t"&&q.d===p.d&&q.m===p.m&&q.t===old)q.t=next;
-   if(level==="c"&&q.d===p.d&&q.m===p.m&&q.t===p.t&&q.c===old)q.c=next;
-   const multi=level+"_multi";if(Array.isArray(q[multi]))q[multi]=q[multi].map(v=>v===old?next:v);
-  });
-  X.Q=Array.isArray(X.Q)?X.Q:Q;X.TREE_FULL=cloneTaxTree();
-  if(level==="d")S.disc=S.disc.map(v=>v===old?next:v);
-  if(level==="m")S.mat=S.mat.map(v=>v===old?next:v);
-  if(level==="t")S.top=S.top.map(v=>v===old?next:v);
-  if(level==="c")S.cont=S.cont.map(v=>v===old?next:v);
-  prune();save();render();closeEditor();toast("Nome atualizado e salvo");
- }
- ["action","level"].forEach(k=>el(k).addEventListener("change",()=>{refreshOptions()}));
- ["d","m","t","c"].forEach(k=>el(k).addEventListener("change",()=>{
-  if(k==="d"){el("m").value="";el("t").value="";el("c").value=""}
-  if(k==="m"){el("t").value="";el("c").value=""}
-  if(k==="t")el("c").value="";
-  ["d","m","t","c"].filter(x=>x!==k).forEach(x=>el("name-"+x).value="");
-  refreshOptions();
-  ["d","m","t","c"].forEach(level=>{
-   const box=el("newbox-"+level),active=el("action").value==="add"&&el(level).value===NEW;
-   box.style.display=active?"block":"none";
-  });
-  if(el(k).value===NEW){const field=el("name-"+k);field.value="";field.focus();}
- }));
- trigger.addEventListener("click",openEditor);
- el("cancel").addEventListener("click",closeEditor);
- modal.querySelectorAll("[data-add-level]").forEach(b=>b.addEventListener("click",()=>addSelected(b.dataset.addLevel)));
- el("save").addEventListener("click",renameSelected);
- modal.addEventListener("click",ev=>{if(ev.target===modal)closeEditor()});
- window.__applyQuestionBankTaxonomy=applyTaxonomySnapshot;
-})();
-window.addEventListener("message",function(event){
- if(event.origin!==location.origin||event.source!==window.parent||!event.data||event.data.type!=="app-question-bank-restore")return;
- const incoming=event.data.data;
- if(!incoming){try{window.parent.postMessage({type:"eear-question-bank-data",data:X},location.origin)}catch(e){}return;}
- if(!Array.isArray(incoming.Q)||!Array.isArray(incoming.PROVAS))return;
- merge(incoming,true);if(incoming.TREE_FULL&&window.__applyQuestionBankTaxonomy)window.__applyQuestionBankTaxonomy(incoming.TREE_FULL);save();render();
-});
-
 `;
    const sourceMarker='/* ---------- início ---------- */';
    if(!html.includes(sourceMarker))throw new Error('Não encontrei o ponto de integração do recorte manual.');
    html=html.replace(sourceMarker,manualCropCode+'\n'+sourceMarker);
-   const multiFilterBefore='return Q.filter(q=>K.every(k=>!S[k].length||S[k].includes(q[map[k]]))&&(!provaSel||q.prova===provaSel));';
-   const multiFilterAfter='return Q.filter(q=>K.every(k=>{const f=map[k],values=[q[f],...(Array.isArray(q[f+"_multi"])?q[f+"_multi"]:[])];return !S[k].length||S[k].some(v=>values.includes(v))})&&(!provaSel||q.prova===provaSel));';
-   if(!html.includes(multiFilterBefore))throw new Error('Não encontrei o filtro de classificação do banco.');
-   html=html.replace(multiFilterBefore,multiFilterAfter);
-   const distBefore='cnt=d=>Q.filter(q=>q.d===d).length;';
-   const distAfter='cnt=d=>Q.filter(q=>q.d===d||(q.d_multi||[]).includes(d)).length;';
-   if(!html.includes(distBefore))throw new Error('Não encontrei a contagem por disciplina.');
-   html=html.replace(distBefore,distAfter);
    const secureClaudeFunction = "async function ai(q,key,model){\n const images=[q.baseImg,q.img].filter(Boolean).map(u=>{\n  const m=/^data:(image\\/(?:jpeg|png|gif|webp));base64,([\\s\\S]+)$/i.exec(u);\n  if(!m)throw new Error(\"A imagem da questão está em formato inválido.\");\n  return {base64:m[2],mediaType:m[1].toLowerCase()};\n });\n if(!images.length)throw new Error(\"Não foi possível preparar a imagem da questão.\");\n const sys='Classifique a questão pelo CONTEÚDO REAL do enunciado e das alternativas, não pela posição no PDF nem pelo cabeçalho anterior. Matemática deve ser Matemática mesmo quando estiver próxima da seção de Inglês; identifique idioma apenas quando o exercício exigir interpretação de língua inglesa. Responda SOMENTE um JSON: {\"d\",\"m\",\"t\",\"c\",\"f\",\"a\",\"n\",\"tm\",\"e\"}. d/m/t/c = disciplina, matéria, tópico e conteúdo específico: use EXATAMENTE os nomes da taxonomia abaixo (d→m→t→[c]); se nada servir, crie um nome curto e coerente. f = \"Fácil\"|\"Médio\"|\"Difícil\". a = letra correta (A-E). n = número de alternativas. tm = minutos estimados (1 a 6). e = explicação passo a passo em português (2 a 5 frases) dizendo por que a alternativa correta está certa. Se a imagem mostrar fórmulas, cálculos, símbolos matemáticos ou problemas numéricos, não classifique como Inglês apenas por conter palavras em inglês. Taxonomia: '+JSON.stringify(TREE);\n const txt=(images.length>1?\"A primeira imagem é o texto-base; a última é a questão. \":\"A imagem é a questão. \")+(q.a>=0?\"Gabarito oficial: \"+LT[q.a]+\".\":\"\");\n const host=window.parent&&window.parent.parent;\n const client=host&&host.__estudosSupabaseClient;\n if(!client||!client.functions||typeof client.functions.invoke!==\"function\")throw new Error(\"Não encontrei a conexão da sua conta com o Supabase. Entre novamente no aplicativo e tente outra vez.\");\n for(let tr=0;tr<2;tr++){\n  try{\n   const result=await client.functions.invoke(\"claude-pdf-analyze\",{body:{images,prompt:sys+\"\\n\"+txt}});\n   if(result.error){let detail=result.error.message||\"Falha ao chamar o serviço seguro do Claude.\";try{const ctx=result.error.context;if(ctx&&typeof ctx.clone===\"function\"){const payload=await ctx.clone().json();detail=payload.error||payload.message||detail}}catch(e){}throw new Error(detail)}\n   const responseText=String(result.data&&result.data.text||\"\");\n   const start=responseText.indexOf(\"{\"),end=responseText.lastIndexOf(\"}\");\n   if(start<0||end<=start)throw new Error(\"O Claude não retornou uma classificação em JSON válida.\");\n   return JSON.parse(responseText.slice(start,end+1));\n  }catch(e){if(tr)throw e;await new Promise(r=>setTimeout(r,1200))}\n }\n}";
    const aiStart=html.indexOf('async function ai(q,key,model){');
    const aiEnd=html.indexOf('/* ---------- persistência ---------- */',aiStart);
@@ -463,11 +183,11 @@ window.addEventListener("message",function(event){
    bank.srcdoc=html;
   }catch(error){
    console.error('Falha ao aplicar correções do Importar PDF:',error);
-   bank.srcdoc='<!doctype html><html lang="pt-BR"><meta charset="utf-8"><body style="margin:0;padding:24px;background:#080808;color:#fff;font:14px system-ui">Falha ao carregar o Banco de Questões: '+String(error&&error.message||error)+'</body></html>';
+   bank.srcdoc='<!doctype html><html lang="pt-BR"><meta charset="utf-8"><body style="margin:0;padding:24px;background:#080808;color:#fff;font:14px system-ui">Não foi possível carregar o Banco de Questões com as correções do Importar PDF. Atualize a página e tente novamente.</body></html>';
   }
  }
- const allowed=new Set(['eear-question-bank-ready','eear-question-bank-data','eear-question-taxonomy-full','eear-question-taxonomy','eear-question-attempt']);
- let bridgeInstalled=false,pendingFilter=null,pendingParentMessage=null;
+ const allowed=new Set(['eear-question-taxonomy-full','eear-question-taxonomy','eear-question-attempt']);
+ let bridgeInstalled=false,pendingFilter=null;
  function installBridge(){
   if(!bank.contentWindow||!bank.contentDocument)return;
   const doc=bank.contentDocument;
@@ -479,7 +199,7 @@ window.addEventListener("message",function(event){
     layout.id='question-bank-responsive-layout';
     (doc.head||doc.documentElement).appendChild(layout);
    }
-   layout.textContent='nav,#nav{display:none!important;height:0!important;min-height:0!important;visibility:hidden!important;pointer-events:none!important}html,body{width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;overflow-x:hidden!important}html{height:100%!important;zoom:1!important;overflow-y:auto!important;scrollbar-width:auto!important;-ms-overflow-style:auto!important;overscroll-behavior:contain!important}body{height:auto!important;min-height:100%!important;overflow-y:visible!important}*:not(html){scrollbar-width:none!important;-ms-overflow-style:none!important}*:not(html)::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}html{scrollbar-width:thin!important;scrollbar-color:#888 #171717!important;-ms-overflow-style:auto!important}html::-webkit-scrollbar{display:block!important;visibility:visible!important;width:8px!important;height:8px!important;background:#171717!important}html::-webkit-scrollbar-track{display:block!important;background:#171717!important}html::-webkit-scrollbar-thumb{display:block!important;visibility:visible!important;background:#888!important;border:1px solid #171717!important;border-radius:8px!important}html::-webkit-scrollbar-thumb:hover{background:#aaa!important}#app{padding-bottom:24px!important}.fab{bottom:24px!important}#ftog{display:none!important}#app,.app{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;height:auto!important;max-height:none!important;overflow-x:clip!important;overflow-y:visible!important;margin:0!important;transform:none!important;zoom:1!important;padding-left:clamp(10px,1.5vw,22px)!important;padding-right:clamp(10px,1.5vw,22px)!important;box-sizing:border-box!important}#app>*,.app>*{width:auto;min-width:0!important;max-width:100%!important;box-sizing:border-box!important}img,svg,canvas{max-width:100%!important}';
+   layout.textContent='nav,#nav{display:none!important;height:0!important;min-height:0!important;visibility:hidden!important;pointer-events:none!important}html,body{width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;overflow-x:hidden!important}html{height:100%!important;zoom:1!important;overflow-y:auto!important;scrollbar-width:auto!important;-ms-overflow-style:auto!important;overscroll-behavior:contain!important}body{height:auto!important;min-height:100%!important;overflow-y:visible!important}*:not(html){scrollbar-width:none!important;-ms-overflow-style:none!important}*:not(html)::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}html{scrollbar-width:thin!important;scrollbar-color:#888 #171717!important;-ms-overflow-style:auto!important}html::-webkit-scrollbar{display:block!important;visibility:visible!important;width:8px!important;height:8px!important;background:#171717!important}html::-webkit-scrollbar-track{display:block!important;background:#171717!important}html::-webkit-scrollbar-thumb{display:block!important;visibility:visible!important;background:#888!important;border:1px solid #171717!important;border-radius:8px!important}html::-webkit-scrollbar-thumb:hover{background:#aaa!important}#app{padding-bottom:24px!important}.fab{bottom:24px!important}#app,.app{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;height:auto!important;max-height:none!important;overflow-x:clip!important;overflow-y:visible!important;margin:0!important;transform:none!important;zoom:1!important;padding-left:clamp(10px,1.5vw,22px)!important;padding-right:clamp(10px,1.5vw,22px)!important;box-sizing:border-box!important}#app>*,.app>*{width:auto;min-width:0!important;max-width:100%!important;box-sizing:border-box!important}img,svg,canvas{max-width:100%!important}';
    if(bridgeInstalled)return;
    bridgeInstalled=true;
    const bridge=doc.createElement('script');
@@ -537,25 +257,20 @@ window.addEventListener("message",function(event){
    })();
    `;
    (doc.head||doc.documentElement).appendChild(bridge);
-   // O aviso de pronto agora vem do banco interno, depois da leitura do IndexedDB.
-   if(pendingFilter){bank.contentWindow.postMessage(pendingFilter,location.origin);pendingFilter=null;}if(pendingParentMessage){bank.contentWindow.postMessage(pendingParentMessage,location.origin);pendingParentMessage=null;}
+   window.parent.postMessage({type:'eear-question-bank-ready'},location.origin);
+   if(pendingFilter){bank.contentWindow.postMessage(pendingFilter,location.origin);pendingFilter=null;}
   }catch(error){bridgeInstalled=false;console.error('Falha ao instalar integração do Banco de Questões:',error)}
  }
  loadBankWithPdfFixes();
  window.addEventListener('message',function(event){
   if(event.source===bank.contentWindow){
    const data=event.data;
-   if(data&&data.type==='eear-question-image-request'&&typeof data.key==='string'){
-    const range=questionImageIndex.get(data.key);
-    if(range){const src=questionImageData.slice(range[0],range[1]);bank.contentWindow.postMessage({type:'eear-question-image-response',key:data.key,src},location.origin)}
-    return;
-   }
    if(data&&allowed.has(data.type))window.parent.postMessage(data,location.origin);
    return;
   }
   if(event.source===window.parent&&event.origin===location.origin){
    const data=event.data;
-   if(data&&(data.type==='app-question-filter'||data.type==='app-question-bank-restore')&&bank.contentWindow){if(bridgeInstalled)bank.contentWindow.postMessage(data,location.origin);else if(data.type==='app-question-filter')pendingFilter=data;else pendingParentMessage=data;}
+   if(data&&data.type==='app-question-filter'&&bank.contentWindow){if(bridgeInstalled)bank.contentWindow.postMessage(data,location.origin);else pendingFilter=data;}
   }
  });
 })();
