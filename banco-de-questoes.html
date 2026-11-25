@@ -236,7 +236,7 @@ if(importPdfButton&&!$("reset-answers"))importPdfButton.insertAdjacentElement("a
 const resetAnswers=()=>{const keys=Object.keys(ans);if(!keys.length){toast("Não há respostas para zerar");return}keys.forEach(k=>delete ans[k]);streak=0;$("sStreak").textContent="0";render();toast("Respostas zeradas")};
 resetAnswerButton.addEventListener("click",resetAnswers);
 
-/* Editor da taxonomia: renomeia itens existentes sem oferecer exclusão. */
+/* Editor da taxonomia: adiciona e renomeia itens em cada nível. */
 (function(){
  const cloneTaxTree=()=>JSON.parse(JSON.stringify(TREE));
  function applyTaxonomySnapshot(snapshot){
@@ -249,98 +249,147 @@ resetAnswerButton.addEventListener("click",resetAnswers);
   originalTaxAddTree(d,m,t,c);
   if(X&&X.TREE_FULL)X.TREE_FULL=cloneTaxTree();
  };
- const taxEditStyle=document.createElement("style");
- taxEditStyle.textContent="#tax-edit-trigger{margin-left:7px;padding:3px 7px;border:1px solid #555;border-radius:6px;background:#202020;color:#ddd;font-size:13px;line-height:1;cursor:pointer;vertical-align:middle}#tax-edit-modal{position:fixed;inset:0;z-index:99999;background:#000b;display:none;align-items:center;justify-content:center;padding:16px}#tax-edit-card{width:min(480px,100%);max-height:90vh;overflow:auto;background:#111;color:#eee;border:1px solid #444;border-radius:12px;padding:16px;box-shadow:0 18px 55px #0009}#tax-edit-card h3{margin:0 0 12px;font-size:17px}#tax-edit-card label{display:block;margin:10px 0 5px;color:#bbb;font-size:12px}#tax-edit-card select,#tax-edit-card input{width:100%;padding:10px;border:1px solid #555;border-radius:7px;background:#1c1c1c;color:#fff}#tax-edit-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}#tax-edit-actions button{padding:8px 12px;border:1px solid #555;border-radius:7px;background:#242424;color:#eee;cursor:pointer}#tax-edit-actions #tax-edit-save{background:#eee;color:#111;border-color:#eee}";
- document.head.appendChild(taxEditStyle);
+ const style=document.createElement("style");
+ style.textContent="#tax-edit-trigger{margin-left:7px;padding:3px 7px;border:1px solid #555;border-radius:6px;background:#202020;color:#ddd;font-size:13px;line-height:1;cursor:pointer;vertical-align:middle}#tax-edit-modal{position:fixed;inset:0;z-index:99999;background:#000b;display:none;align-items:center;justify-content:center;padding:16px}#tax-edit-card{width:min(480px,100%);max-height:90vh;overflow:auto;background:#111;color:#eee;border:1px solid #444;border-radius:12px;padding:16px;box-shadow:0 18px 55px #0009}#tax-edit-card h3{margin:0 0 12px;font-size:17px}#tax-edit-card label{display:block;margin:10px 0 5px;color:#bbb;font-size:12px}#tax-edit-card select,#tax-edit-card input{width:100%;padding:10px;border:1px solid #555;border-radius:7px;background:#1c1c1c;color:#fff}#tax-edit-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}#tax-edit-actions button{padding:8px 12px;border:1px solid #555;border-radius:7px;background:#242424;color:#eee;cursor:pointer}#tax-edit-actions #tax-edit-save{background:#eee;color:#111;border-color:#eee}#tax-edit-newrow{display:flex;gap:7px;align-items:center}#tax-edit-newrow input{flex:1;min-width:0}#tax-edit-add{white-space:nowrap;background:#eee!important;color:#111!important;border-color:#eee!important}#tax-edit-note{font-size:11px;color:#999;margin-top:8px}";
+ document.head.appendChild(style);
  const heading=document.querySelector("#vq aside h2");
  if(!heading||document.getElementById("tax-edit-trigger"))return;
  const trigger=document.createElement("button");
- trigger.id="tax-edit-trigger";trigger.type="button";trigger.title="Editar conteúdos cadastrados";trigger.setAttribute("aria-label","Editar conteúdos cadastrados");trigger.textContent="✎";
+ trigger.id="tax-edit-trigger";trigger.type="button";trigger.title="Adicionar ou renomear conteúdos";trigger.setAttribute("aria-label","Adicionar ou renomear conteúdos");trigger.textContent="✎";
  heading.appendChild(trigger);
  const modal=document.createElement("div");modal.id="tax-edit-modal";
- modal.innerHTML='<section id="tax-edit-card" role="dialog" aria-modal="true" aria-labelledby="tax-edit-title"><h3 id="tax-edit-title">Editar conteúdo cadastrado</h3><label for="tax-edit-d">Disciplina</label><select id="tax-edit-d"></select><label for="tax-edit-m">Matéria</label><select id="tax-edit-m"></select><label for="tax-edit-t">Tópico</label><select id="tax-edit-t"></select><label for="tax-edit-c">Conteúdo específico (opcional)</label><select id="tax-edit-c"></select><label for="tax-edit-level">O que deseja editar?</label><select id="tax-edit-level"><option value="d">Disciplina</option><option value="m">Matéria</option><option value="t">Tópico</option><option value="c">Conteúdo específico</option></select><label for="tax-edit-name">Novo nome</label><input id="tax-edit-name" maxlength="120" placeholder="Digite o novo nome"><div id="tax-edit-actions"><button type="button" id="tax-edit-cancel">Cancelar</button><button type="button" id="tax-edit-save">Salvar alteração</button></div></section>';
+ modal.innerHTML='<section id="tax-edit-card" role="dialog" aria-modal="true" aria-labelledby="tax-edit-title"><h3 id="tax-edit-title">Gerenciar conteúdos</h3><label for="tax-edit-action">Ação</label><select id="tax-edit-action"><option value="add">Adicionar novo</option><option value="rename">Renomear existente</option></select><label for="tax-edit-level">O que deseja gerenciar?</label><select id="tax-edit-level"><option value="d">Disciplina</option><option value="m">Matéria</option><option value="t">Tópico</option><option value="c">Conteúdo específico</option></select><div id="tax-edit-path"><label for="tax-edit-d">Disciplina</label><select id="tax-edit-d"></select><label for="tax-edit-m">Matéria</label><select id="tax-edit-m"></select><label for="tax-edit-t">Tópico</label><select id="tax-edit-t"></select><label for="tax-edit-c">Conteúdo específico</label><select id="tax-edit-c"></select></div><div id="tax-edit-newbox"><label for="tax-edit-name" id="tax-edit-name-label">Nome da nova disciplina</label><div id="tax-edit-newrow"><input id="tax-edit-name" maxlength="120" placeholder="Digite o nome"><button type="button" id="tax-edit-add">Adicionar</button></div></div><div id="tax-edit-renamebox" style="display:none"><label for="tax-edit-rename-name">Novo nome</label><input id="tax-edit-rename-name" maxlength="120" placeholder="Digite o novo nome"></div><div id="tax-edit-note">Escolha o nível e o caminho. Para criar, selecione “＋ Criar novo” na lista do nível escolhido.</div><div id="tax-edit-actions"><button type="button" id="tax-edit-cancel">Fechar</button><button type="button" id="tax-edit-save" style="display:none">Salvar alteração</button></div></section>';
  document.body.appendChild(modal);
- const taxEl=id=>document.getElementById("tax-edit-"+id);
- const taxFill=(node,values,placeholder)=>{node.innerHTML='<option value="">'+placeholder+'</option>'+values.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("")};
- function taxUpdatePath(){
-  const d=taxEl("d").value,m=taxEl("m").value,t=taxEl("t").value;
-  taxFill(taxEl("m"),d?Object.keys(TREE[d]||{}):[],"Selecione a matéria");
-  if(m&&TREE[d]&&TREE[d][m])taxEl("m").value=m;
-  const mm=taxEl("m").value;
-  taxFill(taxEl("t"),d&&mm?Object.keys((TREE[d]||{})[mm]||{}):[],"Selecione o tópico");
-  if(t&&TREE[d]&&TREE[d][mm]&&TREE[d][mm][t])taxEl("t").value=t;
-  const tt=taxEl("t").value;
-  taxFill(taxEl("c"),d&&mm&&tt?(TREE[d][mm][tt]||[]):[],"Sem conteúdo específico");
-  taxSyncName();
+ const el=id=>document.getElementById("tax-edit-"+id),NEW="__CREATE_NEW__";
+ const levels={d:"disciplina",m:"matéria",t:"tópico",c:"conteúdo específico"};
+ const fill=(node,values,placeholder,createOption)=>{
+  node.innerHTML='<option value="">'+placeholder+'</option>'+(createOption?'<option value="'+NEW+'">＋ Criar novo</option>':"")+values.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("");
+ };
+ function selectedPath(){return {d:el("d").value,m:el("m").value,t:el("t").value,c:el("c").value}}
+ function currentLevelKey(){return el("level").value}
+ function currentTargetSelect(){return el(currentLevelKey())}
+ function updateVisibility(){
+  const level=currentLevelKey(),action=el("action").value, p=selectedPath();
+  ["d","m","t","c"].forEach(k=>{
+   const label=el(k).previousElementSibling;
+   const show=(k==="d"||(["m"].includes(k)&&level!=="d")||(["t"].includes(k)&&["t","c"].includes(level))||(["c"].includes(k)&&level==="c"));
+   label.style.display=show?"block":"none";el(k).style.display=show?"block":"none";
+  });
+  el("newbox").style.display=action==="add"&&currentTargetSelect().value===NEW?"block":"none";
+  el("renamebox").style.display=action==="rename"?"block":"none";
+  el("save").style.display=action==="rename"?"inline-block":"none";
+  el("note").textContent=action==="add"?"Escolha um nível. “＋ Criar novo” aparece na lista correspondente; selecione para informar o nome e adicionar.":"Selecione o item existente e informe o novo nome.";
+  el("name-label").textContent="Nome da nova "+levels[level];
  }
- function taxSyncName(){
-  const level=taxEl("level").value,d=taxEl("d").value,m=taxEl("m").value,t=taxEl("t").value,c=taxEl("c").value;
-  const selected=level==="d"?d:level==="m"?m:level==="t"?t:c;
-  taxEl("name").value=selected||"";
-  taxEl("level").querySelector('[value="m"]').disabled=!d;
-  taxEl("level").querySelector('[value="t"]').disabled=!m;
-  taxEl("level").querySelector('[value="c"]').disabled=!c;
+ function refreshOptions(){
+  const p=selectedPath(),level=currentLevelKey(),action=el("action").value;
+  fill(el("d"),Object.keys(TREE), "Escolha a disciplina",level==="d"&&action==="add");
+  if(p.d!==NEW)el("d").value=p.d;
+  const d=el("d").value;
+  fill(el("m"),d&&d!==NEW?Object.keys(TREE[d]||{}):[],"Escolha a matéria",level==="m"&&action==="add");
+  if(p.m!==NEW)el("m").value=p.m;
+  const m=el("m").value;
+  fill(el("t"),d&&d!==NEW&&m&&m!==NEW?Object.keys((TREE[d]||{})[m]||{}):[],"Escolha o tópico",level==="t"&&action==="add");
+  if(p.t!==NEW)el("t").value=p.t;
+  const t=el("t").value;
+  fill(el("c"),d&&d!==NEW&&m&&m!==NEW&&t&&t!==NEW?((TREE[d]||{})[m]||{})[t]||[]:[],"Escolha o conteúdo específico",level==="c"&&action==="add");
+  if(p.c!==NEW)el("c").value=p.c;
+  updateVisibility();
+  const target=currentTargetSelect();
+  if(action==="add"&&target.value===NEW){el("name").value="";el("name").focus()}
+  if(action==="rename"){
+   const v=target.value;el("rename-name").value=v&&v!==NEW?v:"";
+  }
  }
- function taxOpenEditor(){
-  taxFill(taxEl("d"),Object.keys(TREE),"Selecione a disciplina");
-  taxFill(taxEl("m"),[],"Selecione a matéria");taxFill(taxEl("t"),[],"Selecione o tópico");taxFill(taxEl("c"),[],"Sem conteúdo específico");
-  taxEl("level").value="t";taxEl("d").value="";taxEl("name").value="";
-  modal.style.display="flex";
+ function openEditor(){
+  el("action").value="add";el("level").value="d";
+  ["d","m","t","c"].forEach(k=>el(k).value="");
+  el("rename-name").value="";el("name").value="";
+  refreshOptions();modal.style.display="flex";
  }
- function taxCloseEditor(){modal.style.display="none"}
- ["d","m","t"].forEach(k=>taxEl(k).addEventListener("change",()=>{
-  if(k==="d"){taxEl("m").value="";taxEl("t").value="";taxEl("c").value=""}
-  if(k==="m"){taxEl("t").value="";taxEl("c").value=""}
-  if(k==="t")taxEl("c").value="";
-  taxUpdatePath();
- }));
- taxEl("c").addEventListener("change",taxSyncName);taxEl("level").addEventListener("change",taxSyncName);
- trigger.addEventListener("click",taxOpenEditor);
- taxEl("cancel").addEventListener("click",taxCloseEditor);
- modal.addEventListener("click",ev=>{if(ev.target===modal)taxCloseEditor()});
- taxEl("save").addEventListener("click",()=>{
-  const d=taxEl("d").value,m=taxEl("m").value,t=taxEl("t").value,c=taxEl("c").value,level=taxEl("level").value,next=taxEl("name").value.trim();
-  const old=level==="d"?d:level==="m"?m:level==="t"?t:c;
-  if(!old)return toast("Selecione o item que deseja editar");
+ function closeEditor(){modal.style.display="none"}
+ function addTuple(d,m,t,c){
+  const row=[d,m,t,c].filter((v,i)=>v||i===0&&d);
+  if(!Array.isArray(X.TREE))X.TREE=[];
+  if(!X.TREE.some(x=>x.length===row.length&&x.every((v,i)=>v===row[i])))X.TREE.push(row);
+ }
+ function addSelected(){
+  const level=currentLevelKey(),p=selectedPath(),target=currentTargetSelect();
+  if(target.value!==NEW)return toast("Escolha “＋ Criar novo” na lista");
+  const name=el("name").value.trim();
+  if(!name)return toast("Digite o nome que deseja adicionar");
+  if(level!=="d"&&(!p.d||p.d===NEW))return toast("Escolha primeiro a disciplina");
+  if(["t","c"].includes(level)&&(!p.m||p.m===NEW))return toast("Escolha primeiro a matéria");
+  if(level==="c"&&(!p.t||p.t===NEW))return toast("Escolha primeiro o tópico");
+  let exists=false;
+  if(level==="d")exists=!!TREE[name];
+  if(level==="m")exists=!!(TREE[p.d]&&TREE[p.d][name]);
+  if(level==="t")exists=!!(TREE[p.d]&&TREE[p.d][p.m]&&TREE[p.d][p.m][name]);
+  if(level==="c")exists=!!((TREE[p.d]&&TREE[p.d][p.m]&&TREE[p.d][p.m][p.t])||[]).includes(name);
+  if(exists)return toast("Esse nome já existe nesse nível");
+  if(level==="d"){addTree(name);addTuple(name)}
+  if(level==="m"){addTree(p.d,name);addTuple(p.d,name)}
+  if(level==="t"){addTree(p.d,p.m,name);addTuple(p.d,p.m,name)}
+  if(level==="c"){addTree(p.d,p.m,p.t,name);addTuple(p.d,p.m,p.t,name)}
+  X.TREE_FULL=cloneTaxTree();
+  save();prune();render();
+  toast(levels[level].charAt(0).toUpperCase()+levels[level].slice(1)+" adicionada");
+  if(level==="d"){el("d").value=name}
+  if(level==="m"){el("d").value=p.d;el("m").value=name}
+  if(level==="t"){el("d").value=p.d;el("m").value=p.m;el("t").value=name}
+  if(level==="c"){el("d").value=p.d;el("m").value=p.m;el("t").value=p.t;el("c").value=name}
+  el("name").value="";
+  refreshOptions();
+ }
+ function renameSelected(){
+  const p=selectedPath(),level=currentLevelKey(),target=currentTargetSelect(),old=target.value,next=el("rename-name").value.trim();
+  if(!old||old===NEW)return toast("Selecione o item que deseja renomear");
   if(!next)return toast("Digite o novo nome");
-  if(next===old){taxCloseEditor();return}
-  if(level!=="d"&&!d||(["t","c"].includes(level)&&!m)||level==="c"&&!t)return toast("Selecione o caminho completo do conteúdo");
+  if(next===old){closeEditor();return}
+  if(level!=="d"&&(!p.d||p.d===NEW)||(["t","c"].includes(level)&&(!p.m||p.m===NEW))||(level==="c"&&(!p.t||p.t===NEW)))return toast("Selecione o caminho completo");
   let collision=false;
   if(level==="d")collision=!!TREE[next];
-  if(level==="m")collision=!!(TREE[d]&&TREE[d][next]);
-  if(level==="t")collision=!!(TREE[d]&&TREE[d][m]&&TREE[d][m][next]);
-  if(level==="c")collision=!!((TREE[d]&&TREE[d][m]&&TREE[d][m][t])||[]).includes(next);
+  if(level==="m")collision=!!(TREE[p.d]&&TREE[p.d][next]);
+  if(level==="t")collision=!!(TREE[p.d]&&TREE[p.d][p.m]&&TREE[p.d][p.m][next]);
+  if(level==="c")collision=!!((TREE[p.d]&&TREE[p.d][p.m]&&TREE[p.d][p.m][p.t])||[]).includes(next);
   if(collision)return toast("Já existe um item com esse nome nesse nível");
-  if(level==="d"){TREE[next]=TREE[d];delete TREE[d]}
-  if(level==="m"){TREE[d][next]=TREE[d][m];delete TREE[d][m]}
-  if(level==="t"){TREE[d][m][next]=TREE[d][m][t];delete TREE[d][m][t]}
-  if(level==="c"){const arr=TREE[d][m][t],i=arr.indexOf(c);if(i>=0)arr[i]=next}
+  if(level==="d"){TREE[next]=TREE[p.d];delete TREE[p.d]}
+  if(level==="m"){TREE[p.d][next]=TREE[p.d][p.m];delete TREE[p.d][p.m]}
+  if(level==="t"){TREE[p.d][p.m][next]=TREE[p.d][p.m][p.t];delete TREE[p.d][p.m][p.t]}
+  if(level==="c"){const a=TREE[p.d][p.m][p.t],i=a.indexOf(old);if(i>=0)a[i]=next}
   const idx={d:0,m:1,t:2,c:3}[level];
   X.TREE=(Array.isArray(X.TREE)?X.TREE:[]).map(row=>{
-   const a=[...row];
-   const matches=(level==="d"||a[0]===d)&&(level==="d"||level==="m"||a[1]===m)&&(level==="d"||level==="m"||level==="t"||a[2]===t);
-   if(matches&&a[idx]===old)a[idx]=next;
-   return a;
+   const a=[...row],matches=(level==="d"||a[0]===p.d)&&(level==="d"||level==="m"||a[1]===p.m)&&(level==="d"||level==="m"||level==="t"||a[2]===p.t);
+   if(matches&&a[idx]===old)a[idx]=next;return a;
   });
   Q.forEach(q=>{
    if(level==="d"&&q.d===old)q.d=next;
-   if(level==="m"&&q.d===d&&q.m===old)q.m=next;
-   if(level==="t"&&q.d===d&&q.m===m&&q.t===old)q.t=next;
-   if(level==="c"&&q.d===d&&q.m===m&&q.t===t&&q.c===old)q.c=next;
-   const multi=level+"_multi";
-   if(Array.isArray(q[multi]))q[multi]=q[multi].map(v=>v===old?next:v);
+   if(level==="m"&&q.d===p.d&&q.m===old)q.m=next;
+   if(level==="t"&&q.d===p.d&&q.m===p.m&&q.t===old)q.t=next;
+   if(level==="c"&&q.d===p.d&&q.m===p.m&&q.t===p.t&&q.c===old)q.c=next;
+   const multi=level+"_multi";if(Array.isArray(q[multi]))q[multi]=q[multi].map(v=>v===old?next:v);
   });
-  X.Q=Array.isArray(X.Q)?X.Q:Q;
-  X.TREE_FULL=cloneTaxTree();
+  X.Q=Array.isArray(X.Q)?X.Q:Q;X.TREE_FULL=cloneTaxTree();
   if(level==="d")S.disc=S.disc.map(v=>v===old?next:v);
   if(level==="m")S.mat=S.mat.map(v=>v===old?next:v);
   if(level==="t")S.top=S.top.map(v=>v===old?next:v);
   if(level==="c")S.cont=S.cont.map(v=>v===old?next:v);
-  prune();save();render();taxCloseEditor();toast("Nome atualizado e salvo");
- });
+  prune();save();render();closeEditor();toast("Nome atualizado e salvo");
+ }
+ ["action","level"].forEach(k=>el(k).addEventListener("change",()=>{refreshOptions()}));
+ ["d","m","t","c"].forEach((k,i)=>el(k).addEventListener("change",()=>{
+  if(k==="d"){el("m").value="";el("t").value="";el("c").value=""}
+  if(k==="m"){el("t").value="";el("c").value=""}
+  if(k==="t")el("c").value="";
+  refreshOptions();
+ }));
+ trigger.addEventListener("click",openEditor);
+ el("cancel").addEventListener("click",closeEditor);
+ el("add").addEventListener("click",addSelected);
+ el("save").addEventListener("click",renameSelected);
+ modal.addEventListener("click",ev=>{if(ev.target===modal)closeEditor()});
  window.__applyQuestionBankTaxonomy=applyTaxonomySnapshot;
 })();
-
 window.addEventListener("message",function(event){
  if(event.origin!==location.origin||event.source!==window.parent||!event.data||event.data.type!=="app-question-bank-restore")return;
  const incoming=event.data.data;
