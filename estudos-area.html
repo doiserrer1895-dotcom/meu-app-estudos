@@ -470,7 +470,7 @@ let pend={};
 const fmtM=m=>m<60?m+'min':f1(m/60)+'h';
 const opts=(l,sel)=>l.map(x=>`<option value="${esc(x)}"${x===sel?' selected':''}>${esc(x)}</option>`).join('');
 function selS(id,fn,sel){return`<select id="${id}" onchange="${fn}">${opts(S.edital.map(m=>m.name),sel)}</select>`}
-function fillTop(sid,tid,sel){const m=S.edital.find(x=>x.name===$('#'+sid).value),t=$('#'+tid);t.innerHTML='<option value="">Sem conteúdo específico</option>'+(m?opts(m.topics,sel):'')}
+function fillTop(sid,tid,sel){const m=S.edital.find(x=>x.name===$('#'+sid).value),t=$('#'+tid);const options=m?(m.topics||[]).map(topic=>{const raw=m.topicLinks&&m.topicLinks[topic],link=Array.isArray(raw)?raw[0]:raw,label=topicLabel(m,topic),path=link?bankLinkLabel(link):'';return '<option value="'+esc(topic)+'"'+(topic===sel?' selected':'')+'>'+esc(label+(path?' · '+path:''))+'</option>'}).join(''):'';t.innerHTML='<option value="">Sem conteúdo específico</option>'+options}
 function byS(es){const m={};es.forEach(e=>m[e.subj]=(m[e.subj]||0)+net(e));return Object.entries(m).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1])}
 function breakdown(es){const m={};es.forEach(e=>{const k=e.top||'Geral';m[k]=(m[k]||0)+net(e)});const L=Object.entries(m).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]),t=L.reduce((s,x)=>s+x[1],0);
  return L.map(([k,h])=>{const p=t?Math.round(h/t*100):0;return`<div class="row"><div class="g"><b>${esc(k)}</b><small>${f1(h)}h · ${p}% da matéria</small><div class="bar"><i style="width:${p}%"></i></div></div></div>`}).join('')||'<div class="empty">Sem horas registradas</div>'}
