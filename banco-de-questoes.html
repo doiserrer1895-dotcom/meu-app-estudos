@@ -258,7 +258,7 @@ resetAnswerButton.addEventListener("click",resetAnswers);
  trigger.id="tax-edit-trigger";trigger.type="button";trigger.title="Adicionar ou renomear conteúdos";trigger.setAttribute("aria-label","Adicionar ou renomear conteúdos");trigger.textContent="✎";
  heading.appendChild(trigger);
  const modal=document.createElement("div");modal.id="tax-edit-modal";
- modal.innerHTML='<section id="tax-edit-card" role="dialog" aria-modal="true" aria-labelledby="tax-edit-title"><h3 id="tax-edit-title">Gerenciar conteúdos</h3><label for="tax-edit-action">Ação</label><select id="tax-edit-action"><option value="add">Adicionar novo</option><option value="rename">Renomear existente</option></select><label for="tax-edit-level">O que deseja gerenciar?</label><select id="tax-edit-level"><option value="d">Disciplina</option><option value="m">Matéria</option><option value="t">Tópico</option><option value="c">Conteúdo específico</option></select><div id="tax-edit-path"><label for="tax-edit-d">Disciplina</label><select id="tax-edit-d"></select><label for="tax-edit-m">Matéria</label><select id="tax-edit-m"></select><label for="tax-edit-t">Tópico</label><select id="tax-edit-t"></select><label for="tax-edit-c">Conteúdo específico</label><select id="tax-edit-c"></select></div><div id="tax-edit-newbox"><label for="tax-edit-name" id="tax-edit-name-label">Nome da nova disciplina</label><div id="tax-edit-newrow"><input id="tax-edit-name" maxlength="120" placeholder="Digite o nome"><button type="button" id="tax-edit-add">Adicionar</button></div></div><div id="tax-edit-renamebox" style="display:none"><label for="tax-edit-rename-name">Novo nome</label><input id="tax-edit-rename-name" maxlength="120" placeholder="Digite o novo nome"></div><div id="tax-edit-note">Escolha o nível e o caminho. Para criar, selecione “＋ Criar novo” na lista do nível escolhido.</div><div id="tax-edit-actions"><button type="button" id="tax-edit-cancel">Fechar</button><button type="button" id="tax-edit-save" style="display:none">Salvar alteração</button></div></section>';
+ modal.innerHTML='<section id="tax-edit-card" role="dialog" aria-modal="true" aria-labelledby="tax-edit-title"><h3 id="tax-edit-title">Gerenciar conteúdos</h3><label for="tax-edit-action">Ação</label><select id="tax-edit-action"><option value="add">Adicionar novo</option><option value="rename">Renomear existente</option></select><div id="tax-edit-rename-level" style="display:none"><label for="tax-edit-level">O que deseja renomear?</label><select id="tax-edit-level"><option value="d">Disciplina</option><option value="m">Matéria</option><option value="t">Tópico</option><option value="c">Conteúdo específico</option></select></div><div id="tax-edit-path"><div class="tax-edit-field"><label for="tax-edit-d">Disciplina</label><select id="tax-edit-d"></select><div class="tax-edit-newbox" id="tax-edit-newbox-d" style="display:none"><label for="tax-edit-name-d">Nome da nova disciplina</label><div class="tax-edit-newrow"><input id="tax-edit-name-d" maxlength="120" placeholder="Digite o nome"><button type="button" data-add-level="d">Adicionar</button></div></div></div><div class="tax-edit-field" id="tax-edit-wrap-m" style="display:none"><label for="tax-edit-m">Matéria</label><select id="tax-edit-m"></select><div class="tax-edit-newbox" id="tax-edit-newbox-m" style="display:none"><label for="tax-edit-name-m">Nome da nova matéria</label><div class="tax-edit-newrow"><input id="tax-edit-name-m" maxlength="120" placeholder="Digite o nome"><button type="button" data-add-level="m">Adicionar</button></div></div></div><div class="tax-edit-field" id="tax-edit-wrap-t" style="display:none"><label for="tax-edit-t">Tópico</label><select id="tax-edit-t"></select><div class="tax-edit-newbox" id="tax-edit-newbox-t" style="display:none"><label for="tax-edit-name-t">Nome do novo tópico</label><div class="tax-edit-newrow"><input id="tax-edit-name-t" maxlength="120" placeholder="Digite o nome"><button type="button" data-add-level="t">Adicionar</button></div></div></div><div class="tax-edit-field" id="tax-edit-wrap-c" style="display:none"><label for="tax-edit-c">Conteúdo específico</label><select id="tax-edit-c"></select><div class="tax-edit-newbox" id="tax-edit-newbox-c" style="display:none"><label for="tax-edit-name-c">Nome do novo conteúdo específico</label><div class="tax-edit-newrow"><input id="tax-edit-name-c" maxlength="120" placeholder="Digite o nome"><button type="button" data-add-level="c">Adicionar</button></div></div></div></div><div id="tax-edit-renamebox" style="display:none"><label for="tax-edit-rename-name">Novo nome</label><input id="tax-edit-rename-name" maxlength="120" placeholder="Digite o novo nome"></div><div id="tax-edit-note">Escolha a disciplina para começar.</div><div id="tax-edit-actions"><button type="button" id="tax-edit-cancel">Fechar</button><button type="button" id="tax-edit-save" style="display:none">Salvar alteração</button></div></section>';
  document.body.appendChild(modal);
  const el=id=>document.getElementById("tax-edit-"+id),NEW="__CREATE_NEW__";
  const levels={d:"disciplina",m:"matéria",t:"tópico",c:"conteúdo específico"};
@@ -269,43 +269,45 @@ resetAnswerButton.addEventListener("click",resetAnswers);
  function currentLevelKey(){return el("level").value}
  function currentTargetSelect(){return el(currentLevelKey())}
  function updateVisibility(){
-  const level=currentLevelKey(),action=el("action").value, p=selectedPath();
-  ["d","m","t","c"].forEach(k=>{
-   const label=el(k).previousElementSibling;
-   const show=(k==="d"||(["m"].includes(k)&&level!=="d")||(["t"].includes(k)&&["t","c"].includes(level))||(["c"].includes(k)&&level==="c"));
-   label.style.display=show?"block":"none";el(k).style.display=show?"block":"none";
-  });
-  el("newbox").style.display=action==="add"&&currentTargetSelect().value===NEW?"block":"none";
+  const action=el("action").value,level=action==="rename"?currentLevelKey():"",p=selectedPath();
+  el("rename-level").style.display=action==="rename"?"block":"none";
   el("renamebox").style.display=action==="rename"?"block":"none";
   el("save").style.display=action==="rename"?"inline-block":"none";
-  el("note").textContent=action==="add"?"Escolha um nível. “＋ Criar novo” aparece na lista correspondente; selecione para informar o nome e adicionar.":"Selecione o item existente e informe o novo nome.";
-  el("name-label").textContent="Nome da nova "+levels[level];
+  ["d","m","t","c"].forEach((k,i)=>{
+   const show=i===0||(i===1&&!!p.d&&p.d!==NEW)||(i===2&&!!p.m&&p.m!==NEW)||(i===3&&!!p.t&&p.t!==NEW);
+   el("wrap-"+k).style.display=show?"block":"none";
+   el("newbox-"+k).style.display=action==="add"&&el(k).value===NEW?"block":"none";
+  });
+  if(action==="rename"){
+   ["d","m","t","c"].forEach(k=>{
+    const show=k==="d"||(k==="m"&&level!=="d")||(k==="t"&&["t","c"].includes(level))||(k==="c"&&level==="c");
+    el("wrap-"+k).style.display=show?"block":"none";
+    el("newbox-"+k).style.display="none";
+   });
+   const v=currentTargetSelect().value;el("rename-name").value=v&&v!==NEW?v:"";
+   el("note").textContent="Selecione o item existente e informe o novo nome.";
+  }else el("note").textContent="Escolha a disciplina e avance pela hierarquia. Em cada lista, “＋ Criar novo” abre o campo e o botão Adicionar logo abaixo.";
  }
  function refreshOptions(){
-  const p=selectedPath(),level=currentLevelKey(),action=el("action").value;
-  fill(el("d"),Object.keys(TREE), "Escolha a disciplina",level==="d"&&action==="add");
+  const p=selectedPath(),action=el("action").value,rename=action==="rename",level=rename?currentLevelKey():"";
+  fill(el("d"),Object.keys(TREE),"Escolha a disciplina",!rename);
   if(p.d!==NEW)el("d").value=p.d;
   const d=el("d").value;
-  fill(el("m"),d&&d!==NEW?Object.keys(TREE[d]||{}):[],"Escolha a matéria",level==="m"&&action==="add");
+  fill(el("m"),d&&d!==NEW?Object.keys(TREE[d]||{}):[],"Escolha a matéria",!rename);
   if(p.m!==NEW)el("m").value=p.m;
   const m=el("m").value;
-  fill(el("t"),d&&d!==NEW&&m&&m!==NEW?Object.keys((TREE[d]||{})[m]||{}):[],"Escolha o tópico",level==="t"&&action==="add");
+  fill(el("t"),d&&d!==NEW&&m&&m!==NEW?Object.keys((TREE[d]||{})[m]||{}):[],"Escolha o tópico",!rename);
   if(p.t!==NEW)el("t").value=p.t;
   const t=el("t").value;
-  fill(el("c"),d&&d!==NEW&&m&&m!==NEW&&t&&t!==NEW?((TREE[d]||{})[m]||{})[t]||[]:[],"Escolha o conteúdo específico",level==="c"&&action==="add");
+  fill(el("c"),d&&d!==NEW&&m&&m!==NEW&&t&&t!==NEW?((TREE[d]||{})[m]||{})[t]||[]:[],"Escolha o conteúdo específico",!rename);
   if(p.c!==NEW)el("c").value=p.c;
   updateVisibility();
-  const target=currentTargetSelect();
-  if(action==="add"&&target.value===NEW){el("name").value="";el("name").focus()}
-  if(action==="rename"){
-   const v=target.value;el("rename-name").value=v&&v!==NEW?v:"";
-  }
  }
  function openEditor(){
   el("action").value="add";el("level").value="d";
   ["d","m","t","c"].forEach(k=>el(k).value="");
-  el("rename-name").value="";el("name").value="";
-  refreshOptions();modal.style.display="flex";
+  ["d","m","t","c"].forEach(k=>el("name-"+k).value="");
+  el("rename-name").value="";refreshOptions();modal.style.display="flex";
  }
  function closeEditor(){modal.style.display="none"}
  function addTuple(d,m,t,c){
@@ -313,10 +315,10 @@ resetAnswerButton.addEventListener("click",resetAnswers);
   if(!Array.isArray(X.TREE))X.TREE=[];
   if(!X.TREE.some(x=>x.length===row.length&&x.every((v,i)=>v===row[i])))X.TREE.push(row);
  }
- function addSelected(){
-  const level=currentLevelKey(),p=selectedPath(),target=currentTargetSelect();
-  if(target.value!==NEW)return toast("Escolha “＋ Criar novo” na lista");
-  const name=el("name").value.trim();
+ function addSelected(level){
+  const p=selectedPath(),target=el(level);
+  if(target.value!==NEW)return toast("Selecione “＋ Criar novo” nessa lista");
+  const name=el("name-"+level).value.trim();
   if(!name)return toast("Digite o nome que deseja adicionar");
   if(level!=="d"&&(!p.d||p.d===NEW))return toast("Escolha primeiro a disciplina");
   if(["t","c"].includes(level)&&(!p.m||p.m===NEW))return toast("Escolha primeiro a matéria");
@@ -331,14 +333,14 @@ resetAnswerButton.addEventListener("click",resetAnswers);
   if(level==="m"){addTree(p.d,name);addTuple(p.d,name)}
   if(level==="t"){addTree(p.d,p.m,name);addTuple(p.d,p.m,name)}
   if(level==="c"){addTree(p.d,p.m,p.t,name);addTuple(p.d,p.m,p.t,name)}
-  X.TREE_FULL=cloneTaxTree();
-  save();prune();render();
+  X.TREE_FULL=cloneTaxTree();save();prune();render();
   toast(levels[level].charAt(0).toUpperCase()+levels[level].slice(1)+" adicionada");
-  if(level==="d"){el("d").value=name}
-  if(level==="m"){el("d").value=p.d;el("m").value=name}
-  if(level==="t"){el("d").value=p.d;el("m").value=p.m;el("t").value=name}
+  ["d","m","t","c"].forEach(k=>{if(k===level)el(k).value=name;else if(({m:["d"],t:["d","m"],c:["d","m","t"]}[level]||[]).includes(k)){} });
+  if(level==="d"){el("d").value=name;el("m").value="";el("t").value="";el("c").value=""}
+  if(level==="m"){el("d").value=p.d;el("m").value=name;el("t").value="";el("c").value=""}
+  if(level==="t"){el("d").value=p.d;el("m").value=p.m;el("t").value=name;el("c").value=""}
   if(level==="c"){el("d").value=p.d;el("m").value=p.m;el("t").value=p.t;el("c").value=name}
-  el("name").value="";
+  ["d","m","t","c"].forEach(k=>el("name-"+k).value="");
   refreshOptions();
  }
  function renameSelected(){
@@ -377,15 +379,15 @@ resetAnswerButton.addEventListener("click",resetAnswers);
   prune();save();render();closeEditor();toast("Nome atualizado e salvo");
  }
  ["action","level"].forEach(k=>el(k).addEventListener("change",()=>{refreshOptions()}));
- ["d","m","t","c"].forEach((k,i)=>el(k).addEventListener("change",()=>{
+ ["d","m","t","c"].forEach(k=>el(k).addEventListener("change",()=>{
   if(k==="d"){el("m").value="";el("t").value="";el("c").value=""}
   if(k==="m"){el("t").value="";el("c").value=""}
   if(k==="t")el("c").value="";
-  refreshOptions();
+  ["d","m","t","c"].filter(x=>x!==k).forEach(x=>el("name-"+x).value="");refreshOptions();
  }));
  trigger.addEventListener("click",openEditor);
  el("cancel").addEventListener("click",closeEditor);
- el("add").addEventListener("click",addSelected);
+ modal.querySelectorAll("[data-add-level]").forEach(b=>b.addEventListener("click",()=>addSelected(b.dataset.addLevel)));
  el("save").addEventListener("click",renameSelected);
  modal.addEventListener("click",ev=>{if(ev.target===modal)closeEditor()});
  window.__applyQuestionBankTaxonomy=applyTaxonomySnapshot;
