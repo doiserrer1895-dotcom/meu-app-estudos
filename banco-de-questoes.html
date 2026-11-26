@@ -18,7 +18,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  const bank=document.getElementById('bank');
  async function loadBankWithPdfFixes(){
   try{
-   const source=new URL('banco-de-questoes%20(2).html?v=20261123manual11',location.href);
+   const source=new URL('banco-de-questoes%20(2).html?v=20261125stable1',location.href);
    const response=await fetch(source,{cache:'force-cache'});
    if(!response.ok)throw new Error('HTTP '+response.status);
    let html=await response.text();
@@ -81,7 +81,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
    ];
    // Os pares acima são idênticos; não é necessário varrer e recriar o HTML para aplicá-los.
    const bankSaveBefore='const save=()=>idb("readwrite",X).catch(()=>toast("Não foi possível salvar no navegador. Use Exportar para guardar."));';
-   const bankSaveAfter='let bankSyncTimer=null;const save=()=>idb("readwrite",X).then(()=>{clearTimeout(bankSyncTimer);bankSyncTimer=setTimeout(()=>{try{window.parent.postMessage({type:"eear-question-bank-data",data:X},location.origin)}catch(e){}},1800)}).catch(()=>toast("Não foi possível salvar no navegador. Use Exportar para guardar."));';
+   const bankSaveAfter='let bankSyncTimer=null;const save=()=>idb("readwrite",X).then(()=>{clearTimeout(bankSyncTimer);bankSyncTimer=setTimeout(()=>{try{window.parent.postMessage({type:"eear-question-bank-data",data:X,revision:Date.now()},location.origin)}catch(e){}},1800)}).catch(()=>toast("Não foi possível salvar no navegador. Use Exportar para guardar."));';
    if(!html.includes(bankSaveBefore))throw new Error("Não encontrei a função de salvamento do Banco de Questões.");
    html=html.replace(bankSaveBefore,bankSaveAfter);
    const bankLoadBefore='idb("readonly").then(x=>{if(x&&x.Q){X=Object.assign(X,x);merge({Q:x.Q,IMG:x.IMG,PROVAS:x.PROVAS,TREE:x.TREE},false);render()}}).catch(()=>{});';
@@ -132,13 +132,12 @@ function manualView(){
 }
 async function manualAdd(){
  const r=MCV.rect,src=$("mcpdf");if(!r||r.w<18||r.h<18)return toast("Arraste para marcar uma área maior da página");
- const pg=await MC.getPage(MCV.page),base=pg.getViewport({scale:1}),rotation=base.width>base.height?90:0,hiVp=pg.getViewport({scale:4,rotation}),hi=document.createElement("canvas");
- hi.width=Math.ceil(hiVp.width);hi.height=Math.ceil(hiVp.height);
- await pg.render({canvasContext:hi.getContext("2d",{alpha:false}),viewport:hiVp}).promise;
- const sx=hi.width/src.width,sy=hi.height/src.height,x=Math.max(0,Math.floor(r.x*sx)),y=Math.max(0,Math.floor(r.y*sy)),w=Math.min(hi.width-x,Math.ceil(r.w*sx)),h=Math.min(hi.height-y,Math.ceil(r.h*sy));
- if(w<24||h<24){hi.width=1;hi.height=1;return toast("A área selecionada ficou pequena demais")}
- const c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d",{alpha:false});ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";ctx.drawImage(hi,x,y,w,h,0,0,w,h);
- const img=c.toDataURL("image/webp",.98);hi.width=1;hi.height=1;
+ const pg=await MC.getPage(MCV.page),base=pg.getViewport({scale:1}),rotation=base.width>base.height?90:0,hiVp=pg.getViewport({scale:4,rotation});
+ const sx=hiVp.width/src.width,sy=hiVp.height/src.height,x=Math.max(0,Math.floor(r.x*sx)),y=Math.max(0,Math.floor(r.y*sy)),w=Math.max(1,Math.min(Math.ceil(hiVp.width)-x,Math.ceil(r.w*sx))),h=Math.max(1,Math.min(Math.ceil(hiVp.height)-y,Math.ceil(r.h*sy)));
+ if(w<24||h<24)return toast("A área selecionada ficou pequena demais");
+ const c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d",{alpha:false});
+ await pg.render({canvasContext:ctx,viewport:hiVp,transform:[1,0,0,1,-x,-y]}).promise;
+ const img=c.toDataURL("image/webp",.98);c.width=1;c.height=1;
  if(MCV.mode==="b"){const name=($("mcgroup").value||"Texto de apoio "+(Object.keys(MCV.bases).length+1)).trim(),key=W.id+"-T"+(Object.keys(MCV.bases).length+1);MCV.bases[key]={name,img,order:Object.keys(MCV.bases).length+1};MCV.links[MCV.links.length-1]=key;renderTextLinks();toast("Texto de apoio salvo: "+name)}
  else{const links=MCV.links.filter((key,i)=>key&&MCV.bases[key]&&MCV.links.indexOf(key)===i);const baseImg=await combineSupportTexts(links);const n=MCV.num++;MCV.items.push({num:n,img,x:links,baseImg,page:MCV.page});toast("Questão "+n+" recortada em alta resolução")}
  MCV.rect=null;$("mcrect").style.display="none";manualList();$("mcfinish").textContent="Revisar e importar ("+MCV.items.length+")";
@@ -183,10 +182,10 @@ rowH=function(q,k){
   const vals=Array.isArray(q[f+"_multi"])?q[f+"_multi"]:[];
   extra+='<div data-multi-list="'+f+'" style="display:flex;flex-direction:column;gap:5px;margin-top:5px">'+vals.map((v,i)=>'<div style="display:flex;gap:5px"><select data-multi-field="'+f+'" data-multi-index="'+i+'" style="flex:1;min-width:0;background:#171717;color:#fff;border:1px solid #555;border-radius:6px;padding:6px"><option value="">Selecionar '+names[f].toLowerCase()+'</option>'+multiOptions(f,q).map(x=>'<option value="'+escv(x)+'"'+(x===v?' selected':'')+'>'+escv(x)+'</option>').join("")+'</select><button type="button" class="idb" data-remove-multi="'+f+'" data-multi-index="'+i+'">×</button></div>').join("")+'</div>';
  });
- let fieldsHtml=fields.map(f=>'<label>'+names[f]+' <button type="button" class="idb" data-add-multi="'+f+'" style="padding:2px 7px;margin-left:4px" title="Adicionar outra classificação">+</button><input data-f="'+f+'" list="dl'+f+k+'" value="'+escv(q[f]||"")+'"><datalist id="dl'+f+k+'">'+(f==="d"?Object.keys(TREE):multiOptions(f,q)).map(x=>'<option value="'+escv(x)+'">').join("")+'</datalist>'+extraFor(f)+'</label>').join("");
+ let fieldsHtml=fields.map(f=>{const options=[...new Set([...(q[f]?[q[f]]:[]),...(f==="d"?Object.keys(TREE):multiOptions(f,q))])];return '<label>'+names[f]+' <button type="button" class="idb" data-add-multi="'+f+'" style="padding:2px 7px;margin-left:4px" title="Adicionar outra classificação">+</button><select data-f="'+f+'" style="width:100%;background:#171717;color:#fff;border:1px solid #555;border-radius:6px;padding:7px"><option value="">Selecionar '+names[f].toLowerCase()+'</option>'+options.map(x=>'<option value="'+escv(x)+'"'+(x===(q[f]||"")?' selected':'')+'>'+escv(x)+'</option>').join("")+'</select>'+extraFor(f)+'</label>'}).join("");
  function extraFor(f){const a=extra.split('@@'+f+'@@')[1]||"";return a.split(/@@[dmtc]@@/)[0]||""}
  extra="";fields.forEach(f=>{const vals=Array.isArray(q[f+"_multi"])?q[f+"_multi"]:[];extra+='@@'+f+'@@<div data-multi-list="'+f+'" style="display:flex;flex-direction:column;gap:5px;margin-top:5px">'+vals.map((v,i)=>'<div style="display:flex;gap:5px"><select data-multi-field="'+f+'" data-multi-index="'+i+'" style="flex:1;min-width:0;background:#171717;color:#fff;border:1px solid #555;border-radius:6px;padding:6px"><option value="">Selecionar '+names[f].toLowerCase()+'</option>'+multiOptions(f,q).map(x=>'<option value="'+escv(x)+'"'+(x===v?' selected':'')+'>'+escv(x)+'</option>').join("")+'</select><button type="button" class="idb" data-remove-multi="'+f+'" data-multi-index="'+i+'">×</button></div>').join("")+'</div>'});
- fieldsHtml=fields.map(f=>'<label>'+names[f]+' <button type="button" class="idb" data-add-multi="'+f+'" style="padding:2px 7px;margin-left:4px">+</button><input data-f="'+f+'" list="dl'+f+k+'" value="'+escv(q[f]||"")+'"><datalist id="dl'+f+k+'">'+(f==="d"?Object.keys(TREE):multiOptions(f,q)).map(x=>'<option value="'+escv(x)+'">').join("")+'</datalist>'+extraFor(f)+'</label>').join("");
+ fieldsHtml=fields.map(f=>{const options=[...new Set([...(q[f]?[q[f]]:[]),...(f==="d"?Object.keys(TREE):multiOptions(f,q))])];return '<label>'+names[f]+' <button type="button" class="idb" data-add-multi="'+f+'" style="padding:2px 7px;margin-left:4px">+</button><select data-f="'+f+'" style="width:100%;background:#171717;color:#fff;border:1px solid #555;border-radius:6px;padding:7px"><option value="">Selecionar '+names[f].toLowerCase()+'</option>'+options.map(x=>'<option value="'+escv(x)+'"'+(x===(q[f]||"")?' selected':'')+'>'+escv(x)+'</option>').join("")+'</select>'+extraFor(f)+'</label>'}).join("");
  return '<div class="ir'+(q.del?' gone':'')+'" data-k="'+k+'"><div class="ith"><img src="'+q.img+'" alt="Questão '+q.num+'"></div><div class="if"><div class="ihd"><b>'+q.id+'</b><span class="tag">nº '+q.num+'</span>'+(q.x?'<span class="tag dif">com texto-base</span>':'')+'<span class="tag">'+escv(q.flag)+'</span>'+(q.src?'<span class="tag">resposta: '+q.src+'</span>':'')+'<button class="idb" data-del="'+k+'">Descartar</button></div><div class="ig3">'+fieldsHtml+'</div><div class="ig4"><label>Dificuldade<select data-f="f">'+DIF.map(x=>'<option'+(x===q.f?' selected':'')+'>'+x+'</option>').join("")+'</select></label><label>Resposta<select data-f="a"><option value="-1">—</option>'+[0,1,2,3,4].map(i=>'<option value="'+i+'"'+(q.a===i?' selected':'')+'>'+LT[i]+'</option>').join("")+'</select></label><label>Alternativas<select data-f="n">'+[2,3,4,5].map(i=>'<option value="'+i+'"'+(q.n===i?' selected':'')+'>'+i+'</option>').join("")+'</select></label><button type="button" class="idb" data-open-taxonomy style="align-self:end">＋ Gerenciar conteúdos</button>'+(q.e?'<details><summary>Explicação</summary><p>'+escv(q.e)+'</p></details>':'')+'</div><div data-taxonomy-panel style="display:none;margin-top:10px;padding:12px;border:1px solid #444;border-radius:9px;background:#111"><b>Adicionar à taxonomia do banco</b><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px"><label>Disciplina<input data-tax="d" value="'+escv(q.d||"")+'"></label><label>Matéria<input data-tax="m" value="'+escv(q.m||"")+'"></label><label>Tópico<input data-tax="t" value="'+escv(q.t||"")+'"></label><label>Conteúdo específico<input data-tax="c" value="'+escv(q.c||"")+'"></label></div><button type="button" class="idb" data-save-taxonomy style="margin-top:8px">Salvar conteúdo na taxonomia</button><small style="display:block;color:#aaa;margin-top:6px">O novo item ficará disponível nas próximas classificações.</small></div></div></div>';
 };
 review=function(){
@@ -209,8 +208,8 @@ review=function(){
   }
   const del=e.target.closest("[data-del]");if(del){q.del=true;row.remove();upd()}
  };
- host.onchange=function(e){const sel=e.target.closest("[data-multi-field]");if(!sel)return;const row=sel.closest(".ir"),q=R[+row.dataset.k],f=sel.dataset.multiField,i=+sel.dataset.multiIndex;q[f+"_multi"]=q[f+"_multi"]||[];q[f+"_multi"][i]=sel.value};
- host.oninput=function(e){if(!e.target.matches("[data-f]"))return;const k=+e.target.closest(".ir").dataset.k,q=R[k],f=e.target.dataset.f;q[f]=(f==="a"||f==="n")?+e.target.value:e.target.value;if("dmt".includes(f))dl(k);upd()};
+ host.onchange=function(e){const multi=e.target.closest("[data-multi-field]");if(multi){const row=multi.closest(".ir"),q=R[+row.dataset.k],f=multi.dataset.multiField,i=+multi.dataset.multiIndex;q[f+"_multi"]=q[f+"_multi"]||[];q[f+"_multi"][i]=multi.value;return}const field=e.target.closest("select[data-f]");if(!field)return;const row=field.closest(".ir");if(!row)return;const k=+row.dataset.k,q=R[k],f=field.dataset.f;q[f]=field.value;if(f==="d"){q.m="";q.t="";q.c="";["m","t","c"].forEach(x=>delete q[x+"_multi"])}else if(f==="m"){q.t="";q.c="";["t","c"].forEach(x=>delete q[x+"_multi"])}else if(f==="t"){q.c="";delete q.c_multi}row.outerHTML=rowH(q,k);dl(k);upd()};
+ host.oninput=function(e){if(!e.target.matches("input[data-f]"))return;const k=+e.target.closest(".ir").dataset.k,q=R[k],f=e.target.dataset.f;q[f]=(f==="a"||f==="n")?+e.target.value:e.target.value;dl(k);upd()};
  host.addEventListener("focusin",e=>{const el=e.target.closest("input[data-f][list]");if(!el)return;const row=el.closest(".ir");if(!row)return;const k=+row.dataset.k;dl(k);if(typeof el.showPicker==="function"){try{el.showPicker()}catch(_){}}});
  const ok=$("rvok");if(ok)ok.onclick=commit;
 };
