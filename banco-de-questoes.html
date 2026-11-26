@@ -104,7 +104,7 @@ function manualHome(){
 }
 async function manualStart(){
  foot("");prog(0,"Preparando o leitor de PDF…");await loadLib();pdfjsLib.GlobalWorkerOptions.workerSrc=WORKER;
- cache.clear();const pdfBytes=new Uint8Array(await W.file.arrayBuffer());const loadingTask=pdfjsLib.getDocument({data:pdfBytes,isEvalSupported:false});loadingTask.onProgress=p=>{if(p&&p.total)prog(Math.round(p.loaded/p.total*100),"Carregando PDF…")};MC=await loadingTask.promise;
+ cache.clear();const pdfBytes=new Uint8Array(await W.file.arrayBuffer());const loadingTask=pdfjsLib.getDocument({data:pdfBytes});loadingTask.onProgress=p=>{if(p&&p.total)prog(Math.round(p.loaded/p.total*100),"Carregando PDF…")};MC=await loadingTask.promise;
  const pid=(()=>{let b=W.b+W.ano,k=b,n=2;while(PROVAS.some(p=>p.id===k)){k=b+"-"+n++}return k})();W.id=pid;MCV.num=1;manualStyle();manualView();
 }
 async function manualRender(){
