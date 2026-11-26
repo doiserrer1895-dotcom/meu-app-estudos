@@ -132,11 +132,11 @@ function manualView(){
 }
 async function manualAdd(){
  const r=MCV.rect,src=$("mcpdf");if(!r||r.w<18||r.h<18)return toast("Arraste para marcar uma área maior da página");
- const pg=await MC.getPage(MCV.page),base=pg.getViewport({scale:1}),rotation=base.width>base.height?90:0,hiVp=pg.getViewport({scale:4,rotation});
- const sx=hiVp.width/src.width,sy=hiVp.height/src.height,x=Math.max(0,Math.floor(r.x*sx)),y=Math.max(0,Math.floor(r.y*sy)),w=Math.max(1,Math.min(Math.ceil(hiVp.width)-x,Math.ceil(r.w*sx))),h=Math.max(1,Math.min(Math.ceil(hiVp.height)-y,Math.ceil(r.h*sy)));
+ const pg=await MC.getPage(MCV.page),base=pg.getViewport({scale:1}),rotation=base.width>base.height?90:0,fullVp=pg.getViewport({scale:4,rotation});
+ const sx=fullVp.width/src.width,sy=fullVp.height/src.height,x=Math.max(0,Math.floor(r.x*sx)),y=Math.max(0,Math.floor(r.y*sy)),w=Math.max(1,Math.min(Math.ceil(fullVp.width)-x,Math.ceil(r.w*sx))),h=Math.max(1,Math.min(Math.ceil(fullVp.height)-y,Math.ceil(r.h*sy)));
  if(w<24||h<24)return toast("A área selecionada ficou pequena demais");
- const c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d",{alpha:false});
- await pg.render({canvasContext:ctx,viewport:hiVp,transform:[1,0,0,1,-x,-y]}).promise;
+ const c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d",{alpha:false}),cropVp=pg.getViewport({scale:4,rotation,offsetX:-x,offsetY:-y});
+ await pg.render({canvasContext:ctx,viewport:cropVp}).promise;
  const img=c.toDataURL("image/webp",.98);c.width=1;c.height=1;
  if(MCV.mode==="b"){const name=($("mcgroup").value||"Texto de apoio "+(Object.keys(MCV.bases).length+1)).trim(),key=W.id+"-T"+(Object.keys(MCV.bases).length+1);MCV.bases[key]={name,img,order:Object.keys(MCV.bases).length+1};MCV.links[MCV.links.length-1]=key;renderTextLinks();toast("Texto de apoio salvo: "+name)}
  else{const links=MCV.links.filter((key,i)=>key&&MCV.bases[key]&&MCV.links.indexOf(key)===i);const baseImg=await combineSupportTexts(links);const n=MCV.num++;MCV.items.push({num:n,img,x:links,baseImg,page:MCV.page});toast("Questão "+n+" recortada em alta resolução")}
