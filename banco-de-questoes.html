@@ -102,17 +102,19 @@ function manualHome(){
  saved();
 }
 async function manualStart(){
- foot("");prog(0,"Abrindo PDF…");await loadLib();try{const t=await(await fetch(WORKER)).text();pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([t],{type:"text/javascript"}))}catch(e){pdfjsLib.GlobalWorkerOptions.workerSrc=WORKER}
- cache.clear();MC=await pdfjsLib.getDocument({data:new Uint8Array(await W.file.arrayBuffer())}).promise;
+ foot("");prog(0,"Preparando o leitor de PDF…");await loadLib();pdfjsLib.GlobalWorkerOptions.workerSrc=WORKER;
+ cache.clear();const pdfBytes=new Uint8Array(await W.file.arrayBuffer());const loadingTask=pdfjsLib.getDocument({data:pdfBytes,isEvalSupported:false});loadingTask.onProgress=p=>{if(p&&p.total)prog(Math.round(p.loaded/p.total*100),"Carregando PDF…")};MC=await loadingTask.promise;
  const pid=(()=>{let b=W.b+W.ano,k=b,n=2;while(PROVAS.some(p=>p.id===k)){k=b+"-"+n++}return k})();W.id=pid;MCV.num=1;manualStyle();manualView();
 }
 async function manualRender(){
  const pg=await MC.getPage(MCV.page),stage=$("mcstage"),paper=$("mcpaper"),cv=$("mcpdf"),over=$("mcover");
  const original=pg.getViewport({scale:1}),rotation=original.width>original.height?90:0,base=pg.getViewport({scale:1,rotation});
  const maxW=Math.max(280,stage.clientWidth-24),maxH=Math.max(320,stage.clientHeight-24);
- const fit=Math.min(maxW/base.width,maxH/base.height),scale=Math.min(2.2,fit)*MCV.scale,vp=pg.getViewport({scale,rotation});
+ const fit=Math.min(maxW/base.width,maxH/base.height),scale=Math.min(1.35,fit)*MCV.scale,vp=pg.getViewport({scale,rotation});
+ if(MCV.renderTask){try{MCV.renderTask.cancel()}catch(e){}MCV.renderTask=null}
  cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);cv.style.width=vp.width+"px";cv.style.height=vp.height+"px";
- await pg.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;
+ const renderTask=pg.render({canvasContext:cv.getContext("2d"),viewport:vp});MCV.renderTask=renderTask;
+ try{await renderTask.promise}catch(e){if(e&&e.name==="RenderingCancelledException")return;throw e}finally{if(MCV.renderTask===renderTask)MCV.renderTask=null}
  over.width=cv.width;over.height=cv.height;over.style.width=cv.style.width;over.style.height=cv.style.height;paper.style.width=cv.style.width;paper.style.height=cv.style.height;
  $("mcpage").textContent="Página "+MCV.page+" / "+MC.numPages;
 }
