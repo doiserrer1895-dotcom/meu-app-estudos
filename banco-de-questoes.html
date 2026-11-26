@@ -18,12 +18,31 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  const bank=document.getElementById('bank');
  async function loadBankWithPdfFixes(){
   try{
-   const source=new URL('banco-de-questoes%20(2).html?v=20261126cropasync1',location.href);
+   const source=new URL('banco-de-questoes%20(2).html?v=20261126renderbatch1',location.href);
    const response=await fetch(source,{cache:'force-cache'});
    if(!response.ok)throw new Error('HTTP '+response.status);
    let html=await response.text();
    html=html.replaceAll('.qi{display:block;max-width:100%;height:auto;','.qi{display:block;width:100%!important;max-width:100%!important;height:auto!important;');
    html=html.replace(/<img\b[^>]*\bclass\s*=\s*["'][^"']*\bqi\b[^"']*["'][^>]*>/gi,tag=>{if(!/\bloading\s*=/.test(tag))tag=tag.replace(/^<img\b/i,'<img loading="lazy"');if(!/\bdecoding\s*=/.test(tag))tag=tag.replace(/^<img\b/i,'<img decoding="async"');return tag});
+   // O banco tinha mais de 1.300 questões sendo convertidas em HTML e inseridas no DOM de uma só vez.
+   // Renderiza em lotes, mantendo o filtro e as respostas, para evitar longas tarefas na thread principal.
+   const listStart='function renderList(){';
+   if(!html.includes(listStart))throw new Error('Não encontrei a renderização da lista de questões.');
+   html=html.replace(listStart,'let listLimit=36,lastListKey="";\\n'+listStart);
+   const listFilter=' const r=filtered();';
+   if(html.split(listFilter).length!==2)throw new Error('Não encontrei o filtro da lista de questões de forma única.');
+   html=html.replace(listFilter,listFilter+'\\n const listKey=r.map(q=>q.id).join("|");\\n if(listKey!==lastListKey){lastListKey=listKey;listLimit=36;}\\n const shown=r.slice(0,listLimit);');
+   const listMap='$("list").innerHTML=r.map((q,n)=>{';
+   if(html.split(listMap).length!==2)throw new Error('Não encontrei a montagem dos cartões de questões.');
+   html=html.replace(listMap,'$("list").innerHTML=shown.map((q,n)=>{');
+   const listEnd=' }).join("");\\n animIn=false;\\n}\\nfunction stats(){';
+   const listEndNew=' }).join("")+(r.length>shown.length?\'<button type="button" data-more style="display:block;width:100%;margin:18px 0;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font:inherit;font-weight:700;cursor:pointer">Carregar mais \'+Math.min(36,r.length-shown.length)+\' questões (\'+shown.length+\' de \'+r.length+\')</button>\':"");\\n animIn=false;\\n}\\nfunction stats(){';
+   if(html.split(listEnd).length!==2)throw new Error('Não encontrei o final da renderização da lista.');
+   html=html.replace(listEnd,listEndNew);
+   const clickStart='$("list").addEventListener("click",e=>{\\n const b=e.target.closest(".opt");if(!b)return;';
+   const clickEnd='$("list").addEventListener("click",e=>{\\n const more=e.target.closest("[data-more]");if(more){listLimit+=36;renderList();return;}\\n const b=e.target.closest(".opt");if(!b)return;';
+   if(html.split(clickStart).length!==2)throw new Error('Não encontrei o evento de clique das questões.');
+   html=html.replace(clickStart,clickEnd);
 
    const patches=[
     [String.raw`const MK=/^\s*(?:QUEST[ÃA]O\s*[:\-–]?\s*)?(\d{1,3})\s*(?:[.)\-–—:º°]|(?=\s|$))/i,QW=/^\s*QUEST[ÃA]O\s*\d/i,OPT=/^\s*\(?\s*([A-Ea-e])\s*[).\-–]\s*\S/;`,String.raw`const MK=/^\s*(?:QUEST[ÃA]O\s*[:\-–]?\s*)?(\d{1,3})\s*(?:[.)\-–—:º°]|(?=\s|$))/i,QW=/^\s*QUEST[ÃA]O\s*\d/i,OPT=/^\s*\(?\s*([A-Ea-e])\s*[).\-–]\s*\S/;`],
