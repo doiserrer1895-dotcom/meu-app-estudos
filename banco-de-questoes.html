@@ -403,6 +403,7 @@ window.addEventListener("message",function(event){
  const incoming=event.data.data;
  if(!incoming){try{window.parent.postMessage({type:"eear-question-bank-data",data:X},location.origin)}catch(e){}return;}
  if(!Array.isArray(incoming.Q)||!Array.isArray(incoming.PROVAS))return;
+ if(Array.isArray(X&&X.Q)&&X.Q.length>incoming.Q.length){try{window.parent.postMessage({type:"eear-question-bank-data",data:X,revision:Date.now()},location.origin)}catch(e){}return;}
  merge(incoming,true);if(incoming.TREE_FULL&&window.__applyQuestionBankTaxonomy)window.__applyQuestionBankTaxonomy(incoming.TREE_FULL);save();render();
 });
 
