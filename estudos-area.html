@@ -350,7 +350,7 @@ function subjectColor(n){return S.subjectColors&&S.subjectColors[n]||COL[0]}
 function notifyPerformanceDashboard(){
  try{window.parent.postMessage({type:'study-performance-updated'},location.origin)}catch(e){}
 }
-S.seeded=1;const save=()=>{try{const key=window.__activeUserId?K+':'+window.__activeUserId:K;localStorage.setItem(key,JSON.stringify(S))}catch(e){};if(window.__cloudSave)window.__cloudSave(S);notifyPerformanceDashboard();if(typeof syncEuVsPlatformFrame==='function')syncEuVsPlatformFrame()};
+S.seeded=1;const save=()=>{let cloudQueued=false;if(window.__cloudSave)cloudQueued=window.__cloudSave(S)===true;if(!cloudQueued){try{const key=window.__activeUserId?K+':'+window.__activeUserId:K;localStorage.setItem(key,JSON.stringify(S))}catch(e){}};notifyPerformanceDashboard();if(typeof syncEuVsPlatformFrame==='function')syncEuVsPlatformFrame()};
 let view=new URLSearchParams(location.search).get('page')||'d',mode='m',ref=new Date(),open={},inStudies=new URLSearchParams(location.search).get('embedded')==='1';
 const pad=n=>String(n).padStart(2,'0');
 const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -1102,11 +1102,12 @@ async function flushCloudSave(){
  }
 }
 window.__cloudSave=function(state){
- if(!ready||!activeUid)return;
+ if(!ready||!activeUid)return false;
  try{localStorage.setItem(K+':'+activeUid,JSON.stringify(state))}catch(e){setCloudStatus('Armazenamento local cheio',true)}
- queuedState=JSON.parse(JSON.stringify(state));
+ queuedState=state;
  setCloudStatus('Salvando...');
  clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,800);
+ return true;
 };
 document.getElementById('cloud-retry').addEventListener('click',()=>{
  if(!queuedState)return;
