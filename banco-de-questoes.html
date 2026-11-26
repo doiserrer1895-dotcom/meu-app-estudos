@@ -18,7 +18,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  const bank=document.getElementById('bank');
  async function loadBankWithPdfFixes(){
   try{
-   const source=new URL('banco-de-questoes%20(2).html?v=20261126polish1',location.href);
+   const source=new URL('banco-de-questoes%20(2).html?v=20261126polish2',location.href);
    const response=await fetch(source,{cache:'force-cache'});
    if(!response.ok)throw new Error('HTTP '+response.status);
    let html=await response.text();
@@ -204,8 +204,7 @@ review=function(){
    if(!v.d||!v.m||!v.t)return toast("Informe disciplina, matéria e tópico");
    addTree(v.d,v.m,v.t,v.c);const tuple=[v.d,v.m,v.t,v.c];if(!X.TREE.some(a=>a.join("|")===tuple.join("|")))X.TREE.push(tuple);
    q.d=v.d;q.m=v.m;q.t=v.t;if(v.c)q.c=v.c;save();row.outerHTML=rowH(q,k);dl(k);toast("Conteúdo salvo na taxonomia do banco");
-   const hierarchy=JSON.parse(JSON.stringify(TREE)),taxonomy={};Object.keys(TREE).forEach(d=>taxonomy[d]=[...new Set(Object.values(TREE[d]||{}).flatMap(node=>Object.keys(node||{})))]);
-   window.parent.postMessage({type:"eear-question-taxonomy-full",hierarchy},location.origin);return;
+   window.parent.postMessage({type:"eear-question-taxonomy-full",hierarchy:TREE||{}},location.origin);return;
   }
   const del=e.target.closest("[data-del]");if(del){q.del=true;row.remove();upd()}
  };
