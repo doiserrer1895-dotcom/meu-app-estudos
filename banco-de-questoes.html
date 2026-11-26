@@ -18,7 +18,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  const bank=document.getElementById('bank');
  async function loadBankWithPdfFixes(){
   try{
-   const source=new URL('banco-de-questoes%20(2).html?v=20261126renderbatch1',location.href);
+   const source=new URL('banco-de-questoes%20(2).html?v=20261126renderbatch2',location.href);
    const response=await fetch(source,{cache:'force-cache'});
    if(!response.ok)throw new Error('HTTP '+response.status);
    let html=await response.text();
@@ -252,7 +252,7 @@ commit=function(){
   if(q.n!==5)r.n=q.n;if(q.x){r.x=q.x;x.IMG[q.x]=q.baseImg}if(q.e)r.e=q.e;x.Q.push(r);x.IMG[q.id]=q.img;x.TREE.push([q.d,q.m,q.t,q.c]);
   ["d","m","t","c"].forEach(f=>(q[f+"_multi"]||[]).filter(Boolean).forEach(v=>{if(f==="d")x.TREE.push([v,"","",""]);else if(f==="m")x.TREE.push([q.d,v,"",""]);else if(f==="t")x.TREE.push([q.d,q.m,v,""]);else x.TREE.push([q.d,q.m,q.t,v])}));
  });
- merge(x,true);save();$("imo").hidden=true;toast(a.length+" questões adicionadas ao banco");requestAnimationFrame(()=>view("p"));
+ merge(x,true);save();render();$("imo").hidden=true;toast(a.length+" questões adicionadas ao banco");requestAnimationFrame(()=>view("p"));
 };
 
 const resetAnswerButton=document.createElement("button");
