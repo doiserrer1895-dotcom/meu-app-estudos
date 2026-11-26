@@ -208,6 +208,7 @@ review=function(){
  };
  host.onchange=function(e){const sel=e.target.closest("[data-multi-field]");if(!sel)return;const row=sel.closest(".ir"),q=R[+row.dataset.k],f=sel.dataset.multiField,i=+sel.dataset.multiIndex;q[f+"_multi"]=q[f+"_multi"]||[];q[f+"_multi"][i]=sel.value};
  host.oninput=function(e){if(!e.target.matches("[data-f]"))return;const k=+e.target.closest(".ir").dataset.k,q=R[k],f=e.target.dataset.f;q[f]=(f==="a"||f==="n")?+e.target.value:e.target.value;if("dmt".includes(f))dl(k);upd()};
+ host.addEventListener("focusin",e=>{const el=e.target.closest("input[data-f][list]");if(!el)return;const row=el.closest(".ir");if(!row)return;const k=+row.dataset.k;dl(k);if(typeof el.showPicker==="function"){try{el.showPicker()}catch(_){}}});
  const ok=$("rvok");if(ok)ok.onclick=commit;
 };
 commit=function(){
