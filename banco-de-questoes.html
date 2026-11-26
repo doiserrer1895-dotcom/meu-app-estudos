@@ -18,7 +18,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  const bank=document.getElementById('bank');
  async function loadBankWithPdfFixes(){
   try{
-   const source=new URL('banco-de-questoes%20(2).html?v=20261126blackperf1',location.href);
+   const source=new URL('banco-de-questoes%20(2).html?v=20261126bankhandshake1',location.href);
    const response=await fetch(source,{cache:'force-cache'});
    if(!response.ok)throw new Error('HTTP '+response.status);
    let html=await response.text();
@@ -447,7 +447,7 @@ window.addEventListener("message",function(event){
    bank.srcdoc='<!doctype html><html lang="pt-BR"><meta charset="utf-8"><body style="margin:0;padding:24px;background:#080808;color:#fff;font:14px system-ui">Não foi possível carregar o Banco de Questões com as correções do Importar PDF. Atualize a página e tente novamente.</body></html>';
   }
  }
- const allowed=new Set(['eear-question-bank-data','eear-question-taxonomy-full','eear-question-taxonomy','eear-question-attempt']);
+ const allowed=new Set(['eear-question-bank-ready','eear-question-bank-data','eear-question-taxonomy-full','eear-question-taxonomy','eear-question-attempt']);
  let bridgeInstalled=false,pendingFilter=null,pendingParentMessage=null;
  function installBridge(){
   if(!bank.contentWindow||!bank.contentDocument)return;
@@ -467,6 +467,7 @@ window.addEventListener("message",function(event){
    bridge.textContent=`
    (function(){
     'use strict';
+    window.parent.postMessage({type:'eear-question-bank-ready'},location.origin);
     const norm=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[._-]+/g,' ').replace(/\\s+/g,' ').trim();
     const family=s=>norm(s).replace(/\\s+(?:[123]|i{1,3})$/i,'').trim();
     function canonical(s){return norm(s)}
