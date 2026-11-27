@@ -95,6 +95,9 @@
 /* Tela de entrada CAVERNA — animação inspirada no arquivo enviado */
 #caverna-loader{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;overflow:hidden;background:radial-gradient(120% 90% at 50% 38%,#1a1a1d 0%,#111113 38%,#08080a 78%);color:#ecece8;opacity:1;visibility:visible;transition:opacity .35s ease,visibility .35s ease;font-family:"Barlow Condensed","Arial Narrow",system-ui,sans-serif}
 #caverna-loader.done{opacity:0;visibility:hidden;pointer-events:none}
+/* Evita mostrar a tela antiga do app antes da animação inicial. */
+#caverna-loader:not(.done) ~ .layout{visibility:hidden!important}
+#caverna-loader.done ~ .layout{visibility:visible!important}
 #caverna-loader *{box-sizing:border-box}
 #caverna-loader .cav-fx{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 #caverna-loader .cav-fx:before{content:"";position:absolute;width:70vmax;height:70vmax;left:-10vmax;top:-30vmax;background:radial-gradient(circle,rgba(157,183,204,.08),transparent 60%);animation:cav-drift 22s ease-in-out infinite alternate}
