@@ -93,7 +93,7 @@
 .dashboardHome.visible .dashboardFrameMain{display:block;width:100%;height:100%;min-height:100dvh;max-height:none;flex:1 1 auto;border:0;background:transparent}
 @media(max-width:800px){.dashboardHome.visible .dashboardFrameMain{height:calc(100dvh - 50px);min-height:calc(100dvh - 50px)}}
 /* Tela de entrada CAVERNA — animação inspirada no arquivo enviado */
-#caverna-loader{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;overflow:hidden;background:radial-gradient(120% 90% at 50% 38%,#1a1a1d 0%,#111113 38%,#08080a 78%);color:#ecece8;opacity:1;visibility:visible;transition:opacity .35s ease,visibility .35s ease;font-family:"Barlow Condensed","Arial Narrow",system-ui,sans-serif}
+html,body{min-height:100%;background:#08080a!important}body{margin:0;min-height:100vh;min-height:100dvh}#caverna-loader{position:fixed;inset:0;z-index:2147483647;display:grid!important;place-items:center;overflow:hidden;background:radial-gradient(120% 90% at 50% 38%,#1a1a1d 0%,#111113 38%,#08080a 78%);color:#ecece8;opacity:1;visibility:visible;transition:opacity .35s ease,visibility .35s ease;font-family:"Barlow Condensed","Arial Narrow",system-ui,sans-serif}
 #caverna-loader.done{opacity:0;visibility:hidden;pointer-events:none}
 /* Evita mostrar a tela antiga do app antes da animação inicial. */
 #caverna-loader:not(.done) ~ .layout{visibility:hidden!important}
@@ -236,16 +236,22 @@ if ("serviceWorker" in navigator) {
     lastShown=now;
     clearTimeout(finishTimer);
     overlay.classList.remove('done');
+    overlay.style.display='grid';
+    overlay.style.visibility='visible';
+    overlay.style.opacity='1';
     overlay.querySelectorAll('.cav-logo,.cav-spin,.cav-spin-fast,.cav-mark,.cav-mark-glow,.cav-halo,.cav-bar i').forEach(el=>{
       el.style.animation='none';
       void el.offsetWidth;
       el.style.removeProperty('animation');
     });
     void overlay.offsetWidth;
-    finishTimer=setTimeout(()=>overlay.classList.add('done'),2000);
+    // Só inicia a contagem depois de o navegador ter pintado a animação.
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      finishTimer=setTimeout(()=>overlay.classList.add('done'),2800);
+    }));
   }
-  // Primeira abertura e cada retorno ao app no celular: repete a mesma animação.
-  finishTimer=setTimeout(()=>overlay.classList.add('done'),2000);
+  // Primeira abertura: força a animação a aparecer antes de liberar o aplicativo.
+  playLoader();
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden){wasHidden=true;return;}
     if(wasHidden){wasHidden=false;playLoader();}
