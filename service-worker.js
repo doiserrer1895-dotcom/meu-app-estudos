@@ -1,5 +1,5 @@
 // SERVICE WORKER: cache offline resiliente, mantendo o banco de questões.
-const CACHE_NAME="meu-app-estudos-shell-v191";
+const CACHE_NAME="meu-app-estudos-shell-v192";
 const BASE = "/meu-app-estudos/";
 const SHELL = [BASE, BASE + "index.html", BASE + "dashboard-inicio.html", BASE + "questoes.html", BASE + "nutricao.html", BASE + "constancia.html", BASE + "comunidade.html", BASE + "eu-vs-plataforma.html", BASE + "manifest.webmanifest", BASE + "icons/icon.svg", BASE + "assets/nutricao-card-square.svg", BASE + "assets/caverna-logo.webp", BASE + "assets/caverna-loader.svg"];
 
