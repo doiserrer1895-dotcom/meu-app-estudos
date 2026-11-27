@@ -1080,7 +1080,7 @@ importInput.addEventListener('change',()=>{
  reader.onerror=()=>{alert('Não foi possível ler o arquivo selecionado.');importInput.value=''};
  reader.readAsText(file);
 });
-let queuedState=null,saving=false,queuedQuestionBank=null;
+let queuedState=null,saving=false,queuedQuestionBank=null,questionBankSyncPromise=null,questionBankRetryTimer=null,questionBankRetryAttempts=0;
 async function flushCloudSave(){
  if(!ready||!activeUid||saving||!queuedState)return;
  saving=true;const owner=activeUid;
@@ -1113,23 +1113,43 @@ window.__cloudSave=function(state){
  clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,800);
  return true;
 };
-window.__saveQuestionBankCloud=async function(data){
- if(!data||!Array.isArray(data.Q)||!data.Q.length)return false;
+window.__saveQuestionBankCloud=function(data){
+ if(!data||!Array.isArray(data.Q)||!data.Q.length)return Promise.resolve(false);
  queuedQuestionBank=data;
  window.__questionBankCloudCache=data;
- if(!ready||!activeUid){setCloudStatus('Banco de questões aguardando sincronização');return false;}
- const owner=activeUid;
- try{
-  const {error}=await client.from('question_bank_data').upsert({user_id:owner,data,updated_at:new Date().toISOString()},{onConflict:'user_id'});
-  if(error)throw error;
-  if(activeUid===owner){
-   if(queuedQuestionBank===data)queuedQuestionBank=null;
-   if(window.__pendingQuestionBankCloudData===data)window.__pendingQuestionBankCloudData=null;
-   window.__questionBankCloudCache=data;
-   setCloudStatus('Banco de questões sincronizado');
+ if(!ready||!activeUid){setCloudStatus('Banco de questões aguardando sincronização');return Promise.resolve(false);}
+ if(questionBankRetryTimer){clearTimeout(questionBankRetryTimer);questionBankRetryTimer=null;}
+ if(questionBankSyncPromise)return questionBankSyncPromise;
+ questionBankSyncPromise=(async()=>{
+  let savedAny=false;
+  while(queuedQuestionBank&&ready&&activeUid){
+   const payload=queuedQuestionBank,owner=activeUid;
+   try{
+    const {error}=await client.from('question_bank_data').upsert({user_id:owner,data:payload,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+    if(error)throw error;
+    if(activeUid!==owner)return false;
+    if(queuedQuestionBank===payload)queuedQuestionBank=null;
+    if(window.__pendingQuestionBankCloudData===payload)window.__pendingQuestionBankCloudData=null;
+    window.__questionBankCloudCache=payload;
+    questionBankRetryAttempts=0;
+    savedAny=true;
+    setCloudStatus('Banco de questões sincronizado');
+   }catch(e){
+    setCloudStatus('Falha ao sincronizar banco; nova tentativa automática',true);
+    console.error('Falha ao sincronizar banco de questões:',e);
+    questionBankRetryAttempts=Math.min(questionBankRetryAttempts+1,6);
+    const delay=Math.min(60000,2000*Math.pow(2,questionBankRetryAttempts-1));
+    if(questionBankRetryTimer)clearTimeout(questionBankRetryTimer);
+    questionBankRetryTimer=setTimeout(()=>{
+     questionBankRetryTimer=null;
+     if(queuedQuestionBank&&ready&&activeUid)window.__saveQuestionBankCloud(queuedQuestionBank);
+    },delay);
+    return false;
+   }
   }
-  return true;
- }catch(e){setCloudStatus('Falha ao sincronizar banco',true);console.error('Falha ao sincronizar banco de questões:',e);return false;}
+  return savedAny;
+ })().finally(()=>{questionBankSyncPromise=null;});
+ return questionBankSyncPromise;
 };
 document.getElementById('cloud-retry').addEventListener('click',()=>{
  if(!queuedState)return;
