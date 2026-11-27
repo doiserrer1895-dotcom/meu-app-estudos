@@ -931,11 +931,17 @@ async function activate(user){
   }
   const bankResult=await client.from('question_bank_data').select('data').eq('user_id',user.id).maybeSingle();
   if(bankResult.error)throw bankResult.error;
-  window.__questionBankCloudCache=queuedQuestionBank||window.__pendingQuestionBankCloudData||window.__questionBankCloudCache||(bankResult.data&&bankResult.data.data?bankResult.data.data:(S.questionBank||null));
+  const cloudBankData=bankResult.data&&bankResult.data.data&&Array.isArray(bankResult.data.data.Q)?bankResult.data.data:null;
+  window.__questionBankCloudCache=queuedQuestionBank||window.__pendingQuestionBankCloudData||cloudBankData||window.__questionBankCloudCache||(S.questionBank||null);
   window.__activeUserId=user.id;
   localStorage.setItem(cacheKey,JSON.stringify(S));
   ready=true;
   if(queuedQuestionBank||window.__pendingQuestionBankCloudData){const bankToSync=queuedQuestionBank||window.__pendingQuestionBankCloudData;window.__saveQuestionBankCloud(bankToSync);}
+  // Reenvia a nuvem ao banco mesmo se o evento inicial do iframe ocorreu antes do login.
+  const bankFrame=document.getElementById('question-bank-frame')||document.getElementById('question-bank-taxonomy-frame');
+  if(bankFrame&&bankFrame.contentWindow)bankFrame.contentWindow.postMessage({type:'app-question-bank-restore',data:window.__questionBankCloudCache||null},location.origin);
+  // A tela de sono está em outro iframe; avisa o painel quando a sessão estiver pronta.
+  try{const dashboard=window.parent.document.getElementById('dashboardFrameMain');if(dashboard&&dashboard.contentWindow)dashboard.contentWindow.postMessage({type:'app-cloud-ready'},location.origin)}catch(e){}
   notifyPerformanceDashboard();
   if(queuedState){setCloudStatus('Recuperando alterações...');clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,50)}
   else setCloudStatus('Sincronizado');
@@ -1105,6 +1111,21 @@ async function flushCloudSave(){
   clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,300);
  }
 }
+window.__sleepCloudLoad=async function(){
+ if(!ready||!activeUid)return {ready:false,data:null,updatedAt:null};
+ const owner=activeUid;
+ const {data,error}=await client.from('sleep_data').select('data,updated_at').eq('user_id',owner).maybeSingle();
+ if(error)throw error;
+ if(activeUid!==owner)return {ready:false,data:null,updatedAt:null};
+ return {ready:true,data:data&&data.data&&typeof data.data==='object'?data.data:null,updatedAt:data&&data.updated_at||null};
+};
+window.__sleepCloudSave=async function(payload){
+ if(!ready||!activeUid||!payload||typeof payload!=='object')return false;
+ const owner=activeUid;
+ const {error}=await client.from('sleep_data').upsert({user_id:owner,data:payload,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+ if(error)throw error;
+ return ready&&activeUid===owner;
+};
 window.__cloudSave=function(state){
  if(!ready||!activeUid)return false;
  try{localStorage.setItem(K+':'+activeUid,JSON.stringify(state))}catch(e){setCloudStatus('Armazenamento local cheio',true)}
