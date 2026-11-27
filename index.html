@@ -92,25 +92,52 @@
 .dashboardHome.visible{padding:0!important;gap:0!important;background:transparent!important}
 .dashboardHome.visible .dashboardFrameMain{display:block;width:100%;height:100%;min-height:100dvh;max-height:none;flex:1 1 auto;border:0;background:transparent}
 @media(max-width:800px){.dashboardHome.visible .dashboardFrameMain{height:calc(100dvh - 50px);min-height:calc(100dvh - 50px)}}
-/* Tela de entrada CAVERNA */
-#caverna-loader{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:#050505;color:#fff;opacity:1;visibility:visible;transition:opacity .28s ease,visibility .28s ease}
+/* Tela de entrada CAVERNA — animação inspirada no arquivo enviado */
+#caverna-loader{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;overflow:hidden;background:radial-gradient(120% 90% at 50% 38%,#1a1a1d 0%,#111113 38%,#08080a 78%);color:#ecece8;opacity:1;visibility:visible;transition:opacity .35s ease,visibility .35s ease;font-family:"Barlow Condensed","Arial Narrow",system-ui,sans-serif}
 #caverna-loader.done{opacity:0;visibility:hidden;pointer-events:none}
-#caverna-loader .loader-mark{width:min(68vw,290px);height:auto;max-height:34vh;object-fit:contain;display:block}
-#caverna-loader .loader-caption{font:600 12px/1.4 Inter,system-ui,sans-serif;letter-spacing:.12em;color:#e5e5e5;text-transform:none}
-#caverna-loader .loader-progress{width:min(58vw,220px);display:flex;flex-direction:column;gap:9px}
-#caverna-loader .loader-track{height:3px;width:100%;border-radius:99px;background:#252525;overflow:hidden}
-#caverna-loader .loader-fill{height:100%;width:0;background:#fff;border-radius:99px;transition:width .08s linear}
-#caverna-loader .loader-percent{font:500 10px/1 Inter,system-ui,sans-serif;letter-spacing:.08em;color:#929292;text-align:center;font-variant-numeric:tabular-nums}
-@media(prefers-reduced-motion:reduce){#caverna-loader,#caverna-loader .loader-fill{transition:none}}
+#caverna-loader *{box-sizing:border-box}
+#caverna-loader .cav-fx{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+#caverna-loader .cav-fx:before{content:"";position:absolute;width:70vmax;height:70vmax;left:-10vmax;top:-30vmax;background:radial-gradient(circle,rgba(157,183,204,.08),transparent 60%);animation:cav-drift 22s ease-in-out infinite alternate}
+@keyframes cav-drift{to{transform:translate(30vmax,14vmax)}}
+#caverna-loader .cav-fx i{position:absolute;bottom:-10px;left:var(--x);width:var(--z);height:var(--z);border-radius:50%;background:#9db7cc;opacity:0;box-shadow:0 0 8px #9db7cc;animation:cav-up var(--d) linear var(--l) infinite}
+@keyframes cav-up{0%{transform:translate(0,0);opacity:0}12%{opacity:.7}85%{opacity:.35}100%{transform:translate(var(--dx),-105vh);opacity:0}}
+#caverna-loader .cav-ridge{position:absolute;left:0;bottom:0;width:100%;height:30vh;display:block}
+#caverna-loader .cav-main{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:26px;padding:24px}
+#caverna-loader .cav-logo{position:relative;isolation:isolate;width:min(78vw,380px);aspect-ratio:1;animation:cav-in 1.2s cubic-bezier(.2,.7,.2,1) both}
+@keyframes cav-in{from{opacity:0;transform:scale(.94)}}
+#caverna-loader .cav-logo:before{content:"";position:absolute;inset:4%;border-radius:50%;background:radial-gradient(circle at 50% 40%,#1e1e22 0%,#111113 58%,#08080a 100%);box-shadow:inset 0 0 0 1px #2b2b30,inset 0 -30px 60px rgba(0,0,0,.6),0 30px 80px rgba(0,0,0,.7)}
+#caverna-loader .cav-halo{position:absolute;inset:-14%;z-index:-1;border-radius:50%;background:radial-gradient(circle,rgba(157,183,204,.17),transparent 62%);animation:cav-pulse 4.5s ease-in-out infinite}
+@keyframes cav-pulse{50%{transform:scale(1.07);opacity:.55}}
+#caverna-loader .cav-ring{position:absolute;inset:0;width:100%;height:100%}
+#caverna-loader .cav-spin{transform-origin:200px 200px;animation:cav-spin 60s linear infinite}
+#caverna-loader .cav-spin-fast{transform-origin:200px 200px;animation:cav-spin 7s linear infinite}
+@keyframes cav-spin{to{transform:rotate(360deg)}}
+#caverna-loader .cav-mark{position:absolute;left:19%;right:19%;top:50%;width:62%;height:auto;aspect-ratio:560/538;object-fit:contain;transform:translateY(-50%);animation:cav-float 5s ease-in-out infinite;filter:drop-shadow(0 0 16px rgba(157,183,204,.25))}
+@keyframes cav-float{50%{transform:translateY(calc(-50% - 7px))}}
+#caverna-loader .cav-mark-glow{animation:cav-glow 2.6s ease-in-out infinite}
+@keyframes cav-glow{50%{filter:drop-shadow(0 0 30px rgba(157,183,204,.6))}}
+#caverna-loader .cav-txt{text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
+#caverna-loader .cav-txt h1{margin:0;color:#ecece8;font-size:clamp(24px,5vw,30px);font-weight:600;letter-spacing:.02em}
+#caverna-loader .cav-txt h1 b{font-weight:inherit;animation:cav-blink 1.5s ease-in-out infinite}
+#caverna-loader .cav-txt h1 b:nth-of-type(2){animation-delay:.2s}
+#caverna-loader .cav-txt h1 b:nth-of-type(3){animation-delay:.4s}
+@keyframes cav-blink{0%,100%{opacity:.2}50%{opacity:1}}
+#caverna-loader .cav-bar{width:min(48vw,190px);height:2px;background:#2b2b30;overflow:hidden}
+#caverna-loader .cav-bar i{display:block;width:45%;height:100%;background:linear-gradient(90deg,transparent,#9db7cc,#fff,#9db7cc,transparent);animation:cav-slide 2.6s cubic-bezier(.5,0,.2,1) infinite}
+@keyframes cav-slide{0%{transform:translateX(-100%)}80%,100%{transform:translateX(230%)}}
+@media(prefers-reduced-motion:reduce){#caverna-loader .cav-spin,#caverna-loader .cav-spin-fast,#caverna-loader .cav-txt h1 b,#caverna-loader .cav-halo,#caverna-loader .cav-fx:before,#caverna-loader .cav-logo,#caverna-loader .cav-mark,#caverna-loader .cav-mark-glow,#caverna-loader .cav-bar i{animation:none}#caverna-loader .cav-fx i{display:none}}
 </style></head>
 <body>
 <div id="caverna-loader" role="status" aria-live="polite" aria-label="Carregando seus dados">
-  <img class="loader-mark" src="/meu-app-estudos/assets/caverna-loader.svg" alt="">
-  <div class="loader-caption">Carregando seus dados</div>
-  <div class="loader-progress">
-    <div class="loader-track"><div class="loader-fill" id="caverna-loader-fill"></div></div>
-    <div class="loader-percent" id="caverna-loader-percent">0%</div>
-  </div>
+  <div class="cav-fx" id="caverna-loader-fx" aria-hidden="true"></div>
+  <svg class="cav-ridge" viewBox="0 0 1200 300" preserveAspectRatio="none" aria-hidden="true"><polygon fill="#0e0e10" points="0,300 0,170 110,90 210,160 330,40 450,150 540,100 660,190 780,60 900,150 1010,80 1110,150 1200,110 1200,300"/><polygon fill="#0a0a0c" points="0,300 0,230 140,170 260,230 400,140 520,225 650,170 790,245 930,160 1070,230 1200,190 1200,300"/></svg>
+  <main class="cav-main">
+    <div class="cav-logo"><i class="cav-halo"></i>
+      <svg class="cav-ring" viewBox="0 0 400 400" aria-hidden="true"><circle cx="200" cy="200" r="190" fill="none" stroke="#2b2b30" stroke-width="1"/><circle class="cav-spin" cx="200" cy="200" r="178" fill="none" stroke="#2b2b30" stroke-width="1" stroke-dasharray="2 9"/><circle class="cav-spin-fast" cx="200" cy="200" r="190" fill="none" stroke="#9db7cc" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="26 1168"/></svg>
+      <img class="cav-mark cav-mark-glow" src="/meu-app-estudos/assets/caverna-loader.svg" alt="">
+    </div>
+    <div class="cav-txt"><h1>Carregando seus dados<b>.</b><b>.</b><b>.</b></h1><div class="cav-bar"><i></i></div></div>
+  </main>
 </div>
 <div class="shade" id="shade" onclick="drawer(false)"></div>
 <div class="layout"><aside class="sidebar" id="sidebar">
@@ -192,20 +219,24 @@ if ("serviceWorker" in navigator) {
 (function(){
   const overlay=document.getElementById('caverna-loader');
   if(!overlay)return;
-  const fill=document.getElementById('caverna-loader-fill');
-  const label=document.getElementById('caverna-loader-percent');
+  const fx=document.getElementById('caverna-loader-fx');
+  if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&fx){
+    for(let k=0;k<30;k++){const d=document.createElement('i'),z=1+Math.random()*2.5;d.style.cssText='--z:'+z+'px;--x:'+Math.random()*100+'%;--d:'+(9+Math.random()*10)+'s;--l:-'+Math.random()*14+'s;--dx:'+(Math.random()*80-40)+'px';fx.appendChild(d);}
+    const logo=overlay.querySelector('.cav-logo');
+    overlay.addEventListener('pointermove',e=>{const x=e.clientX/innerWidth-.5,y=e.clientY/innerHeight-.5;logo.style.transform='perspective(900px) rotateY('+x*10+'deg) rotateX('+(-y*10)+'deg)';});
+  }
   const frame=document.getElementById('dashboardFrameMain');
   const started=Date.now();
-  let progress=0,frameReady=!!(frame&&frame.contentDocument&&frame.contentDocument.readyState==='complete');
-  if(frame&&!frameReady)frame.addEventListener('load',()=>{frameReady=true},{once:true});
-  const steps=[2,1,1,1,2,2,3,2,3,4,3,4,5,4,5,6,5,6,7,8,9,10];
-  let step=0;
+  let frameReady=!!(frame&&frame.contentDocument&&frame.contentDocument.readyState==='complete');
+  if(frame&&!frameReady)frame.addEventListener('load',()=>{frameReady=true;},{once:true});
   const timer=setInterval(()=>{
-    if(progress<90){progress=Math.min(90,progress+(steps[step++]||5));}
-    if(progress>=90&&(frameReady&&Date.now()-started>=550||Date.now()-started>=1800))progress=100;
-    fill.style.width=progress+'%';label.textContent=progress+'%';
-    if(progress>=100){clearInterval(timer);setTimeout(()=>overlay.classList.add('done'),120);setTimeout(()=>overlay.remove(),500);}
-  },26);
+    const elapsed=Date.now()-started;
+    if((frameReady&&elapsed>=900)||elapsed>=2400){
+      clearInterval(timer);
+      overlay.classList.add('done');
+      setTimeout(()=>overlay.remove(),500);
+    }
+  },80);
 })();
 </script>
 </body></html>
