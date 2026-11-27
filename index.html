@@ -93,11 +93,8 @@
 .dashboardHome.visible .dashboardFrameMain{display:block;width:100%;height:100%;min-height:100dvh;max-height:none;flex:1 1 auto;border:0;background:transparent}
 @media(max-width:800px){.dashboardHome.visible .dashboardFrameMain{height:calc(100dvh - 50px);min-height:calc(100dvh - 50px)}}
 /* Tela de entrada CAVERNA — animação inspirada no arquivo enviado */
-html,body{min-height:100%;background:#08080a!important}body{margin:0;min-height:100vh;min-height:100dvh}#caverna-loader{position:fixed;inset:0;z-index:2147483647;display:grid!important;place-items:center;overflow:hidden;background:radial-gradient(120% 90% at 50% 38%,#1a1a1d 0%,#111113 38%,#08080a 78%);color:#ecece8;opacity:1;visibility:visible;transition:opacity .35s ease,visibility .35s ease;font-family:"Barlow Condensed","Arial Narrow",system-ui,sans-serif}
-#caverna-loader.done{opacity:0;visibility:hidden;pointer-events:none}
-/* Evita mostrar a tela antiga do app antes da animação inicial. */
-#caverna-loader:not(.done) ~ .layout{visibility:hidden!important}
-#caverna-loader.done ~ .layout{visibility:visible!important}
+html,body{min-height:100%;background:#08080a!important}body{margin:0;min-height:100vh;min-height:100dvh}#caverna-loader{position:fixed;inset:0;z-index:2147483647;display:grid!important;place-items:center;overflow:hidden;background:radial-gradient(120% 90% at 50% 38%,#1a1a1d 0%,#111113 38%,#08080a 78%);color:#ecece8;opacity:1;visibility:visible;pointer-events:auto;font-family:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;animation:cav-loader-dismiss .35s ease 2.8s forwards}
+@keyframes cav-loader-dismiss{to{opacity:0;visibility:hidden;pointer-events:none}}
 #caverna-loader *{box-sizing:border-box}
 #caverna-loader .cav-fx{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 #caverna-loader .cav-fx:before{content:"";position:absolute;width:70vmax;height:70vmax;left:-10vmax;top:-30vmax;background:radial-gradient(circle,rgba(157,183,204,.08),transparent 60%);animation:cav-drift 22s ease-in-out infinite alternate}
@@ -218,51 +215,5 @@ if ("serviceWorker" in navigator) {
 }
 </script>
 
-<script>
-(function(){
-  const overlay=document.getElementById('caverna-loader');
-  if(!overlay)return;
-  const fx=document.getElementById('caverna-loader-fx');
-  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(!reduced&&fx&&!fx.children.length){
-    for(let k=0;k<30;k++){const d=document.createElement('i'),z=1+Math.random()*2.5;d.style.cssText='--z:'+z+'px;--x:'+Math.random()*100+'%;--d:'+(9+Math.random()*10)+'s;--l:-'+Math.random()*14+'s;--dx:'+(Math.random()*80-40)+'px';fx.appendChild(d);}
-    const logo=overlay.querySelector('.cav-logo');
-    overlay.addEventListener('pointermove',e=>{const x=e.clientX/innerWidth-.5,y=e.clientY/innerHeight-.5;logo.style.transform='perspective(900px) rotateY('+x*10+'deg) rotateX('+(-y*10)+'deg)';});
-  }
-  let finishTimer=null,wasHidden=false,lastShown=0;
-  function playLoader(){
-    const now=Date.now();
-    if(now-lastShown<700)return;
-    lastShown=now;
-    clearTimeout(finishTimer);
-    overlay.classList.remove('done');
-    overlay.style.display='grid';
-    overlay.style.visibility='visible';
-    overlay.style.opacity='1';
-    overlay.querySelectorAll('.cav-logo,.cav-spin,.cav-spin-fast,.cav-mark,.cav-mark-glow,.cav-halo,.cav-bar i').forEach(el=>{
-      el.style.animation='none';
-      void el.offsetWidth;
-      el.style.removeProperty('animation');
-    });
-    void overlay.offsetWidth;
-    // Libera o aplicativo após a animação. Não depender de requestAnimationFrame:
-    // em alguns celulares ele pode ficar suspenso e prender a tela de carregamento.
-    finishTimer=setTimeout(()=>{
-      overlay.classList.add('done');
-      // Remove os estilos inline para a classe .done poder ocultar o loader.
-      overlay.style.removeProperty('visibility');
-      overlay.style.removeProperty('opacity');
-    },2800);
-  }
-  // Primeira abertura: força a animação a aparecer antes de liberar o aplicativo.
-  playLoader();
-  document.addEventListener('visibilitychange',()=>{
-    if(document.hidden){wasHidden=true;return;}
-    if(wasHidden){wasHidden=false;playLoader();}
-  });
-  window.addEventListener('pageshow',event=>{
-    if(event.persisted)playLoader();
-  });
-})();
-</script>
+
 </body></html>
