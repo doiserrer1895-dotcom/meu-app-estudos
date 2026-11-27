@@ -245,10 +245,14 @@ if ("serviceWorker" in navigator) {
       el.style.removeProperty('animation');
     });
     void overlay.offsetWidth;
-    // Só inicia a contagem depois de o navegador ter pintado a animação.
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      finishTimer=setTimeout(()=>overlay.classList.add('done'),2800);
-    }));
+    // Libera o aplicativo após a animação. Não depender de requestAnimationFrame:
+    // em alguns celulares ele pode ficar suspenso e prender a tela de carregamento.
+    finishTimer=setTimeout(()=>{
+      overlay.classList.add('done');
+      // Remove os estilos inline para a classe .done poder ocultar o loader.
+      overlay.style.removeProperty('visibility');
+      overlay.style.removeProperty('opacity');
+    },2800);
   }
   // Primeira abertura: força a animação a aparecer antes de liberar o aplicativo.
   playLoader();
