@@ -63,6 +63,12 @@
 :root[data-theme="dark"] .navitem.active,:root[data-theme="dark"] .navitem.open{background:#f1f3f1;color:#101211}
 :root[data-theme="dark"] .subitem.active{background:#292e2b;color:#fff}
 @media(max-width:800px){.welcomePanel{padding:8px;margin-bottom:10px}.welcomeGreeting{padding:9px}.welcomeGreeting h2{font-size:14px}.weatherCard{padding:8px}.weatherNow strong{font-size:26px}}
+/* Identidade visual do cartão de boas-vindas e remoção do breadcrumb superior. */
+#crumb{display:none!important}
+.welcomeGreeting{background:var(--soft)!important;color:var(--ink)!important;border:1px solid var(--line)!important}
+.welcomeGreeting h2,.welcomeClock strong{color:var(--ink)!important}
+.welcomeClock span{color:var(--muted)!important}
+.welcomeEdit{background:var(--paper)!important;color:var(--ink)!important;border:1px solid var(--line)!important}
 
 
 /* Painel de visões gerais na aba Início: preserva as páginas originais em iframes interativos. */
@@ -116,10 +122,10 @@ const names={'home':'Início / Painel geral','study-d':'Estudos / Visão geral',
 
 function updateWelcome(){
  const now=new Date(),h=now.getHours(),part=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
- const frames=['studyframe','appframe'].map(id=>document.getElementById(id));let name='Rafael';
+ const frames=['studyframe','appframe'].map(id=>document.getElementById(id));let name='Raphael';
  for(const f of frames){try{const appName=f&&f.contentWindow&&f.contentWindow.__displayName;if(appName&&String(appName).trim()){name=String(appName).trim();break}}catch(e){}}
  const p=document.getElementById('welcomePart'),n=document.getElementById('welcomeName'),clock=document.getElementById('liveClock'),date=document.getElementById('liveDate');
- if(p)p.textContent=part;if(n)n.textContent=name;if(clock)clock.textContent=now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});if(date)date.textContent=now.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+ if(String(name).trim().toLowerCase()==='rafael')name='Raphael';if(p)p.textContent=part;if(n)n.textContent=name;if(clock)clock.textContent=now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});if(date)date.textContent=now.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
 }
 function editNameFromApp(){for(const id of ['studyframe','appframe']){try{const fn=document.getElementById(id).contentWindow.__editDisplayName;if(typeof fn==='function'){fn();return}}catch(e){}}route('settings')}
 function drawer(open){document.getElementById('sidebar').classList.toggle('show',open);document.getElementById('shade').classList.toggle('show',open)}
