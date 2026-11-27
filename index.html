@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="apple-mobile-web-app-title" content="CAVERNA"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="apple-touch-icon" href="/meu-app-estudos/assets/caverna-logo.webp"><link rel="icon" type="image/webp" href="/meu-app-estudos/assets/caverna-logo.webp">
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="apple-mobile-web-app-title" content="CAVERNA"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="/meu-app-estudos/manifest.webmanifest"><link rel="apple-touch-icon" href="/meu-app-estudos/assets/caverna-logo.webp"><link rel="icon" type="image/webp" href="/meu-app-estudos/assets/caverna-logo.webp">
 <title>Caverna — Estudos e Rotina</title>
 <style>
 :root{--bg:#f4f5f4;--paper:#fff;--ink:#111412;--muted:#777e79;--line:#e4e7e4;--soft:#f0f2f0;--accent:#111}
@@ -158,4 +158,13 @@ window.addEventListener('message',event=>{
  try{if(dashboard&&dashboard.contentWindow)dashboard.contentWindow.postMessage({type:'study-performance-updated'},location.origin)}catch(e){}
 });
 function prepareAppFrame(f,isStudy){f.addEventListener('load',()=>{updateWelcome();try{const d=f.contentDocument;if(!d)return;const t=localStorage.getItem('app-theme-evolucao')||document.documentElement.getAttribute('data-theme')||'dark';d.documentElement.setAttribute('data-theme',t);let s=d.getElementById('central-shell-integration');if(!s){s=d.createElement('style');s.id='central-shell-integration';d.head.appendChild(s)}s.textContent=integrationCss(t,isStudy?'constancy':(f.src.includes('nutricao.html')?'nutrition':f.src.includes('constancia.html')?'constancy':f.src.includes('comunidade.html')?'community':false));if(isStudy||f.src.includes('estudos-area.html?embedded=1')){const spans=d.querySelectorAll('#nav button span');const keys=['d','p','s','c','f'];spans.forEach((sp,i)=>{const target=document.querySelector('[data-icon="'+keys[i]+'"]');if(target&&sp.innerHTML.trim())target.innerHTML=sp.innerHTML})}}catch(e){}})}
-prepareAppFrame(document.getElementById('appframe'),false);prepareAppFrame(document.getElementById('studyframe'),true);document.getElementById('studyframe').addEventListener('load',()=>{if(!pendingStudyPage)return;const page=pendingStudyPage;pendingStudyPage=null;try{document.getElementById('studyframe').contentWindow.go(page)}catch(e){pendingStudyPage=page}});</script></body></html>
+prepareAppFrame(document.getElementById('appframe'),false);prepareAppFrame(document.getElementById('studyframe'),true);document.getElementById('studyframe').addEventListener('load',()=>{if(!pendingStudyPage)return;const page=pendingStudyPage;pendingStudyPage=null;try{document.getElementById('studyframe').contentWindow.go(page)}catch(e){pendingStudyPage=page}});</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/meu-app-estudos/service-worker.js", { scope: "/meu-app-estudos/" })
+      .catch((error) => console.error("Falha ao registrar o Service Worker do CAVERNA:", error));
+  });
+}
+</script>
+</body></html>
