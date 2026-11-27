@@ -840,7 +840,7 @@ const form=document.getElementById('auth-form');
 const switchBtn=document.getElementById('auth-switch');
 const intro=document.getElementById('auth-intro');
 const pass=document.getElementById('auth-password');
-let creating=false,client=null,activeUid=null,saveTimer=null,ready=false;
+let creating=false,client=null,activeUid=null,saveTimer=null,ready=false,syncRealtimeChannel=null,lastSleepCloudWriteAt=null;
 /* Disponibiliza ao Painel geral uma leitura somente-leitura do mesmo estado carregado nesta aba. */
 window.__getPerformanceStudyData=function(){
  if(!ready||!S||!Array.isArray(S.entries))return null;
@@ -896,6 +896,23 @@ window.__editDisplayName=async function(){
  });
  const onKey=e=>{if(e.key==='Escape'&&document.getElementById('name-edit-overlay')){close();document.removeEventListener('keydown',onKey)}};document.addEventListener('keydown',onKey);
 };
+function startDeviceRealtime(owner){
+ if(syncRealtimeChannel){try{client.removeChannel(syncRealtimeChannel)}catch(e){}syncRealtimeChannel=null}
+ syncRealtimeChannel=client.channel('device-sync-'+owner)
+  .on('postgres_changes',{event:'*',schema:'public',table:'sleep_data',filter:'user_id=eq.'+owner},payload=>{
+   const stamp=payload&&payload.new&&payload.new.updated_at;
+   if(stamp&&stamp===lastSleepCloudWriteAt)return;
+   try{const dashboard=window.parent.document.getElementById('dashboardFrameMain');if(dashboard&&dashboard.contentWindow)dashboard.contentWindow.postMessage({type:'app-cloud-refresh',source:'sleep'},location.origin)}catch(e){}
+  })
+  .on('postgres_changes',{event:'*',schema:'public',table:'question_bank_data',filter:'user_id=eq.'+owner},payload=>{
+   const data=payload&&payload.new&&payload.new.data;
+   if(!data||!Array.isArray(data.Q))return;
+   window.__questionBankCloudCache=data;
+   const frame=document.getElementById('question-bank-frame')||document.getElementById('question-bank-taxonomy-frame');
+   if(frame&&frame.contentWindow)frame.contentWindow.postMessage({type:'app-question-bank-restore',data},location.origin);
+  })
+  .subscribe((status,error)=>{if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('Sincronização em tempo real indisponível:',error||status)});
+}
 async function activate(user){
  if(!user||!user.id)return;
  window.__displayName=(user.user_metadata&&String(user.user_metadata.full_name||user.user_metadata.name||user.user_metadata.display_name||user.user_metadata.nickname||'').trim())||'Raphael';
@@ -936,6 +953,7 @@ async function activate(user){
   window.__activeUserId=user.id;
   localStorage.setItem(cacheKey,JSON.stringify(S));
   ready=true;
+  startDeviceRealtime(user.id);
   if(queuedQuestionBank||window.__pendingQuestionBankCloudData){const bankToSync=queuedQuestionBank||window.__pendingQuestionBankCloudData;window.__saveQuestionBankCloud(bankToSync);}
   // Reenvia a nuvem ao banco mesmo se o evento inicial do iframe ocorreu antes do login.
   const bankFrame=document.getElementById('question-bank-frame')||document.getElementById('question-bank-taxonomy-frame');
@@ -1122,7 +1140,8 @@ window.__sleepCloudLoad=async function(){
 window.__sleepCloudSave=async function(payload){
  if(!ready||!activeUid||!payload||typeof payload!=='object')return false;
  const owner=activeUid;
- const {error}=await client.from('sleep_data').upsert({user_id:owner,data:payload,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+ const stamp=new Date().toISOString();lastSleepCloudWriteAt=stamp;
+ const {error}=await client.from('sleep_data').upsert({user_id:owner,data:payload,updated_at:stamp},{onConflict:'user_id'});
  if(error)throw error;
  return ready&&activeUid===owner;
 };
