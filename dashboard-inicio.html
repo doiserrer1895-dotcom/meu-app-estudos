@@ -328,7 +328,7 @@ details{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin
   <div><h1>Início</h1><div class="sub" id="hoje"></div></div>
   <div class="bar">
     <select id="cidade" aria-label="Cidade"></select>
-    <input id="busca" type="search" placeholder="Buscar cidade…" aria-label="Buscar cidade" autocomplete="off" enterkeyhint="search">
+    <input id="busca" type="search" placeholder="Buscar endereço ou cidade…" aria-label="Buscar cidade" autocomplete="off" enterkeyhint="search">
     <button class="btn" id="gps">Usar minha localização</button>
     <div class="seg" id="uT" aria-label="Temperatura"><button data-v="C" class="on">°C</button><button data-v="F">°F</button></div>
     <div class="seg" id="uW" aria-label="Vento"><button data-v="kmh" class="on">km/h</button><button data-v="ms">m/s</button><button data-v="mph">mph</button></div>
@@ -456,7 +456,7 @@ function stat(){const el=$('#src');if(!el)return;const L=S.live[S.c],tm=t=>new D
   if(L&&!L.cache){el.className='tag dev';el.innerHTML='<span class="live" style="background:var(--bg)"></span>Ao vivo · Open-Meteo';$('#upd').textContent=(S.loading?'Atualizando… ':'')+'Atualizado às '+tm(L.at);return}
   if(L){el.className='tag demo';el.textContent='Offline · última previsão salva';$('#upd').textContent='De '+new Date(L.at).toLocaleDateString('pt-BR')+' às '+tm(L.at);return}
   el.className='tag demo';el.textContent='Dados de exemplo · sem conexão';$('#upd').textContent=S.err?'Não foi possível acessar o serviço de previsão':''}
-function renderWx(){const{b,hrs,days}=wx(),n=hrs[0],[ic,cn]=cond(n.r,n.h,n.c),d0=days[0];
+function renderWx(){if(!S.live[S.c]){$('#wLoc').textContent=S.c;$('#wT').textContent='—';$('#wC').textContent=S.loading?'Buscando previsão real…':'Previsão indisponível';$('#wF').textContent=S.loading?'Consultando a localização selecionada':'Conecte-se à internet e toque em Atualizar';$('#wP').innerHTML='';$('#mets').innerHTML='<div class="note">Os indicadores aparecerão quando os dados meteorológicos reais forem carregados.</div>';$('#wBody').innerHTML='<p class="note">Aguardando dados reais da previsão do tempo…</p>';stat();return}const{b,hrs,days}=wx(),n=hrs[0],[ic,cn]=cond(n.r,n.h,n.c),d0=days[0];
   $('#wLoc').textContent=''+S.c;cu($('#wT'),Math.round(S.uT==='C'?n.t:n.t*9/5+32));$('#wC').innerHTML=ic+' '+cn;$('#wF').textContent='Sensação térmica de '+T(n.fl??(n.t+1.5+b.h/50));
   $('#wP').innerHTML=`<span class="pill">Máx ${T(d0.mx)}</span><span class="pill">Mín ${T(d0.mn)}</span><span class="pill">Chuva ${d0.r}%</span><span class="pill">${d0.mm?d0.mm+' mm previstos':'Sem volume previsto'}</span>`;
   stat();
@@ -685,16 +685,17 @@ $('#cidade').onchange=e=>{S.c=e.target.value;S.day=0;S.hi=0;LS.set('wx:city',S.c
 const UF={'Acre':'AC','Alagoas':'AL','Amapá':'AP','Amazonas':'AM','Bahia':'BA','Ceará':'CE','Distrito Federal':'DF','Espírito Santo':'ES','Goiás':'GO','Maranhão':'MA','Mato Grosso':'MT','Mato Grosso do Sul':'MS','Minas Gerais':'MG','Pará':'PA','Paraíba':'PB','Paraná':'PR','Pernambuco':'PE','Piauí':'PI','Rio de Janeiro':'RJ','Rio Grande do Norte':'RN','Rio Grande do Sul':'RS','Rondônia':'RO','Roraima':'RR','Santa Catarina':'SC','São Paulo':'SP','Sergipe':'SE','Tocantins':'TO'};
 function addCity(name,lat,lon){CITIES[name]={lat:+(+lat).toFixed(4),lon:+(+lon).toFixed(4)};const cu_=LS.get('wx:cities',{});cu_[name]=CITIES[name];LS.set('wx:cities',cu_);S.c=name;S.day=0;S.hi=0;LS.set('wx:city',name);fillCities();renderWx();load(true)}
 const flash=(el,t,ms=2600)=>{const o=el.dataset.o||(el.dataset.o=el.textContent);el.textContent=t;clearTimeout(el._t);el._t=setTimeout(()=>el.textContent=o,ms)};
-$('#gps').onclick=()=>{const g=$('#gps');if(!navigator.geolocation)return flash(g,'Localização indisponível');g.textContent='Localizando…';
-  navigator.geolocation.getCurrentPosition(async p=>{const{latitude:la,longitude:lo}=p.coords;let name='Minha localização';
-    try{const r=await fj(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${la}&longitude=${lo}&localityLanguage=pt`);const c=r.city||r.locality;if(c)name=c+(r.principalSubdivisionCode?', '+r.principalSubdivisionCode.split('-').pop():'')}catch(_){}
-    g.textContent=g.dataset.o||'Usar minha localização';addCity(name,la,lo)},
-    e=>flash(g,e.code===1?'Permissão de localização negada':'Não foi possível localizar'),{timeout:12000,maximumAge:600000})};
-$('#busca').onkeydown=async e=>{if(e.key!=='Enter')return;const q=e.target.value.trim();if(!q)return;e.target.disabled=true;
-  try{const r=await fj(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=pt&format=json`),c=r.results&&r.results[0];
-    if(!c){e.target.value='';e.target.placeholder='Cidade não encontrada'}else{addCity(c.name+(c.country_code==='BR'&&UF[c.admin1]?', '+UF[c.admin1]:c.country?', '+c.country:''),c.latitude,c.longitude);e.target.value=''}}
-  catch(_){e.target.value='';e.target.placeholder='Sem conexão para buscar'}
-  e.target.disabled=false;setTimeout(()=>e.target.placeholder='Buscar cidade…',3000)};
+const placeName=a=>{if(!a)return'';const city=a.city||a.town||a.village||a.municipality||a.county||a.state||'';const area=a.suburb||a.neighbourhood||a.city_district||'';const state=a.state&&UF[a.state]?UF[a.state]:a.state_code||'';return[area&&area!==city?area:'',city,state].filter(Boolean).join(', ')||''};
+async function reversePlace(la,lo){try{const r=await fj(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&accept-language=pt-BR&zoom=14&lat=${la}&lon=${lo}`);return placeName(r.address)||r.name||''}catch(_){try{const r=await fj(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${la}&longitude=${lo}&localityLanguage=pt`);const n=r.city||r.locality;return n?n+(r.principalSubdivisionCode?', '+r.principalSubdivisionCode.split('-').pop():''):''}catch(__){return''}}}
+function useLocation(silent=false){const g=$('#gps');if(!navigator.geolocation){if(!silent)flash(g,'Localização indisponível');return Promise.resolve(false)}if(!silent)g.textContent='Localizando…';return new Promise(resolve=>navigator.geolocation.getCurrentPosition(async p=>{const{latitude:la,longitude:lo}=p.coords;const name=await reversePlace(la,lo);const label=name||'Minha localização';if(!silent)g.textContent=g.dataset.o||'Usar minha localização';addCity(label,la,lo);resolve(true)},e=>{if(!silent)flash(g,e.code===1?'Permissão de localização negada':'Não foi possível localizar');resolve(false)},{enableHighAccuracy:true,timeout:15000,maximumAge:0}))}
+$('#gps').onclick=()=>useLocation(false);
+$('#ref').onclick=async()=>{const ok=await useLocation(true);if(!ok)load(true)};
+$('#busca').onkeydown=async e=>{if(e.key!=='Enter')return;const q=e.target.value.trim();if(!q)return;e.target.disabled=true;const old=e.target.placeholder;e.target.placeholder='Buscando endereço…';
+  try{let found=null;try{const n=await fj(`https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&accept-language=pt-BR&q=${encodeURIComponent(q)}`);if(n&&n[0])found={name:placeName(n[0].address)||n[0].name||n[0].display_name.split(',').slice(0,2).join(','),latitude:+n[0].lat,longitude:+n[0].lon}}catch(_){}
+    if(!found){const r=await fj(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=pt&format=json`);const a=r.results||[];found=a.find(x=>x.country_code==='BR')||a[0];if(found)found={name:found.name+(found.country_code==='BR'&&UF[found.admin1]?', '+UF[found.admin1]:found.country?', '+found.country:''),latitude:found.latitude,longitude:found.longitude}}
+    if(!found)throw new Error('not-found');addCity(found.name,found.latitude,found.longitude);e.target.value='';e.target.placeholder='Buscar endereço ou cidade…'
+  }catch(_){e.target.placeholder='Endereço não encontrado ou sem conexão';setTimeout(()=>e.target.placeholder='Buscar endereço ou cidade…',3500)}
+  e.target.disabled=false};
 const IO=typeof IntersectionObserver!=='undefined'?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');IO.unobserve(e.target)}}),{threshold:.05}):null;
 function watch(){document.querySelectorAll('.card:not(.in)').forEach(c=>IO?IO.observe(c):c.classList.add('in'))}
 addEventListener('resize',()=>{clearTimeout(window._rt);window._rt=setTimeout(()=>{slide($('#wTab'),false);slide($('#mSeg'),false);if(S.wt==='h'&&window._wd&&$('#cv')&&Math.abs($('#cv').clientWidth-RW)>30)drawH(window._wd[0]);},220)});
