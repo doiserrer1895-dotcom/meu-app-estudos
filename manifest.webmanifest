@@ -11,7 +11,7 @@
   "theme_color": "#0a0a0a",
   "icons": [
     {
-      "src": "/meu-app-estudos/assets/caverna-loader.svg",
+      "src": "/meu-app-estudos/assets/caverna-cover.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
