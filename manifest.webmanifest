@@ -1,7 +1,7 @@
 {
   "id": "/meu-app-estudos/",
-  "name": "Caverna — Estudos e Rotina",
-  "short_name": "Caverna",
+  "name": "CAVERNA",
+  "short_name": "CAVERNA",
   "description": "Seu espaço pessoal de estudos",
   "start_url": "/meu-app-estudos/",
   "scope": "/meu-app-estudos/",
@@ -10,6 +10,11 @@
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",
   "icons": [
-    { "src": "/meu-app-estudos/assets/caverna-logo.webp", "sizes": "any", "type": "image/webp", "purpose": "any maskable" }
+    {
+      "src": "/meu-app-estudos/assets/caverna-logo.webp",
+      "sizes": "any",
+      "type": "image/webp",
+      "purpose": "any"
+    }
   ]
 }
