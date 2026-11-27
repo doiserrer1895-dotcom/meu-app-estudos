@@ -602,6 +602,7 @@ let sleepSyncPromise=null,sleepSyncAgain=false,sleepSyncTimer=null,sleepSyncRevi
 function sleepCloudApi(){
  try{const frame=window.parent.document.getElementById('studyframe');return frame&&frame.contentWindow||null}catch(e){return null}
 }
+function retrySleepCloud(delay=2500){if(document.hidden)return;clearTimeout(sleepSyncTimer);sleepSyncTimer=setTimeout(()=>{sleepSyncTimer=null;syncSleepCloud()},delay)}
 function queueSleepSync(date,action){
  if(date){
   if(action==='delete'){SLEEP_DELETED[date]=Date.now();delete HI[date]}
@@ -619,9 +620,9 @@ async function syncSleepCloud(){
   do{
    sleepSyncAgain=false;
    const api=sleepCloudApi();
-   if(!api||typeof api.__sleepCloudLoad!=='function'||typeof api.__sleepCloudSave!=='function')return false;
+   if(!api||typeof api.__sleepCloudLoad!=='function'||typeof api.__sleepCloudSave!=='function'){retrySleepCloud(2500);return false;}
    const cloudResult=await api.__sleepCloudLoad();
-   if(!cloudResult||!cloudResult.ready)return false;
+   if(!cloudResult||!cloudResult.ready){retrySleepCloud(2500);return false;}
    const cloud=cloudResult.data&&typeof cloudResult.data==='object'?cloudResult.data:{};
    const remoteHistory=cloud.history&&typeof cloud.history==='object'?cloud.history:{};
    const remoteMeta=cloud.historyUpdatedAt&&typeof cloud.historyUpdatedAt==='object'?cloud.historyUpdatedAt:{};
@@ -667,10 +668,12 @@ async function syncSleepCloud(){
  })().catch(error=>{console.warn('Falha ao sincronizar sono com a nuvem:',error);clearTimeout(sleepSyncTimer);sleepSyncTimer=setTimeout(syncSleepCloud,15000);return false}).finally(()=>{sleepSyncPromise=null;if(sleepSyncAgain){sleepSyncAgain=false;clearTimeout(sleepSyncTimer);sleepSyncTimer=setTimeout(syncSleepCloud,100)}});
  return sleepSyncPromise;
 }
-window.addEventListener('message',e=>{if(e.source===window.parent&&e.origin===location.origin&&e.data&&e.data.type==='app-cloud-ready')syncSleepCloud()});
+window.addEventListener('message',e=>{if(e.source===window.parent&&e.origin===location.origin&&e.data&&['app-cloud-ready','app-cloud-refresh'].includes(e.data.type))syncSleepCloud()});
 setTimeout(syncSleepCloud,1800);
 window.addEventListener('online',syncSleepCloud);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncSleepCloud()});
+window.addEventListener('pageshow',()=>syncSleepCloud());
+window.addEventListener('focus',()=>syncSleepCloud());
 function sHyp(p,tib,tst){const o=[['aw',Math.min(p.lat,tib)]],n=Math.max(1,Math.round(tst/90)),L=tst/n,at=new Set([...Array(p.awk)].map((_,j)=>Math.min(n-1,Math.floor((j+1)*n/(p.awk+1)))));
   for(let i=0;i<n;i++){const dp=Math.max(.06,.34-i*.07),rm=Math.min(.34,.1+i*.07),lt=1-dp-rm;o.push(['lt',L*lt*.55],['dp',L*dp],['lt',L*lt*.45],['rm',L*rm]);if(at.has(i))o.push(['aw',8])}
   return o.filter(x=>x[1]>0)}
