@@ -596,6 +596,81 @@ const TL=[['tst','Tempo de sono'],['eff','Eficiência'],['def','Déficit',15],['
 const EX={dp:'Sono profundo: o corpo repara músculos e recupera energia. Domina o começo da noite.',rm:'Sono REM: é quando você sonha. Fixa memória e aprendizado, ótimo para estudo. Fica mais longo perto do amanhecer.',lt:'Sono leve: faz a transição entre as fases e ocupa cerca de metade da noite.'},SN={dp:'Sono profundo',rm:'Sono REM',lt:'Sono leve',aw:'Acordado'};
 function sLoad(i){SL.ns=i;const h=HI[nKey(i)];if(h){Object.assign(SL,pk(h));SL.on=true}else{Object.assign(SL,SD,LS.get('sl:d',{}));SL.on=false}}
 sLoad(6);
+/* Sincronização do Sono entre dispositivos pela sessão autenticada da área Estudos. */
+const SLEEP_META=LS.get('sl:sync-meta',{}),SLEEP_DELETED=LS.get('sl:deleted',{});
+let sleepSyncPromise=null,sleepSyncAgain=false,sleepSyncTimer=null,sleepSyncRevision=0;
+function sleepCloudApi(){
+ try{const frame=window.parent.document.getElementById('studyframe');return frame&&frame.contentWindow||null}catch(e){return null}
+}
+function queueSleepSync(date,action){
+ if(date){
+  if(action==='delete'){SLEEP_DELETED[date]=Date.now();delete HI[date]}
+  else{SLEEP_META[date]=Date.now();delete SLEEP_DELETED[date]}
+ }
+ if(action==='goal')SLEEP_META.goal=Date.now();
+ LS.set('sl:sync-meta',SLEEP_META);LS.set('sl:deleted',SLEEP_DELETED);LS.set('sl:h',HI);LS.set('sl:g',SL.goal);
+ sleepSyncRevision++;
+ clearTimeout(sleepSyncTimer);sleepSyncTimer=setTimeout(syncSleepCloud,650);
+}
+async function syncSleepCloud(){
+ if(sleepSyncPromise){sleepSyncAgain=true;return sleepSyncPromise}
+ sleepSyncPromise=(async()=>{
+  let ok=false;
+  do{
+   sleepSyncAgain=false;
+   const api=sleepCloudApi();
+   if(!api||typeof api.__sleepCloudLoad!=='function'||typeof api.__sleepCloudSave!=='function')return false;
+   const cloudResult=await api.__sleepCloudLoad();
+   if(!cloudResult||!cloudResult.ready)return false;
+   const cloud=cloudResult.data&&typeof cloudResult.data==='object'?cloudResult.data:{};
+   const remoteHistory=cloud.history&&typeof cloud.history==='object'?cloud.history:{};
+   const remoteMeta=cloud.historyUpdatedAt&&typeof cloud.historyUpdatedAt==='object'?cloud.historyUpdatedAt:{};
+   const remoteDeleted=cloud.deleted&&typeof cloud.deleted==='object'?cloud.deleted:{};
+   const localMeta=SLEEP_META,localDeleted=SLEEP_DELETED;
+   const cloudStamp=Date.parse(cloud.updatedAt||cloudResult.updatedAt||'')||0,now=Date.now();
+   Object.keys(HI).forEach(k=>{if(!localMeta[k]&&!remoteHistory[k])localMeta[k]=now});
+   const keys=new Set([...Object.keys(HI),...Object.keys(remoteHistory),...Object.keys(localDeleted),...Object.keys(remoteDeleted)]);
+   const merged={},mergedMeta={},mergedDeleted={};
+   keys.forEach(k=>{
+    const lm=Number(localMeta[k])||0,rm=Number(remoteMeta[k])||cloudStamp;
+    const ld=Number(localDeleted[k])||0,rd=Number(remoteDeleted[k])||0;
+    const deletedAt=Math.max(ld,rd),recordAt=Math.max(lm,rm);
+    if(deletedAt>recordAt){mergedDeleted[k]=deletedAt;return}
+    const local=HI[k],remote=remoteHistory[k];
+    const chosen=local&&(!remote||lm>=rm)?local:remote;
+    if(chosen&&typeof chosen==='object'){
+     merged[k]={b:Number(chosen.b),w:Number(chosen.w),lat:Number(chosen.lat??15),awk:Number(chosen.awk??0),nap:Number(chosen.nap??0)};
+     mergedMeta[k]=local&&chosen===local?lm:rm;
+    }
+   });
+   let localGoalRaw=null;try{localGoalRaw=localStorage.getItem('sl:g')}catch(e){}
+   let localGoalTime=Number(localMeta.goal)||0;
+   if(localGoalRaw!==null&&!localGoalTime)localGoalTime=now;
+   const remoteGoalTime=Number(cloud.goalUpdatedAt)||cloudStamp;
+   const remoteGoal=Number(cloud.goal);
+   const goal=(localGoalRaw!==null&&localGoalTime>=remoteGoalTime)?Number(localGoalRaw):(Number.isFinite(remoteGoal)&&remoteGoal>0?remoteGoal:SL.goal);
+   const goalUpdatedAt=Math.max(localGoalTime,remoteGoalTime);
+   const hadDraft=SL.on&&!eq(pk(SL),HI[nKey(SL.ns)]||{});
+   Object.keys(HI).forEach(k=>delete HI[k]);Object.assign(HI,merged);
+   Object.keys(SLEEP_META).forEach(k=>delete SLEEP_META[k]);Object.assign(SLEEP_META,mergedMeta,{goal:goalUpdatedAt});
+   Object.keys(SLEEP_DELETED).forEach(k=>delete SLEEP_DELETED[k]);Object.assign(SLEEP_DELETED,mergedDeleted);
+   SL.goal=goal;
+   const defaults=Object.assign({},cloud.defaults&&typeof cloud.defaults==='object'?cloud.defaults:{},LS.get('sl:d',{}));
+   const payload=Object.assign({},cloud,{
+    schemaVersion:2,goal,goalUpdatedAt,history:merged,historyUpdatedAt:mergedMeta,deleted:mergedDeleted,defaults,updatedAt:new Date().toISOString()
+   });
+   LS.set('sl:h',HI);LS.set('sl:g',goal);LS.set('sl:d',defaults);LS.set('sl:sync-meta',SLEEP_META);LS.set('sl:deleted',SLEEP_DELETED);
+   await api.__sleepCloudSave(payload);ok=true;
+   if(!hadDraft){sLoad(SL.ns);sDraw(3)}
+  }while(sleepSyncAgain);
+  return ok;
+ })().finally(()=>{sleepSyncPromise=null;if(sleepSyncAgain){sleepSyncAgain=false;clearTimeout(sleepSyncTimer);sleepSyncTimer=setTimeout(syncSleepCloud,100)}});
+ return sleepSyncPromise;
+}
+window.addEventListener('message',e=>{if(e.source===window.parent&&e.origin===location.origin&&e.data&&e.data.type==='app-cloud-ready')syncSleepCloud()});
+setTimeout(syncSleepCloud,1800);
+window.addEventListener('online',syncSleepCloud);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncSleepCloud()});
 function sHyp(p,tib,tst){const o=[['aw',Math.min(p.lat,tib)]],n=Math.max(1,Math.round(tst/90)),L=tst/n,at=new Set([...Array(p.awk)].map((_,j)=>Math.min(n-1,Math.floor((j+1)*n/(p.awk+1)))));
   for(let i=0;i<n;i++){const dp=Math.max(.06,.34-i*.07),rm=Math.min(.34,.1+i*.07),lt=1-dp-rm;o.push(['lt',L*lt*.55],['dp',L*dp],['lt',L*lt*.45],['rm',L*rm]);if(at.has(i))o.push(['aw',8])}
   return o.filter(x=>x[1]>0)}
@@ -668,14 +743,14 @@ const rp=m=>{m.classList.remove('rp');void m.offsetWidth;m.classList.add('rp')};
     el.onkeydown=e=>{const s=/^Arrow(Right|Up)$/.test(e.key)?15:/^Arrow(Left|Down)$/.test(e.key)?-15:0;if(!s)return;e.preventDefault();SL[k]=(SL[k]+s+1440)%1440;SL.on=true;sDraw()}});
   $('#dc').onclick=()=>{SL.mode=(SL.mode+1)%3;const b=$('#snD');b._v=undefined;$('#dc').classList.remove('sw2');void b.offsetWidth;$('#dc').classList.add('sw2');sDraw()};
   const sel=(k,m)=>{SL.sel=k;document.querySelectorAll('.mc').forEach(x=>{x.classList.toggle('on',x.dataset.k===k);x.setAttribute('aria-pressed',x.dataset.k===k)});rp(m);sDraw()};
-  $('#mg').onclick=e=>{const m=e.target.closest('.mc');if(!m)return;const b=e.target.closest('.ss button'),k=m.dataset.k;if(b){const R={lat:[0,120,5],awk:[0,8,1],nap:[0,180,15],def:[300,720,15]}[k],kk=k==='def'?'goal':k;SL[kk]=Math.max(R[0],Math.min(R[1],SL[kk]+ +b.dataset.s*R[2]));if(kk==='goal')LS.set('sl:g',SL.goal);else SL.on=true}sel(k,m)};
+  $('#mg').onclick=e=>{const m=e.target.closest('.mc');if(!m)return;const b=e.target.closest('.ss button'),k=m.dataset.k;if(b){const R={lat:[0,120,5],awk:[0,8,1],nap:[0,180,15],def:[300,720,15]}[k],kk=k==='def'?'goal':k;SL[kk]=Math.max(R[0],Math.min(R[1],SL[kk]+ +b.dataset.s*R[2]));if(kk==='goal'){LS.set('sl:g',SL.goal);queueSleepSync(null,'goal')}else SL.on=true}sel(k,m)};
   $('#mg').onkeydown=e=>{const m=e.target.closest('.mc');if(m&&e.target===m&&(e.key==='Enter'||e.key===' ')){e.preventDefault();sel(m.dataset.k,m)}};
   $('#stg').onclick=e=>{const b=e.target.closest('button');if(!b)return;SL.sg=SL.sg===b.dataset.k?null:b.dataset.k;document.querySelectorAll('.stg button').forEach(x=>x.classList.toggle('on',x.dataset.k===SL.sg));sDraw(1)};
   const hs=$('#hyp');const hv=e=>{if(!SL.on||!SC.tib)return;const q=hs.getBoundingClientRect(),f=cl(((e.clientX-q.left)/q.width*640-74)/556),m=f*SC.tib;let t=0,sg=SC.hy[SC.hy.length-1];for(const s of SC.hy){if(m<=t+s[1]){sg=s;break}t+=s[1]}
     const l=$('#hcur');if(l){l.setAttribute('x1',74+f*556);l.setAttribute('x2',74+f*556)}SL._hy=1;$('#hyt').innerHTML=`<b>${clk(SL.b+m)}</b> · ${SN[sg[0]]} · ${Math.round(sg[1])} min nessa fase`};
   hs.onpointermove=hv;hs.onpointerdown=hv;hs.onpointerleave=()=>{SL._hy=0;$('#hyt').textContent=SL.on?'Passe o dedo na noite para ver a fase':''};
-  $('#cfb').onclick=()=>{const k=nKey(SL.ns),h=HI[k],p=pk(SL);SL.on=true;if(h&&eq(h,p)){burst();return}HI[k]=p;LS.set('sl:h',HI);LS.set('sl:d',p);burst();sDraw(2)};
-  let dz=0;$('#dm').onclick=()=>{const b=$('#dm'),k=nKey(SL.ns);if(!HI[k])return;if(!dz){dz=1;b.textContent='Tocar de novo para apagar';setTimeout(()=>{dz=0;b.textContent='Apagar noite'},2800);return}dz=0;b.textContent='Apagar noite';delete HI[k];LS.set('sl:h',HI);sLoad(SL.ns);sDraw(3)};
+  $('#cfb').onclick=()=>{const k=nKey(SL.ns),h=HI[k],p=pk(SL);SL.on=true;if(h&&eq(h,p)){burst();return}HI[k]=p;LS.set('sl:h',HI);LS.set('sl:d',p);queueSleepSync(k);burst();sDraw(2)};
+  let dz=0;$('#dm').onclick=()=>{const b=$('#dm'),k=nKey(SL.ns);if(!HI[k])return;if(!dz){dz=1;b.textContent='Tocar de novo para apagar';setTimeout(()=>{dz=0;b.textContent='Apagar noite'},2800);return}dz=0;b.textContent='Apagar noite';delete HI[k];LS.set('sl:h',HI);queueSleepSync(k,'delete');sLoad(SL.ns);sDraw(3)};
   const pick=g=>{const n=g&&g.closest('.nb');if(!n)return;sLoad(+n.dataset.i);sDraw(1)};
   $('#n7').onclick=e=>pick(e.target);$('#n7').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(e.target)}};
   sDraw(3)})();
