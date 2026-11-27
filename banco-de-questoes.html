@@ -550,6 +550,12 @@ window.addEventListener("message",function(event){
       if(!bankPublished&&typeof Q!=='undefined'&&Array.isArray(Q)&&Q.length){
        window.__EEAR_BANK_EXPORT__=X;
        window.parent.postMessage({type:'eear-question-bank-data',data:X,revision:Date.now(),initial:true},location.origin);
+       try{
+        const appHost=window.parent&&window.parent.parent;
+        if(appHost&&typeof appHost.__saveQuestionBankCloud==='function'){
+         Promise.resolve(appHost.__saveQuestionBankCloud(X)).then(ok=>{if(!ok)console.warn('Banco local aguardando sincronização com a nuvem')}).catch(error=>console.error('Falha ao enviar banco local para a nuvem:',error));
+        }
+       }catch(error){console.error('Não foi possível acessar a sincronização do aplicativo:',error)}
        bankPublished=true;
        clearInterval(bankPublishTimer);
       }else if(++bankPublishAttempts>=120)clearInterval(bankPublishTimer);
