@@ -544,6 +544,16 @@ window.addEventListener("message",function(event){
     },true);
     let taxonomyAttempts=0;
     const taxonomyTimer=setInterval(function(){if(publishTaxonomy()||++taxonomyAttempts>=80)clearInterval(taxonomyTimer)},250);
+    let bankPublishAttempts=0,bankPublished=false;
+    const bankPublishTimer=setInterval(function(){
+     try{
+      if(!bankPublished&&typeof Q!=='undefined'&&Array.isArray(Q)&&Q.length){
+       window.parent.postMessage({type:'eear-question-bank-data',data:X,revision:Date.now(),initial:true},location.origin);
+       bankPublished=true;
+       clearInterval(bankPublishTimer);
+      }else if(++bankPublishAttempts>=120)clearInterval(bankPublishTimer);
+     }catch(e){if(++bankPublishAttempts>=120)clearInterval(bankPublishTimer)}
+    },500);
    })();
    `;
    (doc.head||doc.documentElement).appendChild(bridge);
