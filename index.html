@@ -225,18 +225,11 @@ if ("serviceWorker" in navigator) {
     const logo=overlay.querySelector('.cav-logo');
     overlay.addEventListener('pointermove',e=>{const x=e.clientX/innerWidth-.5,y=e.clientY/innerHeight-.5;logo.style.transform='perspective(900px) rotateY('+x*10+'deg) rotateX('+(-y*10)+'deg)';});
   }
-  const frame=document.getElementById('dashboardFrameMain');
-  const started=Date.now();
-  let frameReady=!!(frame&&frame.contentDocument&&frame.contentDocument.readyState==='complete');
-  if(frame&&!frameReady)frame.addEventListener('load',()=>{frameReady=true;},{once:true});
-  const timer=setInterval(()=>{
-    const elapsed=Date.now()-started;
-    if((frameReady&&elapsed>=900)||elapsed>=2400){
-      clearInterval(timer);
-      overlay.classList.add('done');
-      setTimeout(()=>overlay.remove(),500);
-    }
-  },80);
+  // Mantém a tela de carregamento visível por exatamente 2 segundos.
+  setTimeout(()=>{
+    overlay.classList.add('done');
+    setTimeout(()=>overlay.remove(),500);
+  },2000);
 })();
 </script>
 </body></html>
