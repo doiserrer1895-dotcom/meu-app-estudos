@@ -664,7 +664,7 @@ async function syncSleepCloud(){
    if(!hadDraft){sLoad(SL.ns);sDraw(3)}
   }while(sleepSyncAgain);
   return ok;
- })().finally(()=>{sleepSyncPromise=null;if(sleepSyncAgain){sleepSyncAgain=false;clearTimeout(sleepSyncTimer);sleepSyncTimer=setTimeout(syncSleepCloud,100)}});
+ })().catch(error=>{console.warn('Falha ao sincronizar sono com a nuvem:',error);clearTimeout(sleepSyncTimer);sleepSyncTimer=setTimeout(syncSleepCloud,15000);return false}).finally(()=>{sleepSyncPromise=null;if(sleepSyncAgain){sleepSyncAgain=false;clearTimeout(sleepSyncTimer);sleepSyncTimer=setTimeout(syncSleepCloud,100)}});
  return sleepSyncPromise;
 }
 window.addEventListener('message',e=>{if(e.source===window.parent&&e.origin===location.origin&&e.data&&e.data.type==='app-cloud-ready')syncSleepCloud()});
