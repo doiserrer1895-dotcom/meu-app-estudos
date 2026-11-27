@@ -11,10 +11,10 @@
   "theme_color": "#0a0a0a",
   "icons": [
     {
-      "src": "/meu-app-estudos/assets/caverna-logo.webp",
+      "src": "/meu-app-estudos/assets/caverna-loader.svg",
       "sizes": "any",
-      "type": "image/webp",
-      "purpose": "any"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }
