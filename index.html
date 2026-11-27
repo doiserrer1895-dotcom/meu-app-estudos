@@ -223,16 +223,36 @@ if ("serviceWorker" in navigator) {
   const overlay=document.getElementById('caverna-loader');
   if(!overlay)return;
   const fx=document.getElementById('caverna-loader-fx');
-  if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&fx){
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!reduced&&fx&&!fx.children.length){
     for(let k=0;k<30;k++){const d=document.createElement('i'),z=1+Math.random()*2.5;d.style.cssText='--z:'+z+'px;--x:'+Math.random()*100+'%;--d:'+(9+Math.random()*10)+'s;--l:-'+Math.random()*14+'s;--dx:'+(Math.random()*80-40)+'px';fx.appendChild(d);}
     const logo=overlay.querySelector('.cav-logo');
     overlay.addEventListener('pointermove',e=>{const x=e.clientX/innerWidth-.5,y=e.clientY/innerHeight-.5;logo.style.transform='perspective(900px) rotateY('+x*10+'deg) rotateX('+(-y*10)+'deg)';});
   }
-  // Mantém a tela de carregamento visível por exatamente 2 segundos.
-  setTimeout(()=>{
-    overlay.classList.add('done');
-    setTimeout(()=>overlay.remove(),500);
-  },2000);
+  let finishTimer=null,wasHidden=false,lastShown=0;
+  function playLoader(){
+    const now=Date.now();
+    if(now-lastShown<700)return;
+    lastShown=now;
+    clearTimeout(finishTimer);
+    overlay.classList.remove('done');
+    overlay.querySelectorAll('.cav-logo,.cav-spin,.cav-spin-fast,.cav-mark,.cav-mark-glow,.cav-halo,.cav-bar i').forEach(el=>{
+      el.style.animation='none';
+      void el.offsetWidth;
+      el.style.removeProperty('animation');
+    });
+    void overlay.offsetWidth;
+    finishTimer=setTimeout(()=>overlay.classList.add('done'),2000);
+  }
+  // Primeira abertura e cada retorno ao app no celular: repete a mesma animação.
+  finishTimer=setTimeout(()=>overlay.classList.add('done'),2000);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){wasHidden=true;return;}
+    if(wasHidden){wasHidden=false;playLoader();}
+  });
+  window.addEventListener('pageshow',event=>{
+    if(event.persisted)playLoader();
+  });
 })();
 </script>
 </body></html>
