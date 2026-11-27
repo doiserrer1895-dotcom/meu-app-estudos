@@ -583,7 +583,15 @@ window.addEventListener("message",function(event){
  window.addEventListener('message',function(event){
   if(event.source===bank.contentWindow){
    const data=event.data;
-   if(data&&allowed.has(data.type))window.parent.postMessage(data,location.origin);
+   if(data&&allowed.has(data.type)){
+    if(data.type==='eear-question-bank-data'&&data.data&&Array.isArray(data.data.Q)&&data.data.Q.length){
+     const cloudHost=window.parent;
+     if(cloudHost&&typeof cloudHost.__saveQuestionBankCloud==='function'){
+      Promise.resolve(cloudHost.__saveQuestionBankCloud(data.data)).then(ok=>{if(!ok)console.warn('Banco local aguardando sincronização com a nuvem')}).catch(error=>console.error('Falha ao sincronizar banco com Supabase:',error));
+     }
+    }
+    window.parent.postMessage(data,location.origin);
+   }
    return;
   }
   if(event.source===window.parent&&event.origin===location.origin){
