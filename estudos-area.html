@@ -931,10 +931,11 @@ async function activate(user){
   }
   const bankResult=await client.from('question_bank_data').select('data').eq('user_id',user.id).maybeSingle();
   if(bankResult.error)throw bankResult.error;
-  window.__questionBankCloudCache=bankResult.data&&bankResult.data.data?bankResult.data.data:(S.questionBank||null);
+  window.__questionBankCloudCache=queuedQuestionBank||(bankResult.data&&bankResult.data.data?bankResult.data.data:(S.questionBank||null));
   window.__activeUserId=user.id;
   localStorage.setItem(cacheKey,JSON.stringify(S));
   ready=true;
+  if(queuedQuestionBank){const bankToSync=queuedQuestionBank;window.__saveQuestionBankCloud(bankToSync);}
   notifyPerformanceDashboard();
   if(queuedState){setCloudStatus('Recuperando alterações...');clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,50)}
   else setCloudStatus('Sincronizado');
@@ -1079,7 +1080,7 @@ importInput.addEventListener('change',()=>{
  reader.onerror=()=>{alert('Não foi possível ler o arquivo selecionado.');importInput.value=''};
  reader.readAsText(file);
 });
-let queuedState=null,saving=false;
+let queuedState=null,saving=false,queuedQuestionBank=null;
 async function flushCloudSave(){
  if(!ready||!activeUid||saving||!queuedState)return;
  saving=true;const owner=activeUid;
@@ -1113,12 +1114,19 @@ window.__cloudSave=function(state){
  return true;
 };
 window.__saveQuestionBankCloud=async function(data){
- if(!ready||!activeUid)return false;
+ if(!data||!Array.isArray(data.Q)||!data.Q.length)return false;
+ queuedQuestionBank=data;
+ window.__questionBankCloudCache=data;
+ if(!ready||!activeUid){setCloudStatus('Banco de questões aguardando sincronização');return false;}
  const owner=activeUid;
  try{
   const {error}=await client.from('question_bank_data').upsert({user_id:owner,data,updated_at:new Date().toISOString()},{onConflict:'user_id'});
   if(error)throw error;
-  if(activeUid===owner){window.__questionBankCloudCache=data;setCloudStatus('Banco de questões sincronizado');}
+  if(activeUid===owner){
+   if(queuedQuestionBank===data)queuedQuestionBank=null;
+   window.__questionBankCloudCache=data;
+   setCloudStatus('Banco de questões sincronizado');
+  }
   return true;
  }catch(e){setCloudStatus('Falha ao sincronizar banco',true);console.error('Falha ao sincronizar banco de questões:',e);return false;}
 };
