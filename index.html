@@ -95,7 +95,7 @@
 /* Tela de entrada CAVERNA */
 #caverna-loader{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:#050505;color:#fff;opacity:1;visibility:visible;transition:opacity .28s ease,visibility .28s ease}
 #caverna-loader.done{opacity:0;visibility:hidden;pointer-events:none}
-#caverna-loader .loader-mark{width:min(68vw,290px);height:auto;max-height:34vh;object-fit:contain;filter:invert(1);mix-blend-mode:screen;display:block}
+#caverna-loader .loader-mark{width:min(68vw,290px);height:auto;max-height:34vh;object-fit:contain;display:block}
 #caverna-loader .loader-caption{font:600 12px/1.4 Inter,system-ui,sans-serif;letter-spacing:.12em;color:#e5e5e5;text-transform:none}
 #caverna-loader .loader-progress{width:min(58vw,220px);display:flex;flex-direction:column;gap:9px}
 #caverna-loader .loader-track{height:3px;width:100%;border-radius:99px;background:#252525;overflow:hidden}
@@ -105,7 +105,7 @@
 </style></head>
 <body>
 <div id="caverna-loader" role="status" aria-live="polite" aria-label="Carregando seus dados">
-  <img class="loader-mark" src="/meu-app-estudos/assets/caverna-logo.webp" alt="">
+  <img class="loader-mark" src="/meu-app-estudos/assets/caverna-loader.svg" alt="">
   <div class="loader-caption">Carregando seus dados</div>
   <div class="loader-progress">
     <div class="loader-track"><div class="loader-fill" id="caverna-loader-fill"></div></div>
