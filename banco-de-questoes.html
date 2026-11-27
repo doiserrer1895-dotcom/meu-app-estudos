@@ -18,7 +18,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden;backgr
  const bank=document.getElementById('bank');
  async function loadBankWithPdfFixes(){
   try{
-   const source=new URL('banco-de-questoes%20(2).html?v=20261127banksync4',location.href);
+   const source=new URL('banco-de-questoes%20(2).html?v=20261127banksync5',location.href);
    const response=await fetch(source,{cache:'force-cache'});
    if(!response.ok)throw new Error('HTTP '+response.status);
    let html=await response.text();
