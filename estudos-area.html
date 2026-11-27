@@ -484,7 +484,7 @@ function breakdown(es){const m={};es.forEach(e=>{const k=e.top||'Geral';m[k]=(m[
   if(!msg)return;
   const bankFrameSource=(frame&&event.source===frame.contentWindow)||(hidden&&event.source===hidden.contentWindow);
   if(msg.type==='eear-question-bank-ready'&&bankFrameSource){bankFrameReady=true;event.source.postMessage({type:'app-question-bank-restore',data:S.questionBank||window.__questionBankCloudCache||null},location.origin);if(pendingBankFilter){event.source.postMessage({type:'app-question-filter',filter:pendingBankFilter},location.origin);pendingBankFilter=null;}return;}
-  if(msg.type==='eear-question-bank-data'&&bankFrameSource){const incoming=msg.data;if(!incoming||!Array.isArray(incoming.Q))return;if(!Array.isArray(incoming.PROVAS))incoming.PROVAS=[];const cloudBank=window.__questionBankCloudCache||S.questionBank;if(msg.initial&&cloudBank&&Array.isArray(cloudBank.Q)&&cloudBank.Q.length){event.source.postMessage({type:'app-question-bank-restore',data:cloudBank},location.origin);return;}if(!incoming.Q.length&&cloudBank&&Array.isArray(cloudBank.Q)&&cloudBank.Q.length){event.source.postMessage({type:'app-question-bank-restore',data:cloudBank},location.origin);return;}const revision=Number(msg.revision)||0;if(revision&&revision===bankDataRevision)return;if(revision)bankDataRevision=revision;window.__questionBankCloudCache=incoming;if(typeof window.__saveQuestionBankCloud==='function')window.__saveQuestionBankCloud(incoming);return;}
+  if(msg.type==='eear-question-bank-data'&&bankFrameSource){const incoming=msg.data;if(!incoming||!Array.isArray(incoming.Q))return;if(!Array.isArray(incoming.PROVAS))incoming.PROVAS=[];const cloudBank=window.__questionBankCloudCache||S.questionBank;if(msg.initial&&cloudBank&&Array.isArray(cloudBank.Q)&&cloudBank.Q.length){event.source.postMessage({type:'app-question-bank-restore',data:cloudBank},location.origin);return;}if(!incoming.Q.length&&cloudBank&&Array.isArray(cloudBank.Q)&&cloudBank.Q.length){event.source.postMessage({type:'app-question-bank-restore',data:cloudBank},location.origin);return;}const revision=Number(msg.revision)||0;if(revision&&revision===bankDataRevision)return;if(revision)bankDataRevision=revision;window.__questionBankCloudCache=incoming;window.__pendingQuestionBankCloudData=incoming;if(typeof window.__saveQuestionBankCloud==='function')window.__saveQuestionBankCloud(incoming);return;}
   if(msg.type==='eear-question-taxonomy-full'&&bankFrameSource){bankHierarchy=msg.hierarchy&&typeof msg.hierarchy==='object'?msg.hierarchy:{};bankTaxonomy=Object.fromEntries(Object.entries(bankHierarchy).map(([subject,tree])=>[subject,[...new Set(Object.values(tree||{}).flatMap(node=>Object.keys(node&&typeof node==='object'?node:{})))]]));if(view==='p')render();return;}
   if(msg.type==='eear-question-taxonomy'&&bankFrameSource){bankTaxonomy=msg.taxonomy&&typeof msg.taxonomy==='object'?msg.taxonomy:{};if(view==='p')render();return;}
   const popupAttempt=msg.type==='eear-question-attempt'&&event.origin===location.origin&&msg.attempt&&msg.attempt.source==='fonetica';
@@ -931,11 +931,11 @@ async function activate(user){
   }
   const bankResult=await client.from('question_bank_data').select('data').eq('user_id',user.id).maybeSingle();
   if(bankResult.error)throw bankResult.error;
-  window.__questionBankCloudCache=queuedQuestionBank||(bankResult.data&&bankResult.data.data?bankResult.data.data:(S.questionBank||null));
+  window.__questionBankCloudCache=queuedQuestionBank||window.__pendingQuestionBankCloudData||window.__questionBankCloudCache||(bankResult.data&&bankResult.data.data?bankResult.data.data:(S.questionBank||null));
   window.__activeUserId=user.id;
   localStorage.setItem(cacheKey,JSON.stringify(S));
   ready=true;
-  if(queuedQuestionBank){const bankToSync=queuedQuestionBank;window.__saveQuestionBankCloud(bankToSync);}
+  if(queuedQuestionBank||window.__pendingQuestionBankCloudData){const bankToSync=queuedQuestionBank||window.__pendingQuestionBankCloudData;window.__saveQuestionBankCloud(bankToSync);}
   notifyPerformanceDashboard();
   if(queuedState){setCloudStatus('Recuperando alterações...');clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,50)}
   else setCloudStatus('Sincronizado');
@@ -1124,6 +1124,7 @@ window.__saveQuestionBankCloud=async function(data){
   if(error)throw error;
   if(activeUid===owner){
    if(queuedQuestionBank===data)queuedQuestionBank=null;
+   if(window.__pendingQuestionBankCloudData===data)window.__pendingQuestionBankCloudData=null;
    window.__questionBankCloudCache=data;
    setCloudStatus('Banco de questões sincronizado');
   }
