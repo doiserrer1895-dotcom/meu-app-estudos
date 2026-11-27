@@ -12,12 +12,12 @@
 .navitem .ico{width:18px;text-align:center;font-size:15px}.navitem.active,.navitem.open{background:#f1f3f1;color:#101211}.navitem:hover{background:#292e2b;color:white}.navitem.active:hover{background:#f1f3f1;color:#101211}
 .subitems{padding:2px 0 7px 29px;display:none}.group.expanded .subitems{display:block}
 .subitem{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:transparent;color:#aab2ac;padding:8px 9px;border-radius:8px;font-size:11px;cursor:pointer}.subitem .tool-ico{width:17px;min-width:17px;text-align:center;font-size:14px}.subitem.active{color:#fff;background:#292e2b;font-weight:750}
-.main{min-width:0;display:flex;flex-direction:column;height:100dvh;min-height:0;overflow:hidden}.topbar{height:66px;flex:none;background:rgba(255,255,255,.9);border-bottom:0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:3;backdrop-filter:blur(12px)}
+.main{min-width:0;display:flex;flex-direction:column;height:100dvh;min-height:0;overflow:hidden}.topbar{height:0;flex:none;background:transparent;border-bottom:0;display:flex;align-items:center;justify-content:space-between;padding:0;position:relative;top:0;z-index:3;overflow:hidden}
 .lefttop{display:flex;align-items:center;gap:13px}.hamb{display:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 11px;font-size:18px;cursor:pointer}.crumb{font-size:12px;color:var(--muted)}.crumb b{color:var(--ink)}
 .top-actions{display:flex;align-items:center;gap:9px}.themeToggle{border:1px solid var(--line);background:#fff;color:#111;border-radius:10px;padding:8px 11px;font-size:16px;cursor:pointer}
 .content{flex:1 1 0%;min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden}.appframe{display:block;flex:1 1 0%;width:100%;height:100%;min-height:0;max-height:100%;border:0;background:transparent}
 .shade{display:none}
-@media(max-width:800px){.layout{grid-template-columns:1fr;min-height:100dvh;height:100dvh}.sidebar{position:fixed;z-index:10;left:0;top:0;width:270px;transform:translateX(-102%);transition:transform .22s;height:100dvh;overflow-y:auto;overscroll-behavior:contain;padding-bottom:16px}.sidebar.show{transform:translateX(0)}.hamb{display:block}.topbar{padding:0 15px}.shade.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:9}.main{height:100dvh;min-height:0;overflow:hidden}.content{height:calc(100dvh - 66px);min-height:0;overflow:hidden}.appframe{height:100%;min-height:0;max-height:100%;flex:1 1 0%}}
+@media(max-width:800px){.layout{grid-template-columns:1fr;min-height:100dvh;height:100dvh}.sidebar{position:fixed;z-index:10;left:0;top:0;width:270px;transform:translateX(-102%);transition:transform .22s;height:100dvh;overflow-y:auto;overscroll-behavior:contain;padding-bottom:16px}.sidebar.show{transform:translateX(0)}.hamb{display:block}.topbar{height:50px;padding:0 15px;overflow:visible;background:transparent}.shade.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:9}.main{height:100dvh;min-height:0;overflow:hidden}.content{height:calc(100dvh - 50px);min-height:0;overflow:hidden}.appframe{height:100%;min-height:0;max-height:100%;flex:1 1 0%}}
 :root[data-theme="dark"]{--bg:#080808;--paper:#111;--ink:#fff;--muted:#aaa;--line:#303030;--soft:#1b1b1b;--accent:#fff}
 :root[data-theme="dark"] .topbar{background:rgba(8,8,8,.94);border-bottom:0}
 :root[data-theme="dark"] .themeToggle,:root[data-theme="dark"] .hamb{background:#171717;color:#fff;border-color:#333}
@@ -90,8 +90,8 @@
 @media(max-width:800px){.dashboardHome{padding:10px 8px 22px;gap:10px}.dashboardSection{border-radius:11px;width:100%}.dashboardSectionHead{padding:9px 12px}.dashboardFrame{height:240px;min-height:0}}
 
 .dashboardHome.visible{padding:0!important;gap:0!important;background:transparent!important}
-.dashboardHome.visible .dashboardFrameMain{display:block;width:100%;height:100%;min-height:calc(100dvh - 66px);max-height:none;flex:1 1 auto;border:0;background:transparent}
-@media(max-width:800px){.dashboardHome.visible .dashboardFrameMain{height:calc(100dvh - 66px);min-height:calc(100dvh - 66px)}}</style></head>
+.dashboardHome.visible .dashboardFrameMain{display:block;width:100%;height:100%;min-height:100dvh;max-height:none;flex:1 1 auto;border:0;background:transparent}
+@media(max-width:800px){.dashboardHome.visible .dashboardFrameMain{height:calc(100dvh - 50px);min-height:calc(100dvh - 50px)}}</style></head>
 <body><div class="shade" id="shade" onclick="drawer(false)"></div>
 <div class="layout"><aside class="sidebar" id="sidebar">
 <div class="brand">MEU APP <small>ESTUDOS · EVOLUÇÃO</small></div>
