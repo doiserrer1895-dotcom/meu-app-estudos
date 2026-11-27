@@ -548,6 +548,7 @@ window.addEventListener("message",function(event){
     const bankPublishTimer=setInterval(function(){
      try{
       if(!bankPublished&&typeof Q!=='undefined'&&Array.isArray(Q)&&Q.length){
+       window.__EEAR_BANK_EXPORT__=X;
        window.parent.postMessage({type:'eear-question-bank-data',data:X,revision:Date.now(),initial:true},location.origin);
        bankPublished=true;
        clearInterval(bankPublishTimer);
@@ -557,6 +558,18 @@ window.addEventListener("message",function(event){
    })();
    `;
    (doc.head||doc.documentElement).appendChild(bridge);
+   if(!doc.__eearCloudExportTimer){
+    let exportAttempts=0;
+    doc.__eearCloudExportTimer=setInterval(function(){
+     try{
+      const exported=doc.defaultView&&doc.defaultView.__EEAR_BANK_EXPORT__;
+      if(exported&&Array.isArray(exported.Q)&&exported.Q.length&&window.parent&&typeof window.parent.__saveQuestionBankCloud==='function'){
+       Promise.resolve(window.parent.__saveQuestionBankCloud(exported)).then(function(ok){if(ok)clearInterval(doc.__eearCloudExportTimer)}).catch(function(){});
+      }
+      if(++exportAttempts>=360)clearInterval(doc.__eearCloudExportTimer);
+     }catch(e){if(++exportAttempts>=360)clearInterval(doc.__eearCloudExportTimer)}
+    },1000);
+   }
    if(pendingFilter){bank.contentWindow.postMessage(pendingFilter,location.origin);pendingFilter=null;}if(pendingParentMessage){bank.contentWindow.postMessage(pendingParentMessage,location.origin);pendingParentMessage=null;}
   }catch(error){bridgeInstalled=false;console.error('Falha ao instalar integração do Banco de Questões:',error)}
  }
