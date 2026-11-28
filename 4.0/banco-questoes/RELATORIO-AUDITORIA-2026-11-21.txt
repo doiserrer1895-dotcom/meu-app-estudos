@@ -1,0 +1,53 @@
+RELATÓRIO DE AUDITORIA E CORREÇÕES DO BANCO EEAR
+Data: 21/11/2026
+Base: pacotes GZIP 01 a 13, descompactados e conferidos com o carregador do aplicativo.
+
+1. CONTAGEM E INTEGRIDADE
+- Total ativo após deduplicação: 4.848 questões.
+- IDs ativos: 4.848 únicos.
+- Matemática: 1.853.
+- Português: 1.665.
+- Física: 970.
+- Inglês: 360.
+- Questões principais dos pacotes 01–09: 4.244.
+- Questões Triunfo Militar: 604.
+- Níveis finais: Fácil 1.626; Médio 2.600; Difícil 622.
+- Os nove fragmentos originais foram concatenados e descompactados com sucesso; os pacotes suplementares foram descompactados individualmente.
+
+2. DUPLICATAS
+- Foi encontrada uma repetição real dentro da importação legada dos pacotes 10–12: a questão 202 de Português estava cadastrada duas vezes.
+- O pacote 13 é a versão consolidada do mesmo conjunto de 604 questões. O carregador compara os registros por disciplina e número da questão, conserva a versão legada com imagens de maior resolução e classificação mais detalhada, e descarta as cópias da versão consolidada.
+- A questão 208 de Português, ausente na importação antiga, é acrescentada a partir do pacote 13.
+- Resultado: 1 registro duplicado removido; 604 questões Triunfo únicas mantidas. Nenhuma questão distinta foi excluída.
+
+3. GABARITOS E RESPOSTAS
+- A versão consolidada foi usada para conferir os gabaritos da importação antiga. A questão 56 de Português, que estava sem alternativa em uma cópia antiga, já possui gabarito D na versão consolidada; a versão ativa com maior resolução também possui D.
+- A questão 208 de Português permanece sem gabarito: o material de origem não apresenta resposta para ela. O aplicativo sinaliza “Gabarito indisponível”, sem inventar alternativa.
+- Os registros principais com resposta textual preservada no campo de solução e sem alternativa (160 casos) foram reclassificados como resposta aberta para exibir a solução textual em vez de tratar “R” ou campo vazio como alternativa.
+- Os itens pa1_39, pa2_18 a pa2_21 e m2-06-Difícil-22 são sinalizados como sem gabarito, em vez de mostrar “Sem Resposta” ou “Resposta não informada” como se fosse solução. As questões f1-02-Difícil-85 e f1-02-Difícil-91 informam que a resolução está em vídeo no curso. A questão pa1_24 mantém “Demonstração” como resposta aberta.
+- Não foram alteradas outras alternativas sem fonte confiável para confirmar a correção.
+
+4. IMAGENS
+- 3.324 imagens embutidas no banco principal e 604 imagens no conjunto Triunfo ativo: 3.928 imagens ativas.
+- As imagens Triunfo legadas, geralmente com 762 px de largura, foram preservadas em vez das cópias reprocessadas de aproximadamente 733 px do pacote 13.
+- Foram inspecionadas visualmente amostras das imagens com menor nitidez calculada e as imagens pequenas que não eram apenas tiras horizontais. Os textos, fórmulas e diagramas das amostras permanecem legíveis; não foi identificada imagem inequivocamente ilegível que pudesse ser substituída por uma fonte melhor comprovada.
+- Todos os 3.928 payloads de imagem ativos foram decodificados com sucesso. A decodificação confirma integridade do arquivo, mas não equivale a uma inspeção visual humana individual de todas as imagens.
+
+5. CLASSIFICAÇÃO POR MATÉRIA
+- A distribuição ativa foi conferida e contém somente Matemática, Português, Física e Inglês.
+- Nenhuma classificação de disciplina claramente incorreta foi comprovada nessa varredura.
+- Os registros legados preservam os campos de assunto/tópico mais detalhados, em vez de substituí-los pela classificação mais genérica do pacote consolidado.
+
+6. CORREÇÕES APLICADAS NO APLICATIVO
+- Deduplicação por disciplina e número da questão, com remoção da repetição da questão 202 de Português.
+- Inclusão da questão 208 de Português sem inventar gabarito.
+- Preservação da versão de maior resolução e dos metadados mais completos das questões Triunfo.
+- Conferência e manutenção do gabarito D da questão 56 de Português.
+- Reclassificação de 160 registros com solução textual para resposta aberta.
+- Total e faixas de IDs sequenciais corrigidos para 4.848 questões.
+- manifest.json e LEIA-ME.txt atualizados para refletir a contagem real.
+
+LIMITES DA AUDITORIA
+- Não há gabarito oficial independente completo para todos os 4.244 registros principais. Portanto, não é possível afirmar que cada uma dessas alternativas foi validada externamente.
+- A inspeção visual de nitidez foi automatizada e complementada por amostras; não se afirma inspeção humana individual de cada imagem.
+- SHA256SUMS.txt valida somente os nove fragmentos originais 01–09. Os pacotes suplementares 10–13 não estão cobertos por essa lista de hashes.

@@ -1,0 +1,20 @@
+{
+  "id": "/meu-app-estudos/",
+  "name": "CAVERNA",
+  "short_name": "CAVERNA",
+  "description": "Seu espaço pessoal de estudos",
+  "start_url": "/meu-app-estudos/",
+  "scope": "/meu-app-estudos/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#08080a",
+  "theme_color": "#08080a",
+  "icons": [
+    {
+      "src": "/meu-app-estudos/assets/caverna-cover.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+PACOTE DO BANCO COMPLETO DE QUESTÕES EEAR
+
+Estrutura dos arquivos:
+- questoes-banco-01.gz até questoes-banco-09.gz: fragmentos consecutivos do fluxo GZIP original, que formam as 4.244 questões principais.
+- questoes-banco-10.gz até questoes-banco-12.gz: importação legada das questões Triunfo Militar (604 registros). Esses arquivos preservam imagens em resolução maior e classificação mais detalhada.
+- questoes-banco-13.gz: versão consolidada das mesmas 604 questões Triunfo Militar. O carregador usa esse pacote para conferir gabaritos e acrescentar a questão 208 de Português, que não estava nos pacotes legados.
+- Há uma repetição interna da questão 202 de Português nos pacotes 10–12. O carregador remove essa repetição e mantém a versão legada com imagem/classificação mais completas. Também aproveita o gabarito D da versão consolidada para a questão 56 de Português.
+- Total ativo após deduplicação: 4.848 questões (Matemática 1.853; Português 1.665; Física 970; Inglês 360).
+
+O carregador está em questoes.html na raiz. Ele concatena e descompacta os nove fragmentos originais, carrega os pacotes complementares e consolida as questões Triunfo por disciplina e número, mantendo apenas um registro por questão.
+
+manifest.json registra a composição e as contagens atualizadas. SHA256SUMS.txt valida somente os nove fragmentos originais (01–09); os pacotes suplementares 10–13 não fazem parte dessa lista de hashes.
+
+Não renomeie, edite ou recomprima os arquivos .gz sem atualizar também o carregador e os metadados correspondentes.
+
+As imagens auxiliares e bt_questoes.json ficam em assets/banco-questoes/.

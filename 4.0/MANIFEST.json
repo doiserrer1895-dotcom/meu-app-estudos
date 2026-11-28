@@ -1,0 +1,14 @@
+{
+  "backup": "4.0",
+  "created_from_commit": "c5795cb3c0dafadb9908fcc9790fc7cab21899c3",
+  "source_branch": "main",
+  "repository": "doiserrer1895-dotcom/meu-app-estudos",
+  "captured_at_utc": "2026-11-28",
+  "description": "Snapshot dos arquivos versionados do aplicativo no estado atual da branch main. Os arquivos foram copiados para esta pasta usando os mesmos objetos Git (blobs), preservando exatamente seus conteúdos.",
+  "source_file_count": 106,
+  "source_directory_count": 10,
+  "included": "Todos os arquivos e diretórios rastreados pelo Git no commit de origem, incluindo HTML, JavaScript, CSS embutido, imagens, ícones, manifest, service worker, SQL, documentação e arquivos do banco de questões.",
+  "not_included": "Dados em tempo real armazenados externamente no Supabase, autenticações/sessões de usuários, segredos e variáveis de ambiente não versionados, caches locais do navegador/dispositivo e arquivos não rastreados pelo Git.",
+  "source_tree_sha": "86a424fdcc0aeae0a77b90287f6aa81195683288",
+  "source_commit_url": "https://github.com/doiserrer1895-dotcom/meu-app-estudos/commit/c5795cb3c0dafadb9908fcc9790fc7cab21899c3"
+}
