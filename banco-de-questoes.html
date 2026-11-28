@@ -244,7 +244,7 @@ review=function(){
  const ok=$("rvok");if(ok)ok.onclick=commit;
 };
 commit=function(){
- const a=R.filter(q=>!q.del);if(a.some(q=>!q.d||!q.m||!q.t))return toast("Preencha disciplina, matéria e tópico");
+ const a=R.filter(q=>!q.del);if(a.some(q=>!q.d))return toast("Selecione a disciplina de cada questão");
  const pv={id:W.id,b:W.b,ano:W.ano,nome:W.nome||W.b+" "+W.ano,n:a.length},x={Q:[],IMG:{},PROVAS:[pv],TREE:[]};
  a.forEach(q=>{
   const r={id:q.id,b:W.b,d:q.d,m:q.m,t:q.t,c:q.c,f:q.f,dt:W.dt,tm:q.tm,i:q.id,a:q.a,prova:W.id};
